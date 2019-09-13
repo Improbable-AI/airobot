@@ -1,0 +1,4 @@
+pybullet==2.5.5
+numpy>=1.16.0
+matplotlib>=2.2.2
+yacs==0.1.6
