@@ -1,3 +1,7 @@
+"""
+Pybullet simulation environment of a UR5e
+ robot with a robotiq 2f140 gripper
+"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -14,8 +18,23 @@ from airobot.robot.robot import Robot
 
 
 class UR5eRobotPybullet(Robot):
+    """
+    Class for the pybullet simulation environment
+        of a UR5e robot with a robotiq 2f140 gripper.
+    """
     def __init__(self, cfgs, render=False,
                  seed=None, self_collision=False):
+        """
+        Constructor for the pybullet simulation environment
+        of a UR5e robot with a robotiq 2f140 gripper
+
+        Args:
+            cfgs (YACS CfgNode): configurations for the robot
+            render (bool): whether to render the environment using GUI
+            seed (int): random seed
+            self_collision (bool): enable self_collision or
+                                   not whiling loading URDF
+        """
         super(UR5eRobotPybullet, self).__init__(cfgs=cfgs)
         self._render = render
         self.self_collision = self_collision
@@ -79,8 +98,7 @@ class UR5eRobotPybullet(Robot):
         self.ik_jds = [self.ik_jd] * len(self.rvl_joint_names)
         self.ee_link = 'wrist_3_link-tool0_fixed_joint'
 
-        # https://www.universal-robots.com/how-tos-and-faqs/
-        # faq/ur-faq/max-joint-torques-17260/
+        # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
         self.max_torques = [150, 150, 150, 28, 28, 28]
         # some random values for robotiq joints
         self.max_torques.append(20)
@@ -215,7 +233,8 @@ class UR5eRobotPybullet(Robot):
             # copy the current gripper joint position
             gripper_pos = self.get_jpos(self.gripper_jnt_names[0])
             positions.append(gripper_pos)
-        assert len(positions) == 7
+        if len(positions) != 7:
+            raise ValueError('Joint positions should contain 6 or 7 elements')
         gripper_pos = positions[-1]
         gripper_pos = max(self.gripper_open_angle, gripper_pos)
         gripper_pos = min(self.gripper_close_angle, gripper_pos)
@@ -248,7 +267,8 @@ class UR5eRobotPybullet(Robot):
             # copy the current gripper joint position
             gripper_vel = self.get_jvel(self.gripper_jnt_names[0])
             velocities.append(gripper_vel)
-        assert len(velocities) == 7
+        if len(velocities) != 7:
+            raise ValueError('Joint velocities should contain 6 or 7 elements')
         p.setJointMotorControlArray(self.robot_id,
                                     self.actuator_ids,
                                     p.VELOCITY_CONTROL,
@@ -290,7 +310,8 @@ class UR5eRobotPybullet(Robot):
         :type torques: list
         """
         torques = copy.deepcopy(torques)
-        assert len(torques) == 6
+        if len(torques) != 6:
+            raise ValueError('Joint torques should contain 6 elements')
         p.setJointMotorControlArray(self.robot_id,
                                     self.actuator_ids[:-1],
                                     p.TORQUE_CONTROL,
@@ -302,8 +323,10 @@ class UR5eRobotPybullet(Robot):
         return jnt_poss
 
     def move_ee_xyz(self, delta_xyz, eef_step=0.005):
-        assert not self._step_sim_mode, \
-            'move_ee_xyz() can only be called in realtime simulation mode'
+        if not self._step_sim_mode:
+            raise AssertionError('move_ee_xyz() can '
+                                 'only be called in realtime'
+                                 ' simulation mode')
         success = True
         pos, quat, rot_mat, euler = self.get_ee_pose()
         cur_pos = np.array(pos)
@@ -426,7 +449,9 @@ class UR5eRobotPybullet(Robot):
             if len(ori) == 3:
                 # [roll, pitch, yaw]
                 ori = p.getQuaternionFromEuler(ori)
-            assert len(ori) == 4
+            if len(ori) != 4:
+                raise ValueError('Orientation should be either '
+                                 'euler angles or quaternion')
             jnt_poss = p.calculateInverseKinematics(self.robot_id,
                                                     self.ee_link_id,
                                                     pos,
