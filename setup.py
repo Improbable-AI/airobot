@@ -34,7 +34,7 @@ setup(
     name='airobot',
     version=__version__,
     author='MIT Improbable AI',
-    url='https://github.com/taochenshh/ur_setup',
+    url='https://github.com/Improbable-AI/airobot.git',
     license='MIT',
     packages=packages,
     package_dir={'': 'src'},
