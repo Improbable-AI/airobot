@@ -4,6 +4,7 @@ from __future__ import print_function
 
 from abc import ABCMeta
 
+
 class Camera(object):
     """
     Base class for cameras
@@ -12,8 +13,8 @@ class Camera(object):
 
     def __init__(self, cfgs):
         """
-        Constructor for Camera base class.
-        :param cfgs: configurations for camera
-        :type cfgs: YACS CfgNode
+
+        Args:
+            cfgs (YACS CfgNode): configurations for the camera
         """
         self.cfgs = cfgs
