@@ -25,8 +25,7 @@ class UR5eRobotPybullet(Robot):
         of a UR5e robot with a robotiq 2f140 gripper.
     """
 
-    def __init__(self, cfgs, render=False,
-                 seed=None, self_collision=False):
+    def __init__(self, cfgs, render=False, seed=None, self_collision=False):
         """
         Constructor for the pybullet simulation environment
         of a UR5e robot with a robotiq 2f140 gripper
@@ -69,24 +68,33 @@ class UR5eRobotPybullet(Robot):
 
         plane_pos = [0, 0, 0]
         plane_ori = p.getQuaternionFromEuler([0, 0, 0])
-        self.plane_id = p.loadURDF("plane.urdf",
-                                   plane_pos,
-                                   plane_ori)
+        self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
         ur_pos = [0, 0, 1]
         ur_ori = p.getQuaternionFromEuler([0, 0, 0])
         if self.self_collision:
-            # weird behavior occurs on the gripper
-            # when self-collision is enforced
             self.robot_id = p.loadURDF(self.cfgs.URDF,
                                        ur_pos,
                                        ur_ori,
                                        flags=p.URDF_USE_SELF_COLLISION)
         else:
-            self.robot_id = p.loadURDF(self.cfgs.URDF,
-                                       ur_pos,
-                                       ur_ori)
+            self.robot_id = p.loadURDF(self.cfgs.URDF, ur_pos, ur_ori)
         self._build_jnt_id()
+        if self.self_collision:
+            # weird behavior occurs on the gripper
+            # when self-collision is enforced
+            self._disable_gripper_self_collision()
+
+    def _disable_gripper_self_collision(self):
+        for i in range(len(self.gripper_jnt_names)):
+            for j in range(i + 1, len(self.gripper_jnt_names)):
+                jnt_idx1 = self.jnt_to_id[self.gripper_jnt_names[i]]
+                jnt_idx2 = self.jnt_to_id[self.gripper_jnt_names[j]]
+                p.setCollisionFilterPair(self.robot_id,
+                                         self.robot_id,
+                                         jnt_idx1,
+                                         jnt_idx2,
+                                         enableCollision=0)
 
     def step_simulation(self):
         p.stepSimulation()
@@ -177,12 +185,12 @@ class UR5eRobotPybullet(Robot):
                 finger_jnt_pos = min(self.gripper_close_angle, finger_jnt_pos)
                 tgt_pos = finger_jnt_pos
                 max_torque = self._max_torques[-len(self.gripper_jnt_ids)]
-                jnt_id = self._jnt_id_from_name(self.gripper_jnt_names[0])
+                jnt_id = self.jnt_to_id[self.gripper_jnt_names[0]]
             else:
                 tgt_pos = position
                 rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
                 max_torque = self._max_torques[rvl_jnt_idx]
-                jnt_id = self._jnt_id_from_name(joint_name)
+                jnt_id = self.jnt_to_id[joint_name]
             p.setJointMotorControl2(self.robot_id,
                                     jnt_id,
                                     p.POSITION_CONTROL,
@@ -236,12 +244,12 @@ class UR5eRobotPybullet(Robot):
                 finger_jnt_vel = velocity / float(mimic_factor)
                 tgt_vel = finger_jnt_vel
                 max_torque = self._max_torques[-len(self.gripper_jnt_ids)]
-                jnt_id = self._jnt_id_from_name(self.gripper_jnt_names[0])
+                jnt_id = self.jnt_to_id[self.gripper_jnt_names[0]]
             else:
                 tgt_vel = velocity
                 rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
                 max_torque = self._max_torques[rvl_jnt_idx]
-                jnt_id = self._jnt_id_from_name(joint_name)
+                jnt_id = self.jnt_to_id[joint_name]
             p.setJointMotorControl2(self.robot_id,
                                     jnt_id,
                                     p.VELOCITY_CONTROL,
@@ -292,7 +300,7 @@ class UR5eRobotPybullet(Robot):
             if joint_name not in self.arm_jnt_names_set:
                 raise ValueError('Only torque control on'
                                  ' the arm is supported!')
-            jnt_id = self._jnt_id_from_name(joint_name)
+            jnt_id = self.jnt_to_id[joint_name]
             p.setJointMotorControl2(self.robot_id,
                                     jnt_id,
                                     p.TORQUE_CONTROL,
@@ -385,7 +393,7 @@ class UR5eRobotPybullet(Robot):
                                         targetVelocities=tgt_vels,
                                         forces=forces)
         else:
-            jnt_id = self._jnt_id_from_name(joint_name)
+            jnt_id = self.jnt_to_id[joint_name]
             p.setJointMotorControl2(self.robot_id,
                                     jnt_id,
                                     p.VELOCITY_CONTROL,
@@ -423,11 +431,10 @@ class UR5eRobotPybullet(Robot):
             the joint_name
         """
         if joint_name is None:
-            states = p.getJointStates(self.robot_id,
-                                      self.actuator_ids)
+            states = p.getJointStates(self.robot_id, self.actuator_ids)
             pos = [state[0] for state in states]
         else:
-            jnt_id = self._jnt_id_from_name(joint_name)
+            jnt_id = self.jnt_to_id[joint_name]
             pos = p.getJointState(self.robot_id, jnt_id)[0]
         return pos
 
@@ -445,11 +452,10 @@ class UR5eRobotPybullet(Robot):
             the joint_name
         """
         if joint_name is None:
-            states = p.getJointStates(self.robot_id,
-                                      self.actuator_ids)
+            states = p.getJointStates(self.robot_id, self.actuator_ids)
             vel = [state[1] for state in states]
         else:
-            jnt_id = self._jnt_id_from_name(joint_name)
+            jnt_id = self.jnt_to_id[joint_name]
             vel = p.getJointState(self.robot_id, jnt_id)[1]
         return vel
 
@@ -470,12 +476,11 @@ class UR5eRobotPybullet(Robot):
             the joint_name
         """
         if joint_name is None:
-            states = p.getJointStates(self.robot_id,
-                                      self.actuator_ids)
+            states = p.getJointStates(self.robot_id, self.actuator_ids)
             # state[3] is appliedJointMotorTorque
             torque = [state[3] for state in states]
         else:
-            jnt_id = self._jnt_id_from_name(joint_name)
+            jnt_id = self.jnt_to_id[joint_name]
             torque = p.getJointState(self.robot_id, jnt_id)[3]
         return torque
 
@@ -554,7 +559,7 @@ class UR5eRobotPybullet(Robot):
             joint_name (str): if it's none, all the actuated
                 joints are compared.
                 Otherwise, only the specified joint is compared
-            mode (str): 'pose' or 'vel'
+            mode (str): 'pos' or 'vel'
 
         Returns:
             if the goal is reached or not
@@ -604,23 +609,6 @@ class UR5eRobotPybullet(Robot):
         else:
             return False
 
-    def _jnt_id_from_name(self, joint_name):
-        """
-        Get joint index from its name
-        Args:
-            joint_name (str): joint name
-
-        Returns:
-            jonit index
-
-        """
-        if joint_name in self.rvl_joint_names:
-            jnt_id = self.jnt_to_id[joint_name]
-        else:
-            raise ValueError('unknown movable joint'
-                             ' name: %s' % joint_name)
-        return jnt_id
-
     def _seed(self, seed=None):
         np_random, seed = seeding.np_random(seed)
         return np_random, seed
@@ -655,22 +643,19 @@ class UR5eRobotPybullet(Robot):
         self._thread_sleep = 0.001
         p.setGravity(0, 0, -9.8)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        self.arm_jnt_names = ['shoulder_pan_joint',
-                              'shoulder_lift_joint',
-                              'elbow_joint',
-                              'wrist_1_joint',
-                              'wrist_2_joint',
-                              'wrist_3_joint']
+        self.arm_jnt_names = [
+            'shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
+            'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint'
+        ]
 
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.arm_dof = len(self.arm_jnt_names)
         self._gripper_mimic_coeff = [1, -1, 1, -1, -1, 1]
-        self.gripper_jnt_names = ['finger_joint',
-                                  'left_inner_knuckle_joint',
-                                  'left_inner_finger_joint',
-                                  'right_outer_knuckle_joint',
-                                  'right_inner_knuckle_joint',
-                                  'right_inner_finger_joint']
+        self.gripper_jnt_names = [
+            'finger_joint', 'left_inner_knuckle_joint',
+            'left_inner_finger_joint', 'right_outer_knuckle_joint',
+            'right_inner_knuckle_joint', 'right_inner_finger_joint'
+        ]
         self.gripper_close_angle = 0.7
         self.gripper_open_angle = 0
         self.gripper_jnt_names_set = set(self.gripper_jnt_names)
@@ -723,14 +708,14 @@ class UR5eRobotPybullet(Robot):
         # only the first joint in the gripper is the actuator
         # in the simulation
         act_joint_names = self.arm_jnt_names + [self.gripper_jnt_names[0]]
-        self.actuator_ids = [self.jnt_to_id[jnt]
-                             for jnt in act_joint_names]
+        self.actuator_ids = [self.jnt_to_id[jnt] for jnt in act_joint_names]
         # joint ids for all joints
-        self.rvl_jnt_ids = [self.jnt_to_id[jnt]
-                            for jnt in self.rvl_joint_names]
+        self.rvl_jnt_ids = [
+            self.jnt_to_id[jnt] for jnt in self.rvl_joint_names
+        ]
 
         self.ee_link_id = self.jnt_to_id[self.ee_link]
-        self.arm_jnt_ids = [self.jnt_to_id[jnt]
-                            for jnt in self.arm_jnt_names]
-        self.gripper_jnt_ids = [self.jnt_to_id[jnt]
-                                for jnt in self.gripper_jnt_names]
+        self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
+        self.gripper_jnt_ids = [
+            self.jnt_to_id[jnt] for jnt in self.gripper_jnt_names
+        ]
