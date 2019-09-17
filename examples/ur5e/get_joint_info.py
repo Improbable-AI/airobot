@@ -4,6 +4,10 @@ import airobot as ar
 
 
 def main():
+    """
+    This function demonstrates how to get joint information
+    such as joint positions/velocities/torques.
+    """
     robot = ar.create_robot('ur5e', robot_cfg={'render': False})
     robot.go_home()
     print('\nJoint positions for all actuated joints:')

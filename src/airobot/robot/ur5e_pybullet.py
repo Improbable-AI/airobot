@@ -64,6 +64,9 @@ class UR5eRobotPybullet(Robot):
         return success
 
     def reset(self):
+        """
+        Reset the simulation environment.
+        """
         p.resetSimulation()
 
         plane_pos = [0, 0, 0]
@@ -97,6 +100,9 @@ class UR5eRobotPybullet(Robot):
                                          enableCollision=0)
 
     def step_simulation(self):
+        """
+        One step forward in simulation
+        """
         p.stepSimulation()
 
     def realtime_simulation(self, on=True):
@@ -152,9 +158,8 @@ class UR5eRobotPybullet(Robot):
                 for the action to complete
 
         Returns:
-            A boolean variable representing if the action is sucessful at
-            the moment when the function is exited
-
+            A boolean variable representing if the action is successful at
+            the moment when the function exits
         """
         position = copy.deepcopy(position)
         success = False
@@ -216,9 +221,8 @@ class UR5eRobotPybullet(Robot):
                 for the action to complete
 
         Returns:
-            A boolean variable representing if the action is sucessful at
-            the moment when the function is exited
-
+            A boolean variable representing if the action is successful at
+            the moment when the function exits
         """
         velocity = copy.deepcopy(velocity)
         success = False
@@ -316,8 +320,8 @@ class UR5eRobotPybullet(Robot):
                 or euler angles ([roll, pitch, yaw])
 
         Returns:
-            A boolean variable representing if the action is sucessful at
-            the moment when the function is exited
+            A boolean variable representing if the action is successful at
+            the moment when the function exits
         """
         jnt_pos = self.compute_ik(pos, ori)
         self.set_jpos(jnt_pos)
@@ -334,8 +338,8 @@ class UR5eRobotPybullet(Robot):
                 a point every eef_step distance between the two end points
 
         Returns:
-            A boolean variable representing if the action is sucessful at
-            the moment when the function is exited
+            A boolean variable representing if the action is successful at
+            the moment when the function exits
         """
         if self._step_sim_mode:
             raise AssertionError('move_ee_xyz() can '
@@ -461,10 +465,11 @@ class UR5eRobotPybullet(Robot):
 
     def get_jtorq(self, joint_name=None):
         """
-        Return the joint torque(s) applied during the last stepSimulation
-        in VELOCITY_CONTROL and POSITION_CONTROL modes.
-        In TORQUE_CONTROL, the applied joint motor torque is
-        exactly what you provide, so there is no need to report it separately.
+        If the robot is operated in VELOCITY_CONTROL or POSITION_CONTROL mode,
+        return the joint torque(s) applied during the last simulation step. In
+        TORQUE_CONTROL, the applied joint motor torque is exactly what you provide,
+        so there is no need to report it separately. So don't use this method
+        to get the joint torque values when the robot is in TORQUE_CONTROL mode.
 
         Args:
             joint_name: If it's None, it will return joint torques

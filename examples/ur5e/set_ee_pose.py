@@ -4,6 +4,9 @@ import airobot as ar
 
 
 def main():
+    """
+    Move the robot end effector to the desired pose
+    """
     robot = ar.create_robot('ur5e',
                             robot_cfg={'render': True})
     robot.go_home()

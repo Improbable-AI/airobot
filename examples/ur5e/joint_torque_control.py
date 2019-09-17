@@ -4,6 +4,10 @@ import airobot as ar
 
 
 def main():
+    """
+    This function demonstrates how to perform torque
+    control on the simulated UR robot
+    """
     robot = ar.create_robot('ur5e',
                             robot_cfg={'render': True,
                                        'self_collision': True})
