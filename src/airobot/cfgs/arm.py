@@ -1,4 +1,3 @@
-# noinspection PyPep8Naming
 from yacs.config import CfgNode as CN
 
 _C = CN()

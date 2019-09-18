@@ -71,8 +71,9 @@ class Robot(object):
             torque (float or list): torque value(s) for the joint(s)
             joint_name (str): specify the joint on which the torque is applied.
                 If it's not provided(None), it will apply the torques on
-                the actuated joints on the arm. Otherwise, only the specified joint
-                will be applied with the given torque.
+                the actuated joints on the arm. Otherwise,
+                only the specified joint will be applied with
+                the given torque.
             wait (bool): whether to block the code and wait
                 for the action to complete
 

@@ -9,6 +9,7 @@ from __future__ import print_function
 import copy
 import threading
 import time
+# import pkgutil
 
 import numpy as np
 import pybullet as p
@@ -45,6 +46,14 @@ class UR5eRobotPybullet(Robot):
             p.connect(p.GUI)
         else:
             p.connect(p.DIRECT)
+            # TODO Check if EGL is working properly
+            #  EGL rendering seems to give different images
+            # # using the eglRendererPlugin (hardware OpenGL acceleration)
+            # egl = pkgutil.get_loader('eglRenderer')
+            # if egl:
+            #     p.loadPlugin(egl.get_filename(), "_eglRendererPlugin")
+            # else:
+            #     p.loadPlugin("eglRendererPlugin")
         self.np_random, _ = self._seed(seed)
         self._init_consts()
         self.reset()
@@ -467,9 +476,10 @@ class UR5eRobotPybullet(Robot):
         """
         If the robot is operated in VELOCITY_CONTROL or POSITION_CONTROL mode,
         return the joint torque(s) applied during the last simulation step. In
-        TORQUE_CONTROL, the applied joint motor torque is exactly what you provide,
-        so there is no need to report it separately. So don't use this method
-        to get the joint torque values when the robot is in TORQUE_CONTROL mode.
+        TORQUE_CONTROL, the applied joint motor torque is exactly what
+        you provide, so there is no need to report it separately.
+        So don't use this method to get the joint torque values when
+         the robot is in TORQUE_CONTROL mode.
 
         Args:
             joint_name: If it's None, it will return joint torques
@@ -509,6 +519,74 @@ class UR5eRobotPybullet(Robot):
         TODO add force sensor on the end effector
         """
         raise NotImplementedError
+
+    def setup_camera(self, focus_pt=None, dist=3, yaw=0, pitch=0, roll=0):
+        """
+        Setup the camera view matrix and projection matrix. Must be called
+        first before images are renderred
+
+        Args:
+            focus_pt (list): position of the target (focus) point,
+                in Cartesian world coordinates
+            dist (float): distance from eye (camera) to the focus point
+            yaw (float): yaw angle in degrees,
+                left/right around up-axis (z-axis).
+            pitch (float): pitch in degrees, up/down.
+            roll (float): roll in degrees around forward vector
+        """
+        if focus_pt is None:
+            focus_pt = [0, 0, 0]
+        if len(focus_pt) != 3:
+            raise ValueError('Length of focus_pt should be 3 ([x, y, z]).')
+        self.view_matrix = p.computeViewMatrixFromYawPitchRoll(focus_pt,
+                                                               dist,
+                                                               yaw,
+                                                               pitch,
+                                                               roll,
+                                                               upAxisIndex=2)
+        height = self.cfgs.CAM_SIM.HEIGHT
+        width = self.cfgs.CAM_SIM.WIDTH
+        aspect = width / float(height)
+        znear = self.cfgs.CAM_SIM.ZNEAR
+        zfar = self.cfgs.CAM_SIM.ZFAR
+        self.proj_matrix = p.computeProjectionMatrixFOV(self.cfgs.CAM_SIM.FOV,
+                                                        aspect,
+                                                        znear,
+                                                        zfar)
+
+    def get_images(self, get_rgb=True, get_depth=True):
+        """
+        Return rgba/depth images
+
+        Args:
+            get_rgb (bool): return rgb image if True, None otherwise
+            get_depth (bool): return depth image if True, None otherwise
+
+        Returns:
+            rgba and depth images (np.ndarray)
+        """
+
+        if self.view_matrix is None:
+            raise ValueError('Please call setup_camera() first!')
+        height = self.cfgs.CAM_SIM.HEIGHT
+        width = self.cfgs.CAM_SIM.WIDTH
+        images = p.getCameraImage(width=width,
+                                  height=height,
+                                  viewMatrix=self.view_matrix,
+                                  projectionMatrix=self.proj_matrix,
+                                  shadow=True,
+                                  flags=p.ER_NO_SEGMENTATION_MASK,
+                                  renderer=p.ER_BULLET_HARDWARE_OPENGL)
+        rgba = None
+        depth = None
+        if get_rgb:
+            rgba = np.reshape(images[2], (height, width, 4))  # 0 to 255
+        if get_depth:
+            depth_buffer = np.reshape(images[3], [width, height])
+            znear = self.cfgs.CAM_SIM.ZNEAR
+            zfar = self.cfgs.CAM_SIM.ZFAR
+            depth = zfar * znear / (zfar - (zfar - znear) * depth_buffer)
+        return rgba, depth
 
     def compute_ik(self, pos, ori=None):
         """
@@ -672,6 +750,8 @@ class UR5eRobotPybullet(Robot):
         self._max_torques = [150, 150, 150, 28, 28, 28]
         # a random value for robotiq joints
         self._max_torques.append(20)
+        self.view_matrix = None
+        self.proj_matrix = None
 
     def _rt_simulation(self):
         """
