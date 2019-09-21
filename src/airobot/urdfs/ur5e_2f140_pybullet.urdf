@@ -691,12 +691,12 @@
     <origin rpy="0.0 0.0 1.57079632679" xyz=" 0.0 0.0 0.0"/>
   </joint>
   <!-- not sure what this does, parent link-->
-  <link name="tool"/>
-  <joint name="tool_tip" type="fixed">
-    <parent link="ee_link"/>
-    <child link="tool"/>
-    <origin rpy="0.0 0.0 0.0" xyz=" 0.00 0.0 0.1"/>
-  </joint>
+  <!--     <link name="${prefix}tool" />
+    <joint name="tool_tip" type="fixed">
+      <parent link= "${prefix}ee_link" />
+      <child link = "${prefix}tool" />
+      <origin xyz=" 0.00 0.0 0.1" rpy="0.0 0.0 0.0" />
+    </joint> -->
   <!-- <gazebo>
       <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
         <robotNamespace>/ur5_robotiq</robotNamespace>
