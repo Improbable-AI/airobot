@@ -9,7 +9,6 @@ from __future__ import print_function
 import copy
 import threading
 import time
-# import pkgutil
 
 import numpy as np
 import pybullet as p
@@ -18,6 +17,10 @@ from gym.utils import seeding
 
 from airobot import arutil
 from airobot.robot.robot import Robot
+from airobot.sensor.camera.pybullet_cam import PyBulletCamera
+
+
+# import pkgutil
 
 
 class UR5eRobotPybullet(Robot):
@@ -534,27 +537,10 @@ class UR5eRobotPybullet(Robot):
             pitch (float): pitch in degrees, up/down.
             roll (float): roll in degrees around forward vector
         """
-        if focus_pt is None:
-            focus_pt = [0, 0, 0]
-        if len(focus_pt) != 3:
-            raise ValueError('Length of focus_pt should be 3 ([x, y, z]).')
-        self.view_matrix = p.computeViewMatrixFromYawPitchRoll(focus_pt,
-                                                               dist,
-                                                               yaw,
-                                                               pitch,
-                                                               roll,
-                                                               upAxisIndex=2)
-        height = self.cfgs.CAM_SIM.HEIGHT
-        width = self.cfgs.CAM_SIM.WIDTH
-        aspect = width / float(height)
-        znear = self.cfgs.CAM_SIM.ZNEAR
-        zfar = self.cfgs.CAM_SIM.ZFAR
-        self.proj_matrix = p.computeProjectionMatrixFOV(self.cfgs.CAM_SIM.FOV,
-                                                        aspect,
-                                                        znear,
-                                                        zfar)
+        self.camera.setup_camera(focus_pt=focus_pt, dist=dist,
+                                 yaw=yaw, pitch=pitch, roll=roll)
 
-    def get_images(self, get_rgb=True, get_depth=True):
+    def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
         Return rgba/depth images
 
@@ -565,28 +551,7 @@ class UR5eRobotPybullet(Robot):
         Returns:
             rgba and depth images (np.ndarray)
         """
-
-        if self.view_matrix is None:
-            raise ValueError('Please call setup_camera() first!')
-        height = self.cfgs.CAM_SIM.HEIGHT
-        width = self.cfgs.CAM_SIM.WIDTH
-        images = p.getCameraImage(width=width,
-                                  height=height,
-                                  viewMatrix=self.view_matrix,
-                                  projectionMatrix=self.proj_matrix,
-                                  shadow=True,
-                                  flags=p.ER_NO_SEGMENTATION_MASK,
-                                  renderer=p.ER_BULLET_HARDWARE_OPENGL)
-        rgba = None
-        depth = None
-        if get_rgb:
-            rgba = np.reshape(images[2], (height, width, 4))  # 0 to 255
-        if get_depth:
-            depth_buffer = np.reshape(images[3], [width, height])
-            znear = self.cfgs.CAM_SIM.ZNEAR
-            zfar = self.cfgs.CAM_SIM.ZFAR
-            depth = zfar * znear / (zfar - (zfar - znear) * depth_buffer)
-        return rgba, depth
+        return self.camera.get_images(get_rgb, get_depth)
 
     def compute_ik(self, pos, ori=None):
         """
@@ -750,8 +715,7 @@ class UR5eRobotPybullet(Robot):
         self._max_torques = [150, 150, 150, 28, 28, 28]
         # a random value for robotiq joints
         self._max_torques.append(20)
-        self.view_matrix = None
-        self.proj_matrix = None
+        self.camera = PyBulletCamera(p, self.cfgs)
 
     def _rt_simulation(self):
         """

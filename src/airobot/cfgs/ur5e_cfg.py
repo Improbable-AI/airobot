@@ -1,5 +1,6 @@
-from airobot.cfgs.arm import get_cfg_defaults
 from yacs.config import CfgNode as CN
+
+from airobot.cfgs.arm import get_cfg_defaults
 from airobot.cfgs.pybullet_camera import get_sim_cam_cfg
 
 _C = get_cfg_defaults()

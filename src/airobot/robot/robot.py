@@ -18,6 +18,7 @@ class Robot(object):
             cfgs (YACS CfgNode): configurations for the robot
         """
         self.cfgs = cfgs
+        self.camera = None
 
     def go_home(self):
         """
