@@ -15,7 +15,7 @@ import pybullet as p
 import pybullet_data
 from gym.utils import seeding
 
-from airobot import arutil
+import airobot.utils.common as arutil
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.pybullet_cam import PyBulletCamera
 
