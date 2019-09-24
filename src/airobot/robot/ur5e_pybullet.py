@@ -345,8 +345,8 @@ class UR5eRobotPybullet(Robot):
         orientation
 
         Args:
-            delta_xyz: movement in x, y, z directions
-            eef_step: interpolation interval along delta_xyz. Interpolate
+            delta_xyz (list): movement in x, y, z directions
+            eef_step (float): interpolation interval along delta_xyz. Interpolate
                 a point every eef_step distance between the two end points
 
         Returns:
