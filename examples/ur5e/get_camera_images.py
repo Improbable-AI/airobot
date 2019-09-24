@@ -1,7 +1,7 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 import airobot as ar
-import matplotlib.pyplot as plt
 
 
 def main():

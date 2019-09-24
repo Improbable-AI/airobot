@@ -1,12 +1,15 @@
-import open3d
+import signal
 import sys
 
 import open3d
 
 import airobot as ar
-import signal
+
 
 def signal_handler(sig, frame):
+    """
+    Capture exit signal from the keyboard
+    """
     print('Exit')
     sys.exit(0)
 
@@ -15,6 +18,9 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def main():
+    """
+    Visualize the point cloud from the RGBD camera
+    """
     robot = ar.create_robot('ur5e',
                             pb=False)
     vis = open3d.visualization.Visualizer()
