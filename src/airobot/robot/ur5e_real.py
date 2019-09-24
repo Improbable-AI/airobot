@@ -95,8 +95,10 @@ class UR5eRobotReal(Robot):
 
             else:
                 target_pos = position
+                current_pos = self.get_jpos()
                 rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
                 jnt_id = self.jnt_to_id[joint_name]
+                current_pos[rvl_jnt_idx] = target_pos 
 
         if wait:
             success = self._wait_to_reach_jnt_goal(target_pos, joint_name=joint_name, mode="pos")
@@ -104,26 +106,65 @@ class UR5eRobotReal(Robot):
         return success 
 
     
-    def set_jvel(self, velocity, joint_name=None, wait=False, *args, **kwargs):
-        """[summary]
+    def set_jvel(self, velocity, acc=0.1, joint_name=None, wait=False, *args, **kwargs):
+        """Set joint velocity in rad/s
         
         Args:
-            velocity ([type]): [description]
-            joint_name ([type], optional): [description]. Defaults to None.
+            velocity (list): list of target joint velocity values
+            joint_name (str, optional): If not provided, velocity should be list and all joints
+                will be turned on at specified velocity. Defaults to None.
             wait (bool, optional): [description]. Defaults to False.
         """
+        velocity = copy.deepcopy(velocity)
+        if joint_name is None:
+            if (len(velocity) == 6):
+                gripper_vel = self.get_jvel(self.gripper_jnt_names[0])
+                velocity.append(gripper_vel)
+
+            if (len(velocity != 7)):
+                raise ValueError("Velocity should contain 6 or 7 elements"
+                                    "if the joint name is not provided")
+
+            target_vel = velocity
+
+        else:
+            if joint_name in self.gripper_jnt_names:
+
+            else:
+                target_vel_joint = velocity
+                target_vel = [0.0] * 7
+                rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
+                target_vel[rvl_jnt_idx] = target_vel_joint
+
+        prog = "speedj([%f, %f, %f, %f, %f, %f], a=%f)" % target_vel*, acc
+        self.send_program(prog)
+
+        #TODO see about getting back joint velocity info from the robot to use for success flag
 
     
     def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, *args, **kwargs):
+        """Set cartesian space pose of end effector
+        
+        Args:
+            pos (list): Desired x, y, z positions in the robot's base frame to move to
+            ori (list, optional): Desired euler angle orientation of the end effector. Defaults to None.
+            acc (float, optional): Acceleration of end effector during beginning of movement. Defaults to 0.1.
+            vel (float, optional): Velocity of end effector during movement. Defaults to 0.05.
+        
+        Returns:
+            [type]: [description]
+        """
         if ori is None:
-            ori = self.get_ee_pose[-1]
+            ori = self.get_ee_pose[-1] # last index of return is the euler angle representation
         ee_pos = [pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]]
         prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % *ee_pos, acc, vel
         self.send_program(prog)
 
+        # TODO implement blocking version that checks whether or not we got there for success flag
+
     
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, *args, **kwargs):
-        """[summary]
+        """Move end effector in straight line while maintaining a particular orientation
         
         Args:
             delta_xyz (list): Goal change in x, y, z position of end effector
@@ -143,34 +184,58 @@ class UR5eRobotReal(Robot):
         waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
 
         for i in range(waypoints.shape[0]):
-            target_j
+            self.set_ee_pose(waypoints[i, :].flatten().tolist(), ee_quat)
+            # see to what extent this type of straight line end effector motion requires
+            # breaking up the path like this
 
-        ee_pose[0]
-        ee_pose[1]
-        ee_pose[2]
+        # or instead of this ^ just
+        # ee_pos[0] += delta_xyz[0]
+        # ee_pos[1] += delta_xyz[1]
+        # ee_pos[2] += delta_xyz[2]
 
-        # send movel command to robot
-        return 
+        # self.set_ee_pose(ee_pos, ee_euler)
+         
 
 
     def get_jpos(self, joint_name=None, wait=False):
-        """[summary]
+        """Get current joint angles of the robot   
         
         Args:
-            joint_name ([type], optional): [description]. Defaults to None.
+            joint_name (str, optional): Defaults to None.
 
         Return:
-            jpos ([list]): list of current joint positions in radians
+            jpos (list): list of current joint positions in radians
         """
         jdata = self.monitor.get_joint_data(wait)
-        jpos = [jdata["q_actual0"], jdata["q_actual1", jdata["q_actual2"], jdata["q_actual3"], jdata["q_actual4"], jdata["q_actual5"]]
+        jpos = [jdata["q_actual0"], jdata["q_actual1"], jdata["q_actual2"], jdata["q_actual3"], jdata["q_actual4"], jdata["q_actual5"]]
         return jpos 
 
+    def get_jvel(self, joint_name=None, wait=False):
+        """Get current joint angular velocities of the robot   
+        
+        Args:
+            joint_name (str, optional): Defaults to None.
 
-    def get_jvel(self, joint_name=None):
+        Return:
+            jvel (list): list of current joint angular velocities in radians/s
+        """        
+        jdata = self.monitor.get_joint_data(wait)
+        jvel = [jdata["qd_actual0"], jdata["qd_actual1"], jdata["qd_actual2"], jdata["qd_actual3"], jdata["qd_actual4"], jdata["qd_actual5"]]
+        return jvel
 
 
     def get_ee_pose(self, wait=False):
+        """Get current cartesian pose of the end effector, in the robot's base frame
+        
+        Args:
+            wait (bool, optional): [description]. Defaults to False.
+        
+        Returns:
+            list: x, y, z position of the end effector
+            list: quaternion representation of the end effector orientation
+            list: rotation matrix representation of the end effector orientation
+            list: euler angle representation of the end effector orientation
+        """
         pose_data = self.monitor.get_cartesian_info(wait)
         if pose_data:
             pos = [pose_data["X"], pose_data["Y"], pose_data["Z"]]
@@ -183,12 +248,30 @@ class UR5eRobotReal(Robot):
 
 
     def _get_dist(self, target, joints=False):
+        """General distance function with flag for determining configuration space distance
+        or cartesian space distance
+        
+        Args:
+            target (list): Target configuration to compute distance to, from current
+            joints (bool, optional): If True, compute distance in configuration space, otherwise in cartesian space. Defaults to False.
+        
+        Returns:
+            float: Distance value, depending on which type of distance was requestedf
+        """
         if joints:
             return self._get_joints_dist(target)
         else:
             return self._get_lin_dist(target)
 
     def _get_lin_dist(self, target):
+        """Get cartesian space linear distance between current and target end effector pose
+        
+        Args:
+            target (list): Target pose for end effector
+        
+        Returns:
+            float: euclidean distance between current end effector pose and target pose
+        """
         # FIXME: we have an issue here, it seems sometimes the axis angle received from robot
         pose = URRobot.getl(self, wait=True)
         dist = 0
@@ -199,6 +282,14 @@ class UR5eRobotReal(Robot):
         return dist ** 0.5
 
     def _get_joints_dist(self, target):
+        """Compute euclidean distance to target
+        
+        Args:
+            target (list): Target joint angles to compute distance to, with respect to current joint angles
+        
+        Returns:
+            list: euclidean distance between current and target joint configuration
+        """
         joints = self.get_jpos(wait=True)
         dist = 0
         for i in range(6):
@@ -206,6 +297,19 @@ class UR5eRobotReal(Robot):
         return dist ** 0.5
 
     def _wait_to_reach_jnt_goal(self, goal, joint_name=None, mode='pos', threshold=None, timeout=5):
+        """Blocking function to ensure robot reaches goal configuration before doing anything else
+        
+        Args:
+            goal (list): Target joint configuration
+            joint_name ([type], optional): [description]. Defaults to None.
+            mode (str, optional): Control mode ('pos' or 'vel'). Defaults to 'pos'.
+            threshold (float, optional): Threshold to specify maximum allowable distance between current and target. Defaults to None.
+            timeout (int, optional): Time in seconds before command returns as failed. Defaults to 5.
+        
+        Raises:
+            RobotException: [description]
+            RobotException: [description]
+        """
 
         start_dist = self._get_joint_dist(goal)
         if threshold is None:
@@ -230,10 +334,6 @@ class UR5eRobotReal(Robot):
             else:
                 count = 0
 
-
-    def _format_move_command(self, ur_command, tpose, acc, vel, radius=0, prefix=""):
-
-        move_command = "{}({}[{},{},{},{},{},{}], a={}, v={}, r={})" % ur_command, prefix, *tpose
 
     def _build_jnt_id(self):
         """
