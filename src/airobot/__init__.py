@@ -53,6 +53,10 @@ def create_robot(robot_name, pb=True, robot_cfg=None):
         # robot in pybullet should be named with _pybullet suffix
         robot_path += '_pybullet'
         robot_node += '_pybullet'
+    else:
+        # real robot should be named with _real suffix
+        robot_path += '_real'
+        robot_node += '_real'
     with open(robot_path + '.py') as f:
         node = ast.parse(f.read())
     classes = [n for n in node.body if isinstance(n, ast.ClassDef)]
