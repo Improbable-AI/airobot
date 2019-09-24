@@ -7,7 +7,7 @@ from __future__ import print_function
 
 import rospy
 import numpy
-import transforms3d
+from transforms3d.euler import euler2quat, euler2mat
 
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
@@ -245,8 +245,8 @@ class UR5eRobotReal(Robot):
             pos = [pose_data["X"], pose_data["Y"], pose_data["Z"]]
             euler_ori = [pose_data["Rx"], pose_data["Ry"], pose_data["Rz"]]
 
-            rot_mat = transforms3d.euler.euler2mat(euler_ori)
-            quat_ori = transforms3d.euler.euler2quat(euler_ori)
+            rot_mat = euler2mat(euler_ori)
+            quat_ori = euler2quat(euler_ori)
 
         return list(pos), list(quat_ori), list(rot_mat), list(euler)
 
