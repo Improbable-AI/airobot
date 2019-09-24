@@ -15,6 +15,8 @@ from airobot.sensor.camera.rgbd_cam import RGBDCamera
 from airobot.utils import tcp_util
 from airobot.utils import urscript_util
 
+class RobotException(Exception):
+    pass
 
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, host):
@@ -23,8 +25,10 @@ class UR5eRobotReal(Robot):
             rospy.init_node('airobot', anonymous=True)
         except rospy.exceptions.ROSException:
             rospy.logwarn('ROS node [airobot] has already been initialized')
-        self.camera = RGBDCamera(cfgs=cfgs)
         
+        self.camera = RGBDCamera(cfgs=cfgs)
+        self._init_consts()
+
         self.host = host
 
         self.monitor = tcp_util.SecondaryMonitor(self.host)
@@ -74,32 +78,31 @@ class UR5eRobotReal(Robot):
         success = False
 
         if joint_name is None:
-            if len(position) == 6:
-                gripper_pos = self.get_jpos(self.gripper_jnt_names[0])
-                position.append(gripper_pos)
+            # if len(position) == 6:
+            #     gripper_pos = self.get_jpos(self.gripper_jnt_names[0])
+            #     position.append(gripper_pos)
             
-            if len(position) != 7:
+            if len(position) != 6:
                 raise ValueError("position should contain 6 or 7 elements if" 
                                     "joint_name is not provided")
 
-            gripper_pos = position[-1] 
-            gripper_pos = min(self.gripper_open_angle, max(self.gripper_close_angle, gripper_pos))
+            # gripper_pos = position[-1] 
+            # gripper_pos = min(self.gripper_open_angle, max(self.gripper_close_angle, gripper_pos))
 
-            position[-1] = gripper_pos
+            # position[-1] = gripper_pos
 
             target_pos = position 
-            prog = self._format_move_command("movej", joints, acc, vel)
-            self.send_program(prog)
         else:
             if joint_name is self.gripper_jnt_names:
-
+                continue # don't do anything with gripper yet
             else:
                 target_pos = position
                 current_pos = self.get_jpos()
                 rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
-                jnt_id = self.jnt_to_id[joint_name]
                 current_pos[rvl_jnt_idx] = target_pos 
-
+        
+        prog = "movej([%f, %f, %f, %f, %f, %f])" % target_pos*
+        self.send_program(prog)
         if wait:
             success = self._wait_to_reach_jnt_goal(target_pos, joint_name=joint_name, mode="pos")
 
@@ -117,11 +120,11 @@ class UR5eRobotReal(Robot):
         """
         velocity = copy.deepcopy(velocity)
         if joint_name is None:
-            if (len(velocity) == 6):
-                gripper_vel = self.get_jvel(self.gripper_jnt_names[0])
-                velocity.append(gripper_vel)
+            # if (len(velocity) == 6):
+            #     gripper_vel = self.get_jvel(self.gripper_jnt_names[0])
+            #     velocity.append(gripper_vel)
 
-            if (len(velocity != 7)):
+            if (len(velocity != 6)):
                 raise ValueError("Velocity should contain 6 or 7 elements"
                                     "if the joint name is not provided")
 
@@ -129,7 +132,7 @@ class UR5eRobotReal(Robot):
 
         else:
             if joint_name in self.gripper_jnt_names:
-
+                continue
             else:
                 target_vel_joint = velocity
                 target_vel = [0.0] * 7
@@ -157,7 +160,7 @@ class UR5eRobotReal(Robot):
         if ori is None:
             ori = self.get_ee_pose[-1] # last index of return is the euler angle representation
         ee_pos = [pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]]
-        prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % *ee_pos, acc, vel
+        prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % ee_pos*, acc, vel
         self.send_program(prog)
 
         # TODO implement blocking version that checks whether or not we got there for success flag
@@ -185,6 +188,7 @@ class UR5eRobotReal(Robot):
 
         for i in range(waypoints.shape[0]):
             self.set_ee_pose(waypoints[i, :].flatten().tolist(), ee_quat)
+            time.sleep(0.01)
             # see to what extent this type of straight line end effector motion requires
             # breaking up the path like this
 

@@ -1,0 +1,17 @@
+import time
+
+import airobot as ar
+
+
+def main():
+    """
+    Move the robot end effector in a straight line
+    """
+    robot = ar.create_robot('ur5e', pb=False)
+    robot.go_home()
+    robot.move_ee_xyz([0.1, 0.1, 0.1])
+    time.sleep(3)
+
+
+if __name__ == '__main__':
+    main()
