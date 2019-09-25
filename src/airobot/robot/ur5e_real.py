@@ -5,36 +5,38 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# import rospy
-# import numpy as np
+import rospy
+import numpy as np
 import copy
-# import time
+
+import time
 from transforms3d.euler import euler2quat, euler2mat
 
 from airobot.robot.robot import Robot
-# from airobot.sensor.camera.rgbd_cam import RGBDCamera
-
 from airobot.utils import tcp_util
 # from airobot.utils import urscript_util
-from airobot.utils.common import RobotException
+
+
+from airobot.sensor.camera.rgbd_cam import RGBDCamera
 
 
 class UR5eRobotReal(Robot):
-    def __init__(self, cfgs, host):
-        super(UR5eRobotReal, self).__init__(cfgs=cfgs)
-        # try:
-        #     rospy.init_node('airobot', anonymous=True)
-        # except rospy.exceptions.ROSException:
-        #     rospy.logwarn('ROS node [airobot] has already been initialized')
+    def __init__(self, cfgs, host, use_cam=False, use_arm=True):
+        try:
+            rospy.init_node('ur5e', anonymous=True)
+        except rospy.exceptions.ROSException:
+            rospy.logwarn('ROS node [ur5e] has already been initialized')
+        if use_cam:
+            self.camera = RGBDCamera(cfgs=cfgs)
+        if use_arm:
+            super(UR5eRobotReal, self).__init__(cfgs=cfgs)
 
-        # self.camera = RGBDCamera(cfgs=cfgs)
-        self._init_consts()
-        self._home_position = [1.57, -1.5, 2.0, -2.05, -1.57, 0]
+            self._init_consts()
 
-        self.host = host
+            self.host = host
 
-        self.monitor = tcp_util.SecondaryMonitor(self.host)
-        self.monitor.wait()  # make contact with robot before anything
+            self.monitor = tcp_util.SecondaryMonitor(self.host)
+            self.monitor.wait()  # make contact with robot before anything
 
     def send_program(self, prog):
         """
@@ -146,7 +148,7 @@ class UR5eRobotReal(Robot):
             #     gripper_vel = self.get_jvel(self.gripper_jnt_names[0])
             #     velocity.append(gripper_vel)
 
-            if (len(velocity != 6)):
+            if len(velocity) != 6:
                 raise ValueError("Velocity should contain 6 or 7 elements"
                                  "if the joint name is not provided")
 
@@ -195,15 +197,15 @@ class UR5eRobotReal(Robot):
             ori = self.get_ee_pose()[-1]  # last index of return is euler angle
         ee_pos = [pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]]
         prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % (
-                                                                ee_pos[0],
-                                                                ee_pos[1],
-                                                                ee_pos[2],
-                                                                ee_pos[3],
-                                                                ee_pos[4],
-                                                                ee_pos[5],
-                                                                acc,
-                                                                vel,
-                                                                0.0)
+            ee_pos[0],
+            ee_pos[1],
+            ee_pos[2],
+            ee_pos[3],
+            ee_pos[4],
+            ee_pos[5],
+            acc,
+            vel,
+            0.0)
         self.send_program(prog)
 
         # if wait:
@@ -383,8 +385,8 @@ class UR5eRobotReal(Robot):
                 as failed. Defaults to 5.
 
         Raises:
-            RobotException: [description]
-            RobotException: [description]
+            RuntimeError: [description]
+            RuntimeError: [description]
         """
 
         start_dist = self._get_joints_dist(goal)
@@ -396,7 +398,7 @@ class UR5eRobotReal(Robot):
         count = 0
         while True:
             if not self.is_running():
-                raise RobotException("Robot stopped")
+                raise RuntimeError("Robot stopped")
 
             dist = self._get_joints_dist(goal)
 
@@ -406,7 +408,7 @@ class UR5eRobotReal(Robot):
 
                 count += 1
                 if count > timeout * 10:
-                    raise RobotException("Goal not reached, timeout reached")
+                    raise RuntimeError("Goal not reached, timeout reached")
             else:
                 count = 0
 
@@ -417,6 +419,7 @@ class UR5eRobotReal(Robot):
         # joint damping for inverse kinematics
         self._ik_jd = 0.05
         self._thread_sleep = 0.001
+        self._home_position = [1.57, -1.5, 2.0, -2.05, -1.57, 0]
 
         self.arm_jnt_names = [
             'shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',

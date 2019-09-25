@@ -9,16 +9,16 @@ So do not rely on it unless you know no other client is running (Hint the UR jav
 http://support.universal-robots.com/Technical/PrimaryAndSecondaryClientInterface
 """
 
-
-from threading import Thread, Condition, Lock
 import logging
-import struct
 import socket
-from copy import copy
+import struct
 import time
+from copy import copy
+from threading import Thread, Condition, Lock
 
 """
-Code built off of ursecmon.py in python-urx library (https://github.com/anthonysimeonov/python-urx/blob/master/urx/ursecmon.py)
+Code built off of ursecmon.py in python-urx library 
+(https://github.com/anthonysimeonov/python-urx/blob/master/urx/ursecmon.py)
 written by Oliver Roulet-Dubonnet (see original author info below)
 __author__ = "Olivier Roulet-Dubonnet"
 __copyright__ = "Copyright 2011-2013, Sintef Raufoss Manufacturing"
@@ -40,6 +40,7 @@ class Program(object):
 
     def __str__(self):
         return "Program({})".format(self.program)
+
     __repr__ = __str__
 
 
@@ -168,9 +169,9 @@ class ParserUtils(object):
 
             elif ptype == 3:
                 if self.version >= (3, 0):
-                    fmt = "iBiibbddbbddffffBBb"     # firmware >= 3.0
+                    fmt = "iBiibbddbbddffffBBb"  # firmware >= 3.0
                 else:
-                    fmt = "iBhhbbddbbddffffBBb"     # firmware < 3.0
+                    fmt = "iBhhbbddbbddffffBBb"  # firmware < 3.0
 
                 allData["MasterBoardData"] = \
                     self._get_data(
@@ -417,7 +418,9 @@ class ParserUtils(object):
                     data = data[1:]
                     counter += 1
                     if counter > limit:
-                        self.logger.warning("tried %s times to find a packet in data, advertised packet size: %s, type: %s", counter, psize, ptype)
+                        self.logger.warning(
+                            "tried %s times to find a packet in data, advertised packet size: %s, type: %s", counter,
+                            psize, ptype)
                         self.logger.warning("Data length: %s", len(data))
                         limit = limit * 10
                 elif len(data) >= psize:
@@ -428,7 +431,8 @@ class ParserUtils(object):
                     return (data[:psize], data[psize:])
                 else:
                     # packet is not complete
-                    self.logger.debug("Packet is not complete, advertised size is %s, received size is %s, type is %s", psize, len(data), ptype)
+                    self.logger.debug("Packet is not complete, advertised size is %s, received size is %s, type is %s",
+                                      psize, len(data), ptype)
                     return None
             else:
                 # self.logger.debug("data smaller than 5 bytes")
@@ -436,7 +440,6 @@ class ParserUtils(object):
 
 
 class SecondaryMonitor(Thread):
-
     """
     Monitor data from secondary port and send programs to robot
     """
@@ -448,7 +451,7 @@ class SecondaryMonitor(Thread):
         self._dict = {}
         self._dictLock = Lock()
         self.host = host
-        secondary_port = 30002    # Secondary client interface on Universal Robots
+        secondary_port = 30002  # Secondary client interface on Universal Robots
         self._s_secondary = socket.create_connection((self.host, secondary_port), timeout=0.5)
         self._prog_queue = []
         self._prog_queue_lock = Lock()
