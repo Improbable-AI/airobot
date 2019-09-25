@@ -209,6 +209,8 @@ class UR5eRobotReal(Robot):
         # if wait:
         # TODO implement blocking version
 
+        # TODO implement computeIK version
+
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True,
                     *args, **kwargs):
         """Move end effector in straight line while maintaining orientation
@@ -294,6 +296,17 @@ class UR5eRobotReal(Robot):
                                   euler_ori[2]).flatten().tolist()
 
         return pos, quat_ori, rot_mat, euler_ori
+
+    def compute_ik(self, ee_pose):
+        """
+        Function to obtain the joint angles corresponding
+        to a particular end effector pose
+
+        Args:
+            ee_pose (list): End effector pose, specified as
+                [x, y, z, roll, pitch, yaw]
+        """
+        raise NotImplementedError
 
     def _get_dist(self, target, joints=False):
         """

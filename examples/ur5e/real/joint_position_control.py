@@ -2,12 +2,14 @@ import time
 
 import airobot as ar
 
+
 def rad2deg(joint_values):
     deg_values = []
     for i, val in enumerate(joint_values):
         deg_values.append(val * (180/3.1415))
 
     return deg_values
+
 
 def main():
     """
@@ -56,8 +58,6 @@ def main():
     time.sleep(1)
     
     robot.close()
-
-
 
 if __name__ == '__main__':
     main()
