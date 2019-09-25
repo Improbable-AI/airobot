@@ -24,16 +24,17 @@ def main():
     """
     Move all the joints of the robot in a sine-wave fashion
     """
-    robot = ar.create_robot('ur5e', pb=False)
+    robot = ar.create_robot('ur5e', pb=False, robot_cfg={
+                            'host': '128.30.31.59'})
     robot.go_home()
 
-    A = 0.2
-    f = 0.4
+    A = 0.4
+    f = 0.3
     start_time = time.time()
     while True:
         elapsed_time = time.time() - start_time
         vels = [sin_wave(elapsed_time, f, A)] * robot.arm_dof
-        robot.set_jvel(vels)
+        robot.set_jvel(vels[0], joint_name='shoulder_pan_joint')
         time.sleep(0.01)
 
 

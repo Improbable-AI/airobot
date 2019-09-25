@@ -28,7 +28,7 @@ def main():
     current_pos = robot.get_jpos()
     print("Current joint configuration (degrees): ")
     print(rad2deg(current_pos))
-    time.sleep(1)
+    # time.sleep(1)
 
     goal_pos = current_pos 
     goal_pos[0] += 0.1

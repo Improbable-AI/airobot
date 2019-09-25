@@ -70,7 +70,7 @@ class UR5eRobotReal(Robot):
         Move the robot to a pre-defined home pose
         """
         # 6 joints for the arm, 7th joint for the gripper
-        self.set_jpos(self._home_position)
+        self.set_jpos(self._home_position, wait=True)
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
@@ -116,8 +116,8 @@ class UR5eRobotReal(Robot):
         
         prog = "movej([%f, %f, %f, %f, %f, %f])" % (target_pos[0], target_pos[1], target_pos[2], target_pos[3], target_pos[4], target_pos[5])
         self.send_program(prog)
-        # if wait:
-        #     success = self._wait_to_reach_jnt_goal(target_pos, joint_name=joint_name, mode="pos")
+        if wait:
+            success = self._wait_to_reach_jnt_goal(target_pos, joint_name=joint_name, mode="pos")
 
         return success 
 
@@ -152,13 +152,13 @@ class UR5eRobotReal(Robot):
                 rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
                 target_vel[rvl_jnt_idx] = target_vel_joint
 
-        prog = "speedj([%f, %f, %f, %f, %f, %f], a=%f)" % target_vel[0], target_vel[1], target_vel[2], target_vel[3], target_vel[4], target_vel[5], acc
+        prog = "speedj([%f, %f, %f, %f, %f, %f], a=%f)" % (target_vel[0], target_vel[1], target_vel[2], target_vel[3], target_vel[4], target_vel[5], acc)
         self.send_program(prog)
 
         #TODO see about getting back joint velocity info from the robot to use for success flag
 
     
-    def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, *args, **kwargs):
+    def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, wait=False, *args, **kwargs):
         """Set cartesian space pose of end effector
         
         Args:
@@ -173,13 +173,14 @@ class UR5eRobotReal(Robot):
         if ori is None:
             ori = self.get_ee_pose()[-1] # last index of return is the euler angle representation
         ee_pos = [pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]]
-        prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % ee_pos[0], ee_pos[1], ee_pos[2], ee_pos[3], ee_pos[4], ee_pos[5], acc, vel
+        prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % (ee_pos[0], ee_pos[1], ee_pos[2], ee_pos[3], ee_pos[4], ee_pos[5], acc, vel, 0.0)
         self.send_program(prog)
 
-        # TODO implement blocking version that checks whether or not we got there for success flag
+        # if wait:
+            # TODO implement blocking version that checks whether or not we got there for success flag
 
     
-    def move_ee_xyz(self, delta_xyz, eef_step=0.005, *args, **kwargs):
+    def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True, *args, **kwargs):
         """Move end effector in straight line while maintaining a particular orientation
         
         Args:
@@ -199,18 +200,18 @@ class UR5eRobotReal(Robot):
         waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
         waypoints = current_pos + waypoints_sp / float(path_len) * delta_xyz
 
-        for i in range(waypoints.shape[0]):
-            self.set_ee_pose(waypoints[i, :].flatten().tolist(), ee_quat)
-            time.sleep(0.01)
+        # for i in range(waypoints.shape[0]):
+        #     self.set_ee_pose(waypoints[i, :].flatten().tolist(), ee_quat)
+        #     time.sleep(0.01)
             # see to what extent this type of straight line end effector motion requires
             # breaking up the path like this
 
         # or instead of this ^ just
-        # ee_pos[0] += delta_xyz[0]
-        # ee_pos[1] += delta_xyz[1]
-        # ee_pos[2] += delta_xyz[2]
+        ee_pos[0] += delta_xyz[0]
+        ee_pos[1] += delta_xyz[1]
+        ee_pos[2] += delta_xyz[2]
 
-        # self.set_ee_pose(ee_pos, ee_euler)
+        self.set_ee_pose(ee_pos, ee_euler, wait=wait)
          
 
 
@@ -258,10 +259,10 @@ class UR5eRobotReal(Robot):
             pos = [pose_data["X"], pose_data["Y"], pose_data["Z"]]
             euler_ori = [pose_data["Rx"], pose_data["Ry"], pose_data["Rz"]]
 
-            rot_mat = euler2mat(euler_ori)
-            quat_ori = euler2quat(euler_ori)
+            rot_mat = euler2mat(euler_ori[0], euler_ori[1], euler_ori[2]).flatten().tolist()
+            quat_ori = euler2quat(euler_ori[0], euler_ori[1], euler_ori[2]).flatten().tolist()
 
-        return list(pos), list(quat_ori), list(rot_mat), list(euler_ori)
+        return pos, quat_ori, rot_mat, euler_ori
 
 
     def _get_dist(self, target, joints=False):
@@ -343,7 +344,7 @@ class UR5eRobotReal(Robot):
 
             if not self.monitor.is_program_running():
                 if dist < threshold:
-                    return
+                    return True
 
                 count += 1
                 if count > timeout * 10:
