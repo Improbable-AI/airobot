@@ -5,19 +5,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import rospy
-import numpy as np
 import copy
-
 import time
+
+import numpy as np
+import rospy
 from transforms3d.euler import euler2quat, euler2mat
 
 from airobot.robot.robot import Robot
-from airobot.utils import tcp_util
-# from airobot.utils import urscript_util
-
-
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
+from airobot.utils import tcp_util
 
 
 class UR5eRobotReal(Robot):
@@ -64,7 +61,7 @@ class UR5eRobotReal(Robot):
         prog = "textmsg(%s)" % msg
         self.send_program(prog)
 
-    def is_running(self):
+    def _is_running(self):
         return self.monitor.running
 
     def go_home(self):
@@ -276,6 +273,8 @@ class UR5eRobotReal(Robot):
     def get_ee_pose(self, wait=False):
         """Get current cartesian pose of the EE, in the robot's base frame
 
+        TODO: why do we need to wait here?
+
         Args:
             wait (bool, optional): [description]. Defaults to False.
 
@@ -310,115 +309,74 @@ class UR5eRobotReal(Robot):
         """
         raise NotImplementedError
 
-    def _get_dist(self, target, joints=False):
+    def _wait_to_reach_jnt_goal(self, goal, joint_name=None, mode='pos'):
         """
-        General distance function with flag for determining
-        configuration space distance or cartesian space distance
+        Block the code to wait for the joint moving to the specified goal.
+        The goal can be a desired velocity(s) or a desired position(s).
+        Max waiting time is self.cfgs.TIMEOUT_LIMIT
 
         Args:
-            target (list): Target configuration to compute distance to,
-                from current
-            joints (bool, optional): If True, compute distance in
-                configuration space, otherwise in cartesian space.
-                Defaults to False.
+            goal (float or list): goal positions or velocities
+            joint_name (str): if it's none, all the actuated
+                joints are compared.
+                Otherwise, only the specified joint is compared
+            mode (str): 'pos' or 'vel'
 
         Returns:
-            float: Distance value, depending on which type of distance
-                was requested
+            if the goal is reached or not
         """
-        if joints:
-            return self._get_joints_dist(target)
-        else:
-            return self._get_lin_dist(target)
-
-    def _get_lin_dist(self, target):
-        """Get cartesian space linear distance between current and target
-            end effector pose
-
-        Args:
-            target (list): Target pose for end effector
-
-        Returns:
-            float: euclidean distance between current end effector
-                pose and target pose
-        """
-        pose = self.get_ee_pose()
-        dist = 0
-        for i in range(3):
-            dist += (target[i] - pose[i]) ** 2
-        for i in range(3, 6):
-            dist += ((target[i] - pose[i]) / 5) ** 2  # arbitraty length like
-        return dist ** 0.5
-
-    def _get_joints_dist(self, target):
-        """Compute euclidean distance to target
-
-        Args:
-            target (list): Target joint angles to compute distance to,
-                with respect to current joint angles
-
-        Returns:
-            list: euclidean distance between current and target
-                joint configuration
-        """
-        joints = self.get_jpos(wait=True)
-        dist = 0
-        for i in range(6):
-            dist += (target[i] - joints[i]) ** 2
-        return dist ** 0.5
-
-    def _wait_to_reach_jnt_goal(self, goal, joint_name=None, mode='pos',
-                                threshold=None, timeout=5):
-        """
-        Blocking function to ensure robot reaches goal configuration before
-        doing anything else
-
-        Args:
-            goal (list): Target joint configuration
-            joint_name ([type], optional): [description]. Defaults to None.
-            mode (str, optional): Control mode ('pos' or 'vel').
-                Defaults to 'pos'.
-            threshold (float, optional): Threshold to specify maximum
-                allowable distance between current and target.
-                Defaults to None.
-            timeout (int, optional): Time in seconds before command returns
-                as failed. Defaults to 5.
-
-        Raises:
-            RuntimeError: [description]
-            RuntimeError: [description]
-        """
-
-        start_dist = self._get_joints_dist(goal)
-        if threshold is None:
-            threshold = start_dist * 0.8
-            if threshold < 0.001:
-                threshold = 0.001
-
-        count = 0
+        success = False
+        start_time = time.time()
         while True:
-            if not self.is_running():
+            if not self._is_running():
                 raise RuntimeError("Robot stopped")
 
-            dist = self._get_joints_dist(goal)
+            if time.time() - start_time > self.cfgs.TIMEOUT_LIMIT:
+                pt_str = 'Unable to move to joint goals [mode: %s] (%s)' \
+                         ' within %f s' % (mode, str(goal),
+                                           self.cfgs.TIMEOUT_LIMIT)
+                arutil.print_red(pt_str)
+                return success
+            if self._reach_jnt_goal(goal, joint_name, mode=mode):
+                success = True
+                break
+            time.sleep(0.001)
+        return success
 
-            if not self.monitor.is_program_running():
-                if dist < threshold:
-                    return True
+    def _reach_jnt_goal(self, goal, joint_name=None, mode='pos'):
+        """
+        Check if the joint reached the goal or not.
+        The goal can be a desired velocity(s) or a desired position(s).
 
-                count += 1
-                if count > timeout * 10:
-                    raise RuntimeError("Goal not reached, timeout reached")
-            else:
-                count = 0
+        Args:
+            goal (float or list): goal positions or velocities
+            joint_name (str): if it's none, all the
+                actuated joints are compared.
+                Otherwise, only the specified joint is compared
+            mode (str): 'pose' or 'vel'
+
+        Returns:
+            if the goal is reached or not
+        """
+        goal = np.array(goal)
+        if mode == 'pos':
+            new_jnt_val = self.get_jpos(joint_name)
+        elif mode == 'vel':
+            new_jnt_val = self.get_jvel(joint_name)
+        else:
+            raise ValueError('Only pos and vel modes are supported!')
+        new_jnt_val = np.array(new_jnt_val)
+        jnt_diff = new_jnt_val - goal
+        error = np.max(np.abs(jnt_diff))
+        if error < self.cfgs.MAX_JOINT_ERROR:
+            return True
+        else:
+            return False
 
     def _init_consts(self):
         """
         Initialize constants
         """
-        # joint damping for inverse kinematics
-        self._ik_jd = 0.05
-        self._thread_sleep = 0.001
         self._home_position = [1.57, -1.5, 2.0, -2.05, -1.57, 0]
 
         self.arm_jnt_names = [
@@ -446,5 +404,5 @@ class UR5eRobotReal(Robot):
         self._max_torques.append(20)
         # self.camera = PyBulletCamera(p, self.cfgs)
 
-    def close(self):
+    def _close(self):
         self.monitor.close()
