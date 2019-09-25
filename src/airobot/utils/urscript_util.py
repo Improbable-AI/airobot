@@ -9,7 +9,6 @@ built off of urscript.py, part of python-urx library (https://github.com/anthony
 
 import logging
 
-
 # Controller Settings
 CONTROLLER_PORTS = [0, 1]
 CONTROLLER_VOLTAGE = [
@@ -41,7 +40,7 @@ class URScript(object):
         self.program = ""
 
     def __call__(self):
-        if(self.program == ""):
+        if (self.program == ""):
             self.logger.debug(u"urscript program is empty")
             return ""
 
@@ -70,7 +69,7 @@ class URScript(object):
         Ensure that unsigned char values are constrained
         to between 0 and 255.
         """
-        assert(isinstance(value, int))
+        assert (isinstance(value, int))
         if value < 0:
             value = 0
         elif value > 255:
@@ -79,27 +78,27 @@ class URScript(object):
 
     def _set_analog_inputrange(self, port, vrange):
         if port in CONTROLLER_PORTS:
-            assert(vrange in CONTROLLER_VOLTAGE)
+            assert (vrange in CONTROLLER_VOLTAGE)
         elif port in TOOL_PORTS:
-            assert(vrange in TOOL_VOLTAGE)
+            assert (vrange in TOOL_VOLTAGE)
         msg = "set_analog_inputrange({},{})".format(port, vrange)
         self.add_line_to_program(msg)
 
     def _set_analog_output(self, input_id, signal_level):
-        assert(input_id in [0, 1])
-        assert(signal_level in [0, 1])
+        assert (input_id in [0, 1])
+        assert (signal_level in [0, 1])
         msg = "set_analog_output({}, {})".format(input_id, signal_level)
         self.add_line_to_program(msg)
 
     def _set_analog_outputdomain(self, port, domain):
-        assert(domain in OUTPUT_DOMAIN_VOLTAGE)
+        assert (domain in OUTPUT_DOMAIN_VOLTAGE)
         msg = "set_analog_outputdomain({},{})".format(port, domain)
         self.add_line_to_program(msg)
 
     def _set_payload(self, mass, cog=None):
         msg = "set_payload({}".format(mass)
         if cog:
-            assert(len(cog) == 3)
+            assert (len(cog) == 3)
             msg = "{},{}".format(msg, cog)
         msg = "{})".format(msg)
         self.add_line_to_program(msg)
@@ -111,7 +110,7 @@ class URScript(object):
         self.add_line_to_program(msg)
 
     def _set_tool_voltage(self, voltage):
-        assert(voltage in [0, 12, 24])
+        assert (voltage in [0, 12, 24])
         msg = "set_tool_voltage({})".format(voltage)
         self.add_line_to_program(msg)
 
