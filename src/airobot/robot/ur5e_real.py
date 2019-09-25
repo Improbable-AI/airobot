@@ -32,7 +32,7 @@ class UR5eRobotReal(Robot):
         self.host = host
 
         self.monitor = tcp_util.SecondaryMonitor(self.host)
-        self.monitor.wait() # make sure to make contact with the robot before doing anything
+        self.monitor.wait()  # make sure to make contact with the robot before doing anything
 
     def send_program(self, prog):
         """
@@ -59,12 +59,19 @@ class UR5eRobotReal(Robot):
         prog = "textmsg(%s)" % msg
         self.send_program(prog)
 
+    def go_home(self):
+        """
+        Move the robot to a pre-defined home pose
+        """
+        # 6 joints for the arm, 7th joint for the gripper
+        jnt_positions = [0., -1.5, 2.0, -2.05, -1.57]
+        self.set_jpos(jnt_positions)
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
         Method to send a joint position command to the robot
 
-        Args: 
+        Args:
             position (float or list): desired joint position(s)
             joint_name (str): If not provided, position should be a list and
                 all actuated joints will be moved to specified positions. If 
