@@ -3,6 +3,9 @@ from __future__ import division
 from __future__ import print_function
 
 
+class RobotException(Exception):
+    pass
+
 def print_red(skk):
     """
     print the text in red color

@@ -5,29 +5,32 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import rospy
-import numpy
+# import rospy
+import numpy as np
+import copy
+import time
 from transforms3d.euler import euler2quat, euler2mat
 
 from airobot.robot.robot import Robot
-from airobot.sensor.camera.rgbd_cam import RGBDCamera
+# from airobot.sensor.camera.rgbd_cam import RG`BDCamera
 
 from airobot.utils import tcp_util
 from airobot.utils import urscript_util
+from airobot.utils.common import RobotException
 
-class RobotException(Exception):
-    pass
+
 
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, host):
         super(UR5eRobotReal, self).__init__(cfgs=cfgs)
-        try:
-            rospy.init_node('airobot', anonymous=True)
-        except rospy.exceptions.ROSException:
-            rospy.logwarn('ROS node [airobot] has already been initialized')
+        # try:
+        #     rospy.init_node('airobot', anonymous=True)
+        # except rospy.exceptions.ROSException:
+        #     rospy.logwarn('ROS node [airobot] has already been initialized')
         
-        self.camera = RGBDCamera(cfgs=cfgs)
+        # self.camera = RGBDCamera(cfgs=cfgs)
         self._init_consts()
+        self._home_position = [1.57, -1.5, 2.0, -2.05, -1.57, 0]
 
         self.host = host
 
@@ -59,13 +62,15 @@ class UR5eRobotReal(Robot):
         prog = "textmsg(%s)" % msg
         self.send_program(prog)
 
+    def is_running(self):
+        return self.monitor.running
+
     def go_home(self):
         """
         Move the robot to a pre-defined home pose
         """
         # 6 joints for the arm, 7th joint for the gripper
-        jnt_positions = [0., -1.5, 2.0, -2.05, -1.57]
-        self.set_jpos(jnt_positions)
+        self.set_jpos(self._home_position)
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
@@ -101,17 +106,18 @@ class UR5eRobotReal(Robot):
             target_pos = position 
         else:
             if joint_name is self.gripper_jnt_names:
-                continue # don't do anything with gripper yet
+                pass # don't do anything with gripper yet
             else:
-                target_pos = position
+                target_pos_joint = position
                 current_pos = self.get_jpos()
                 rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
-                current_pos[rvl_jnt_idx] = target_pos 
+                current_pos[rvl_jnt_idx] = target_pos_joint
+                target_pos = copy.deepcopy(current_pos) 
         
-        prog = "movej([%f, %f, %f, %f, %f, %f])" % target_pos*
+        prog = "movej([%f, %f, %f, %f, %f, %f])" % (target_pos[0], target_pos[1], target_pos[2], target_pos[3], target_pos[4], target_pos[5])
         self.send_program(prog)
-        if wait:
-            success = self._wait_to_reach_jnt_goal(target_pos, joint_name=joint_name, mode="pos")
+        # if wait:
+        #     success = self._wait_to_reach_jnt_goal(target_pos, joint_name=joint_name, mode="pos")
 
         return success 
 
@@ -139,14 +145,14 @@ class UR5eRobotReal(Robot):
 
         else:
             if joint_name in self.gripper_jnt_names:
-                continue
+                pass
             else:
                 target_vel_joint = velocity
                 target_vel = [0.0] * 7
                 rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
                 target_vel[rvl_jnt_idx] = target_vel_joint
 
-        prog = "speedj([%f, %f, %f, %f, %f, %f], a=%f)" % target_vel*, acc
+        prog = "speedj([%f, %f, %f, %f, %f, %f], a=%f)" % target_vel[0], target_vel[1], target_vel[2], target_vel[3], target_vel[4], target_vel[5], acc
         self.send_program(prog)
 
         #TODO see about getting back joint velocity info from the robot to use for success flag
@@ -165,9 +171,9 @@ class UR5eRobotReal(Robot):
             [type]: [description]
         """
         if ori is None:
-            ori = self.get_ee_pose[-1] # last index of return is the euler angle representation
+            ori = self.get_ee_pose()[-1] # last index of return is the euler angle representation
         ee_pos = [pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]]
-        prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % ee_pos*, acc, vel
+        prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % ee_pos[0], ee_pos[1], ee_pos[2], ee_pos[3], ee_pos[4], ee_pos[5], acc, vel
         self.send_program(prog)
 
         # TODO implement blocking version that checks whether or not we got there for success flag
@@ -191,7 +197,7 @@ class UR5eRobotReal(Robot):
             num_pts = 2
         
         waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
-        waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
+        waypoints = current_pos + waypoints_sp / float(path_len) * delta_xyz
 
         for i in range(waypoints.shape[0]):
             self.set_ee_pose(waypoints[i, :].flatten().tolist(), ee_quat)
@@ -255,7 +261,7 @@ class UR5eRobotReal(Robot):
             rot_mat = euler2mat(euler_ori)
             quat_ori = euler2quat(euler_ori)
 
-        return list(pos), list(quat_ori), list(rot_mat), list(euler)
+        return list(pos), list(quat_ori), list(rot_mat), list(euler_ori)
 
 
     def _get_dist(self, target, joints=False):
@@ -284,7 +290,7 @@ class UR5eRobotReal(Robot):
             float: euclidean distance between current end effector pose and target pose
         """
         # FIXME: we have an issue here, it seems sometimes the axis angle received from robot
-        pose = URRobot.getl(self, wait=True)
+        pose = self.get_ee_pose(self)
         dist = 0
         for i in range(3):
             dist += (target[i] - pose[i]) ** 2
@@ -322,7 +328,7 @@ class UR5eRobotReal(Robot):
             RobotException: [description]
         """
 
-        start_dist = self._get_joint_dist(goal)
+        start_dist = self._get_joints_dist(goal)
         if threshold is None:
             threshold = start_dist * 0.8
             if threshold < 0.001:
@@ -346,31 +352,31 @@ class UR5eRobotReal(Robot):
                 count = 0
 
 
-    def _build_jnt_id(self):
-        """
-        Build the mapping from the joint name to joint index
-        """
-        self.jnt_to_id = {}
-        for i in range(p.getNumJoints(self.robot_id)):
-            info = p.getJointInfo(self.robot_id, i)
-            jnt_name = info[1].decode('UTF-8')
-            self.jnt_to_id[jnt_name] = info[0]
+    # def _build_jnt_id(self):
+    #     """
+    #     Build the mapping from the joint name to joint index
+    #     """
+    #     self.jnt_to_id = {}
+    #     for i in range(p.getNumJoints(self.robot_id)):
+    #         info = p.getJointInfo(self.robot_id, i)
+    #         jnt_name = info[1].decode('UTF-8')
+    #         self.jnt_to_id[jnt_name] = info[0]
 
-        # joint ids for the actuators
-        # only the first joint in the gripper is the actuator
-        # in the simulation
-        act_joint_names = self.arm_jnt_names + [self.gripper_jnt_names[0]]
-        self.actuator_ids = [self.jnt_to_id[jnt] for jnt in act_joint_names]
-        # joint ids for all joints
-        self.rvl_jnt_ids = [
-            self.jnt_to_id[jnt] for jnt in self.rvl_joint_names
-        ]
+    #     # joint ids for the actuators
+    #     # only the first joint in the gripper is the actuator
+    #     # in the simulation
+    #     act_joint_names = self.arm_jnt_names + [self.gripper_jnt_names[0]]
+    #     self.actuator_ids = [self.jnt_to_id[jnt] for jnt in act_joint_names]
+    #     # joint ids for all joints
+    #     self.rvl_jnt_ids = [
+    #         self.jnt_to_id[jnt] for jnt in self.rvl_joint_names
+    #     ]
 
-        self.ee_link_id = self.jnt_to_id[self.ee_link]
-        self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
-        self.gripper_jnt_ids = [
-            self.jnt_to_id[jnt] for jnt in self.gripper_jnt_names
-        ]
+    #     self.ee_link_id = self.jnt_to_id[self.ee_link]
+    #     self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
+    #     self.gripper_jnt_ids = [
+    #         self.jnt_to_id[jnt] for jnt in self.gripper_jnt_names
+    #     ]
 
 
     def _init_consts(self):
@@ -404,7 +410,10 @@ class UR5eRobotReal(Robot):
         self._max_torques = [150, 150, 150, 28, 28, 28]
         # a random value for robotiq joints
         self._max_torques.append(20)
-        self.camera = PyBulletCamera(p, self.cfgs)
+        # self.camera = PyBulletCamera(p, self.cfgs)
+
+    def close(self):
+        self.monitor.close()
 
 
 
