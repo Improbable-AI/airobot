@@ -285,7 +285,7 @@ class UR5eRobotReal(Robot):
         Returns:
             list: x, y, z position of the EE (shape: [3])
             list: quaternion representation of the EE orientation (shape: [4])
-            list: rotation matrix representation of the EE orientation (shape: [9])
+            list: rotation matrix representation of the EE orientation (shape: [3, 3])
             list: euler angle representation of the EE orientation (roll, pitch, yaw with
                 static reference frame) (shape: [3])
         """
@@ -296,7 +296,7 @@ class UR5eRobotReal(Robot):
 
             rot_mat = euler2mat(euler_ori[0],
                                 euler_ori[1],
-                                euler_ori[2]).flatten().tolist()
+                                euler_ori[2]).tolist()
             quat_ori = euler2quat(euler_ori[0],
                                   euler_ori[1],
                                   euler_ori[2]).flatten().tolist()
@@ -314,7 +314,7 @@ class UR5eRobotReal(Robot):
             joint_angles (list or flattened np.ndarray): joint angles
 
         Returns:
-            jacobian (np.ndarray)
+            jacobian (list, shape: [6, 6])
         """
         q = kdl.JntArray(self.urdf_chain.getNrOfJoints())
         for i in range(q.rows()):
@@ -323,7 +323,7 @@ class UR5eRobotReal(Robot):
         fg = self.jac_solver.JntToJac(q, jac)
         assert fg == 0, 'KDL JntToJac error!'
         jac_np = kdl_array_to_numpy(jac)
-        return jac_np
+        return jac_np.tolist()
 
     def compute_fk_position(self, jpos, tgt_frame):
         """
@@ -336,8 +336,8 @@ class UR5eRobotReal(Robot):
             tgt_frame (str): target link frame
 
         Returns:
-            translational vector (np.ndarray, shape: [3,])
-            and rotational matrix (np.ndarray, shape: [3, 3])
+            translational vector (list, shape: [3,])
+            and rotational matrix (list, shape: [3, 3])
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -356,8 +356,8 @@ class UR5eRobotReal(Robot):
         if fg == 0:
             raise ValueError('KDL Pos JntToCart error!')
         pose = kdl_frame_to_numpy(kdl_end_frame)
-        pos = pose[:3, 3].flatten()
-        rot = pose[:3, :3]
+        pos = pose[:3, 3].flatten().tolist()
+        rot = pose[:3, :3].tolist()
         return pos, rot
 
     def compute_fk_velocity(self, jpos, jvel, tgt_frame):
@@ -374,7 +374,7 @@ class UR5eRobotReal(Robot):
         Returns:
             translational and rotational
                  velocities (vx, vy, vz, wx, wy, wz)
-                 (np.ndarray, shape: [6,])
+                 (list, shape: [6,])
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -391,8 +391,8 @@ class UR5eRobotReal(Robot):
         if fg == 0:
             raise ValueError('KDL Vel JntToCart error!')
         end_twist = kdl_end_frame.GetTwist()
-        return np.array([end_twist[0], end_twist[1], end_twist[2],
-                         end_twist[3], end_twist[4], end_twist[5]])
+        return [end_twist[0], end_twist[1], end_twist[2],
+                end_twist[3], end_twist[4], end_twist[5]]
 
     def compute_ik(self, pos, ori=None, qinit=None, *args, **kwargs):
         """
