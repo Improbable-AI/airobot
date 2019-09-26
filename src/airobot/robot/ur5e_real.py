@@ -15,7 +15,7 @@ from transforms3d.euler import euler2quat, euler2mat
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
 from airobot.utils import tcp_util
-
+from trac_ik_python import trac_ik
 
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, host, use_cam=False, use_arm=True):
@@ -282,7 +282,8 @@ class UR5eRobotReal(Robot):
             list: x, y, z position of the EE
             list: quaternion representation of the EE orientation
             list: rotation matrix representation of the EE orientation
-            list: euler angle representation of the EE orientation
+            list: euler angle representation of the EE orientation (roll, pitch, yaw with
+                static reference frame)
         """
         pose_data = self.monitor.get_cartesian_info(wait)
         if pose_data:
@@ -403,6 +404,12 @@ class UR5eRobotReal(Robot):
         # a random value for robotiq joints
         self._max_torques.append(20)
         # self.camera = PyBulletCamera(p, self.cfgs)
+
+        robot_description = self.cfgs.ROBOT_DESCRIPTION
+        urdf_string = rospy.get_param(robot_description)
+        self.num_ik_solver = trac_ik.IK(self.cfgs.ROBOT_BASE_FRAME,
+                                        self.cfgs.ROBOT_EE_FRAME,
+                                        urdf_string=urdf_string)
 
     def _close(self):
         self.monitor.close()

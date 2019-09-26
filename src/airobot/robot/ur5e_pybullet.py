@@ -88,12 +88,12 @@ class UR5eRobotPybullet(Robot):
         ur_pos = [0, 0, 1]
         ur_ori = p.getQuaternionFromEuler([0, 0, 0])
         if self.self_collision:
-            self.robot_id = p.loadURDF(self.cfgs.URDF,
+            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
                                        ur_pos,
                                        ur_ori,
                                        flags=p.URDF_USE_SELF_COLLISION)
         else:
-            self.robot_id = p.loadURDF(self.cfgs.URDF, ur_pos, ur_ori)
+            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF, ur_pos, ur_ori)
         self._build_jnt_id()
         if self.self_collision:
             # weird behavior occurs on the gripper

@@ -22,10 +22,9 @@ def create_robot(robot_name, pb=True, robot_cfg=None):
 
     if robot_cfg is None:
         robot_cfg = {}
+
     root_path = os.path.dirname(os.path.realpath(__file__))
     cfgs_root_path = os.path.join(root_path, 'cfgs')
-    urdfs_root_path = os.path.join(root_path, 'urdfs')
-
     robot_pool = []
     for f in os.listdir(cfgs_root_path):
         if f.endswith('_cfg.py'):
@@ -43,9 +42,12 @@ def create_robot(robot_name, pb=True, robot_cfg=None):
     if cfgs is None:
         raise ValueError('Invalid robot name provided, only the following'
                          ' robots are available: {}'.format(robot_pool))
-    urdf = os.path.join(urdfs_root_path,
-                        cfgs.URDF)
-    cfgs.URDF = urdf
+
+    if pb:
+        urdfs_root_path = os.path.join(root_path, 'urdfs')
+        urdf = os.path.join(urdfs_root_path,
+                            cfgs.PYBULLET_URDF)
+        cfgs.PYBULLET_URDF = urdf
     cfgs.freeze()
     robot_path = os.path.join(root_path, 'robot', tr)
     robot_node = root_node + 'robot.' + tr
