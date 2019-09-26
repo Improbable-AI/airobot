@@ -3,6 +3,9 @@ from __future__ import division
 from __future__ import print_function
 
 
+def clamp(n, minn, maxn):
+    return max(min(maxn, n), minn)
+
 def print_red(skk):
     """
     print the text in red color

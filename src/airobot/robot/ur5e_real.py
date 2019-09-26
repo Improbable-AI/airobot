@@ -16,6 +16,7 @@ from airobot.robot.robot import Robot
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
 from airobot.utils import tcp_util
 from trac_ik_python import trac_ik
+from airobot.utils.common import clamp
 
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, host, use_cam=False, use_arm=True):
@@ -410,6 +411,12 @@ class UR5eRobotReal(Robot):
         self.num_ik_solver = trac_ik.IK(self.cfgs.ROBOT_BASE_FRAME,
                                         self.cfgs.ROBOT_EE_FRAME,
                                         urdf_string=urdf_string)
+
+    def scale_moveit_motion(self, vel_scale=1.0, acc_scale=1.0):
+        vel_scale = clamp(vel_scale, 0.0, 1.0)
+        acc_scale = clamp(acc_scale, 0.0, 1.0)
+        self.moveit_group.set_max_velocity_scaling_factor(vel_scale)
+        self.moveit_group.set_max_acceleration_scaling_factor(acc_scale)
 
     def _close(self):
         self.monitor.close()
