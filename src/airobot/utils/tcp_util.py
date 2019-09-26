@@ -1,11 +1,12 @@
 """
 This file contains 2 classes:
     - ParseUtils containing utilies to parse data from UR robot
-    - SecondaryMonitor, a class opening a socket to the robot and with methods to
-            access data and send programs to the robot
+    - SecondaryMonitor, a class opening a socket to the robot and with methods
+        to access data and send programs to the robot
 Both use data from the secondary port of the URRobot.
 Only the last connected socket on 3001 is the primary client !!!!
-So do not rely on it unless you know no other client is running (Hint the UR java interface is a client...)
+So do not rely on it unless you know no other client is running
+(Hint the UR java interface is a client...)
 http://support.universal-robots.com/Technical/PrimaryAndSecondaryClientInterface
 """
 
@@ -17,7 +18,7 @@ from copy import copy
 from threading import Thread, Condition, Lock
 
 """
-Code built off of ursecmon.py in python-urx library 
+Code built off of ursecmon.py in python-urx library
 (https://github.com/anthonysimeonov/python-urx/blob/master/urx/ursecmon.py)
 written by Oliver Roulet-Dubonnet (see original author info below)
 __author__ = "Olivier Roulet-Dubonnet"
@@ -51,9 +52,16 @@ class TimeoutException(Exception):
 
 
 class ParserUtils(object):
+    """
+    Class of parsing utilities for getting data from the UR robot
+    through the TCP socket
+    """
 
     def __init__(self):
-        self.logger = logging.getLogger("ursecmon")
+        """
+        Constructor for parsing utilities class
+        """
+        self.logger = logging.getLogger("monitor")
         self.version = (0, 0)
         self.packet_type_map = {
                          "RobotModeData": 0,
@@ -67,10 +75,21 @@ class ParserUtils(object):
 
     def parse(self, data):
         """
-        parse a packet from the UR socket and return a dictionary with the data
+        Parse a packet from the UR socket and return dictionary with the data.
+        Data is parsed in sections by starting at the beginning and using the
+        header information to unpack the data in chunks. struct format strings
+        are used for unpacking based on the expected data being unpacked (see
+        Python struct package for information on these format strings)
+
+        Args:
+            data (str? bytes?): Packet data in raw form
+
+        Return:
+            dict: Dictionary with interpretable state data from robot, with
+                keys corresponding to different types of data
+
         """
         allData = {}
-        # print "Total size ", len(data)
         while data:
             # Each iteration, pdata gets all the data from the next section in
             # the packet and this is the data that goes into the dictionary,
@@ -279,10 +298,13 @@ class ParserUtils(object):
                             pdata, "!iBQbb iiAc",
                             ("size", "type", "timestamp", "source",
                              "robotMessageType", "code", "argument",
+                             "messageText"))
                 else:
-                    self.logger.debug("Message type parser not implemented %s", tmp)
+                    self.logger.debug("Message type parser "
+                                      "not implemented %s", tmp)
             else:
-                self.logger.debug("Unknown packet type %s with size %s", ptype, psize)
+                self.logger.debug("Unknown packet type %s with "
+                                  "size %s", ptype, psize)
 
         return allData
 
@@ -371,7 +393,7 @@ class ParserUtils(object):
         what type it is?
 
         Arguments:
-            data (bytes): Raw data received from socket connection
+            data (str): Raw data received from socket connection
 
         Raises:
             ParsingException: Packet size too small to read header
@@ -385,7 +407,7 @@ class ParserUtils(object):
             int: Indication of the type of packet
             bytes: Sliced packet, only taking how many bytes the
                 header says we received
-            bytes: The rest of the packet, data that will be 
+            bytes: The rest of the packet, data that will be
                 unpacked on the next parser iteration
         """
         if len(data) < 5:
@@ -406,53 +428,80 @@ class ParserUtils(object):
 
     def find_first_packet(self, data):
         """
-        find the first complete packet in a string
-        returns None if none found
+        find the first complete packet in a string by checking for length
+        matching expected length, returns None if none found
+        """
+        """
+        Finds the first complete packet in a string, and returns
+        None if none found
+
+        Args:
+            data (bytes): Incoming data from socket stream
+
+        Returns:
+            [type] -- [description]
         """
         counter = 0
         limit = 10
         while True:
+            # check if we at least have enough to read header
             if len(data) >= 5:
                 psize, ptype = self.get_header(data)
+
+                # packet size should not be less than 5 bytes,
+                # packet size should not be too large
+                # initial packet type should be 16
                 if psize < 5 or psize > 2000 or ptype != 16:
+                    # move one byte at a time along datastream
                     data = data[1:]
                     counter += 1
                     if counter > limit:
                         self.logger.warning(
-                            "tried %s times to find a packet in data, advertised packet size: %s, type: %s", counter,
+                            "tried %s times to find a packet in data,"
+                            "advertised packet size: %s, type: %s", counter,
                             psize, ptype)
                         self.logger.warning("Data length: %s", len(data))
                         limit = limit * 10
                 elif len(data) >= psize:
-                    self.logger.debug("Got packet with size %s and type %s", psize, ptype)
+                    self.logger.debug("Got packet with size %s and type %s",
+                                      psize, ptype)
                     if counter:
-                        self.logger.info("Remove %s bytes of garbage at begining of packet", counter)
-                    # ok we we have somehting which looks like a packet"
+                        self.logger.info("Remove %s bytes of garbage at"
+                                         "begining of packet", counter)
+                    # We have something which looks like a packet"
                     return (data[:psize], data[psize:])
                 else:
                     # packet is not complete
-                    self.logger.debug("Packet is not complete, advertised size is %s, received size is %s, type is %s",
+                    self.logger.debug("Packet is not complete, advertised size"
+                                      "is %s, received size is %s, type is %s",
                                       psize, len(data), ptype)
                     return None
             else:
-                # self.logger.debug("data smaller than 5 bytes")
                 return None
 
 
 class SecondaryMonitor(Thread):
     """
-    Monitor data from secondary port and send programs to robot
+    Class to monitor data from secondary port and send programs to robot
     """
 
     def __init__(self, host):
+        """
+        Constructor for UR monitor class
+
+        Arguments:
+            host (str): Robot's IP address
+        """
         Thread.__init__(self)
-        self.logger = logging.getLogger("ursecmon")
+        self.logger = logging.getLogger("monitor")
         self._parser = ParserUtils()
         self._dict = {}
         self._dictLock = Lock()
         self.host = host
-        secondary_port = 30002  # Secondary client interface on Universal Robots
-        self._s_secondary = socket.create_connection((self.host, secondary_port), timeout=0.5)
+        secondary_port = 30002  # Secondary client interface on UR
+        self._socket = socket.create_connection((self.host,
+                                                secondary_port),
+                                                timeout=1)
         self._prog_queue = []
         self._prog_queue_lock = Lock()
         self._dataqueue = bytes()
@@ -466,33 +515,45 @@ class SecondaryMonitor(Thread):
 
     def send_program(self, prog):
         """
-        send program to robot in URRobot format
-        If another program is send while a program is running the first program is aborded.
+        Send program to robot in URRobot format. If another program
+        is sent while a program is running, the first program is aborded.
+
+        Args:
+            prog (str): URScript style program or command to run
         """
         prog.strip()
         self.logger.debug("Enqueueing program: %s", prog)
         if not isinstance(prog, bytes):
-            prog = prog.encode()
+            prog = prog.encode()  # make sure we're sending raw data
 
         data = Program(prog + b"\n")
         with data.condition:
             with self._prog_queue_lock:
                 self._prog_queue.append(data)
             data.condition.wait()
-            self.logger.debug("program sendt: %s", data)
+            self.logger.debug("program send: %s", data)
 
     def run(self):
         """
-        check program execution status in the secondary client data packet we get from the robot
-        This interface uses only data from the secondary client interface (see UR doc)
-        Only the last connected client is the primary client,
-        so this is not guaranted and we cannot rely on information to the primary client.
+        Check program execution status in the secondary client data packet we
+        get from the robot. This interface uses only data from the secondary
+        client interface (see UR doc), only the last connected client is
+        the primary client, so this is not guaranted and we cannot rely on
+        information to the primary client.
+
+        This is the method that is started in a separate thread when the
+        monitor is instantiated.
+
+        The flow is to pop a program off the program queue, send the data,
+        receive the incoming data, parse it, check to make sure the robot is
+        okay, and then let everyone know we got some new data
         """
         while not self._trystop:
             with self._prog_queue_lock:
                 if len(self._prog_queue) > 0:
+                    # get data from the queue and send it out
                     data = self._prog_queue.pop(0)
-                    self._s_secondary.send(data.program)
+                    self._socket.send(data.program)
                     with data.condition:
                         data.condition.notify_all()
 
@@ -502,11 +563,13 @@ class SecondaryMonitor(Thread):
                 with self._dictLock:
                     self._dict = tmpdict
             except ParsingException as ex:
-                self.logger.warning("Error parsing one packet from urrobot: %s", ex)
+                self.logger.warning("Error parsing one packet "
+                                    "from urrobot: %s", ex)
                 continue
 
             if "RobotModeData" not in self._dict:
-                self.logger.warning("Got a packet from robot without RobotModeData, strange ...")
+                self.logger.warning("Got a packet from robot without "
+                                    "RobotModeData, strange ...")
                 continue
 
             self.lastpacket_timestamp = time.time()
@@ -515,48 +578,91 @@ class SecondaryMonitor(Thread):
             if self._parser.version >= (3, 0):
                 rmode = 7
 
-            if self._dict["RobotModeData"]["robotMode"] == rmode \
-                    and self._dict["RobotModeData"]["isRealRobotEnabled"] is True \
-                    and self._dict["RobotModeData"]["isEmergencyStopped"] is False \
-                    and self._dict["RobotModeData"]["isSecurityStopped"] is False \
-                    and self._dict["RobotModeData"]["isRobotConnected"] is True \
-                    and self._dict["RobotModeData"]["isPowerOnRobot"] is True:
+            if (self.check_if_running(rmode)):
                 self.running = True
             else:
                 if self.running:
-                    self.logger.error("Robot not running: " + str(self._dict["RobotModeData"]))
+                    self.logger.error("Robot not running: " +
+                                      str(self._dict["RobotModeData"]))
                 self.running = False
             with self._dataEvent:
                 # print("X: new data")
                 self._dataEvent.notifyAll()
 
+    def check_if_running(self, rmode):
+        """
+        Method to check if all the data we received from the latest packet
+        tells us that everything is fine with the robot. If not, will
+        return False and the main monitor thread will send out an error
+
+        Arguments:
+            rmode (int): Varible indicating robotMode value that is sent
+                to the monitor from the robot. Used for one of the checks
+                for if the robot is running or not
+
+        Returns:
+            bool: True if robot seems to be running, False if not
+        """
+        status = True
+
+        status = (status and
+                  (self._dict["RobotModeData"]["robotMode"] == rmode))
+        status = (status and
+                  (self._dict["RobotModeData"]["isRealRobotEnabled"] is True))
+        status = (status and
+                  (self._dict["RobotModeData"]["isEmergencyStopped"] is False))
+        status = (status and
+                  (self._dict["RobotModeData"]["isSecurityStopped"] is False))
+        status = (status and
+                  (self._dict["RobotModeData"]["isRobotConnected"] is True))
+        status = (status and
+                  (self._dict["RobotModeData"]["isPowerOnRobot"] is True))
+
+        if status is True:
+            return True
+        else:
+            return False
+
     def _get_data(self):
         """
-        returns something that looks like a packet, nothing is guaranted
+        Returns something that looks like a packet (nothing is guaranted)
         """
         while True:
-            # self.logger.debug("data queue size is: {}".format(len(self._dataqueue)))
             ans = self._parser.find_first_packet(self._dataqueue[:])
             if ans:
+                # Reset the queue with everything passed the packet we got
                 self._dataqueue = ans[1]
-                # self.logger.debug("found packet of size {}".format(len(ans[0])))
+
+                # Return the packet we found
                 return ans[0]
             else:
-                # self.logger.debug("Could not find packet in received data")
-                tmp = self._s_secondary.recv(1024)
+                # Keep putting more data into the queue if we haven't found
+                # a packet yet
+                tmp = self._socket.recv(1024)
                 self._dataqueue += tmp
 
-    def wait(self, timeout=0.5):
+    def wait(self, timeout=1.0):
         """
-        wait for next data packet from robot
+        Wait for next data packet from robot
         """
         tstamp = self.lastpacket_timestamp
         with self._dataEvent:
             self._dataEvent.wait(timeout)
             if tstamp == self.lastpacket_timestamp:
-                raise TimeoutException("Did not receive a valid data packet from robot in {}".format(timeout))
+                raise TimeoutException("Did not receive a valid data packet "
+                                       "from robot in %f" % timeout)
 
     def get_cartesian_info(self, wait=False):
+        """
+        Get end effector information from robot
+        
+        Keyword Arguments:
+            wait (bool): Boolean to tell whether to block
+                until data is returned (default: {False})
+        
+        Returns:
+            dict: Value in the state dict with the CartesianInfo data
+        """
         if wait:
             self.wait()
         with self._dictLock:
@@ -567,7 +673,14 @@ class SecondaryMonitor(Thread):
 
     def get_all_data(self, wait=False):
         """
-        return last data obtained from robot in dictionnary format
+        Return all most recent data in big dictionary
+        
+        Keyword Arguments:
+            wait (bool): Boolean to tell whether to block
+                until data is returned (default: {False})
+
+        Returns:
+            dict: Full state dict
         """
         if wait:
             self.wait()
@@ -627,7 +740,8 @@ class SecondaryMonitor(Thread):
         if wait:
             self.wait()
         with self._dictLock:
-            return self._dict["MasterBoardData"]["analogInput0"], self._dict["MasterBoardData"]["analogInput1"]
+            return (self._dict["MasterBoardData"]["analogInput0"], 
+                    self._dict["MasterBoardData"]["analogInput1"])
 
     def is_program_running(self, wait=False):
         """
@@ -642,8 +756,7 @@ class SecondaryMonitor(Thread):
     def close(self):
         self._trystop = True
         self.join()
-        # with self._dataEvent: #wake up any thread that may be waiting for data before we close. Should we do that?
-        # self._dataEvent.notifyAll()
-        if self._s_secondary:
+
+        if self._socket:
             with self._prog_queue_lock:
-                self._s_secondary.close()
+                self._socket.close()
