@@ -7,19 +7,24 @@ from __future__ import print_function
 
 import copy
 import time
+import PyKDL as kdl
 
 import numpy as np
 import rospy
+from trac_ik_python import trac_ik
 from transforms3d.euler import euler2quat, euler2mat
 
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
 from airobot.utils import tcp_util
-from trac_ik_python import trac_ik
 from airobot.utils.common import clamp
+from airobot.utils.common import kdl_array_to_numpy
+from airobot.utils.common import kdl_frame_to_numpy
+from airobot.utils.common import joints_to_kdl
 
 class UR5eRobotReal(Robot):
-    def __init__(self, cfgs, host, use_cam=False, use_arm=True):
+    def __init__(self, cfgs, host, use_cam=False, use_arm=True,
+                 moveit_planner='RRTConnectkConfigDefault'):
         try:
             rospy.init_node('ur5e', anonymous=True)
         except rospy.exceptions.ROSException:
@@ -28,11 +33,9 @@ class UR5eRobotReal(Robot):
             self.camera = RGBDCamera(cfgs=cfgs)
         if use_arm:
             super(UR5eRobotReal, self).__init__(cfgs=cfgs)
-
-            self._init_consts()
-
+            self.moveit_planner = moveit_planner
             self.host = host
-
+            self._init_consts()
             self.monitor = tcp_util.SecondaryMonitor(self.host)
             self.monitor.wait()  # make contact with robot before anything
 
@@ -274,17 +277,17 @@ class UR5eRobotReal(Robot):
     def get_ee_pose(self, wait=False):
         """Get current cartesian pose of the EE, in the robot's base frame
 
-        TODO: why do we need to wait here?
+        TODO: Anthony, why do we need to wait here?
 
         Args:
             wait (bool, optional): [description]. Defaults to False.
 
         Returns:
-            list: x, y, z position of the EE
-            list: quaternion representation of the EE orientation
-            list: rotation matrix representation of the EE orientation
+            list: x, y, z position of the EE (shape: [3])
+            list: quaternion representation of the EE orientation (shape: [4])
+            list: rotation matrix representation of the EE orientation (shape: [9])
             list: euler angle representation of the EE orientation (roll, pitch, yaw with
-                static reference frame)
+                static reference frame) (shape: [3])
         """
         pose_data = self.monitor.get_cartesian_info(wait)
         if pose_data:
@@ -297,19 +300,157 @@ class UR5eRobotReal(Robot):
             quat_ori = euler2quat(euler_ori[0],
                                   euler_ori[1],
                                   euler_ori[2]).flatten().tolist()
-
+        else:
+            # TODO Anthony, fill in this part
+            raise RuntimeError('Cannot get pose information!')
         return pos, quat_ori, rot_mat, euler_ori
 
-    def compute_ik(self, ee_pose):
+    def get_jacobian(self, joint_angles):
         """
-        Function to obtain the joint angles corresponding
-        to a particular end effector pose
+        Return the geometric jacobian on the given joint angles.
+        Refer to P112 in "Robotics: Modeling, Planning, and Control"
 
         Args:
-            ee_pose (list): End effector pose, specified as
-                [x, y, z, roll, pitch, yaw]
+            joint_angles (list or flattened np.ndarray): joint angles
+
+        Returns:
+            jacobian (np.ndarray)
         """
-        raise NotImplementedError
+        q = kdl.JntArray(self.urdf_chain.getNrOfJoints())
+        for i in range(q.rows()):
+            q[i] = joint_angles[i]
+        jac = kdl.Jacobian(self.urdf_chain.getNrOfJoints())
+        fg = self.jac_solver.JntToJac(q, jac)
+        assert fg == 0, 'KDL JntToJac error!'
+        jac_np = kdl_array_to_numpy(jac)
+        return jac_np
+
+    def compute_fk_position(self, jpos, tgt_frame):
+        """
+        Given joint angles, compute the pose of desired_frame with respect
+        to the base frame (self.cfgs.ROBOT_BASE_FRAME). The desired frame
+        must be in self.arm_link_names
+
+        Args:
+            jpos (list or flattened np.ndarray): joint angles
+            tgt_frame (str): target link frame
+
+        Returns:
+            translational vector (np.ndarray, shape: [3,])
+            and rotational matrix (np.ndarray, shape: [3, 3])
+        """
+        if isinstance(jpos, list):
+            jpos = np.array(jpos)
+        jpos = jpos.flatten()
+        if jpos.size != self.arm_dof:
+            raise ValueError('Length of the joint angles '
+                             'does not match the robot DOF')
+        assert joint_positions.size == self.arm_dof
+        kdl_jnt_angles = joints_to_kdl(jpos)
+
+        kdl_end_frame = kdl.Frame()
+        idx = self.arm_link_names.index(tgt_frame) + 1
+        fg = self.fk_solver_pos.JntToCart(kdl_jnt_angles,
+                                          kdl_end_frame,
+                                          idx)
+        if fg == 0:
+            raise ValueError('KDL Pos JntToCart error!')
+        pose = kdl_frame_to_numpy(kdl_end_frame)
+        pos = pose[:3, 3].flatten()
+        rot = pose[:3, :3]
+        return pos, rot
+
+    def compute_fk_velocity(self, jpos, jvel, tgt_frame):
+        """
+        Given joint_positions and joint velocities,
+        compute the velocities of des_frame with respect
+        to the base frame
+
+        Args:
+            jpos (list or flattened np.ndarray): joint positions
+            jvel (list or flattened np.ndarray): joint velocities
+            tgt_frame (str): target link frame
+
+        Returns:
+            translational and rotational
+                 velocities (vx, vy, vz, wx, wy, wz)
+                 (np.ndarray, shape: [6,])
+        """
+        if isinstance(jpos, list):
+            jpos = np.array(jpos)
+        if isinstance(jvel, list):
+            jvel = np.array(jvel)
+        kdl_end_frame = kdl.FrameVel()
+        kdl_jnt_angles = joints_to_kdl(jpos)
+        kdl_jnt_vels = joints_to_kdl(jvel)
+        kdl_jnt_qvels = kdl.JntArrayVel(kdl_jnt_angles, kdl_jnt_vels)
+        idx = self.arm_link_names.index(tgt_frame) + 1
+        fg = self.fk_solver_vel.JntToCart(kdl_jnt_qvels,
+                                          kdl_end_frame,
+                                          idx)
+        if fg == 0:
+            raise ValueError('KDL Vel JntToCart error!')
+        end_twist = kdl_end_frame.GetTwist()
+        return np.array([end_twist[0], end_twist[1], end_twist[2],
+                         end_twist[3], end_twist[4], end_twist[5]])
+
+    def compute_ik(self, pos, ori=None, qinit=None, *args, **kwargs):
+        """
+        Compute the inverse kinematics solution given the
+        position and orientation of the end effector
+        (self.cfgs.ROBOT_EE_FRAME)
+
+        Args:
+            pos (list): position
+            ori (list): orientation. It can be euler angles
+                (roll, pitch, yaw) or quaternion. If it's None,
+                the solver will use the current end effector
+                orientation as the target orientation
+            qinit (list): initial joint positions for numerical IK
+
+        Returns:
+            inverse kinematics solution (joint angles, list)
+        """
+        if ori is not None:
+            if len(ori) == 3:
+                # [roll, pitch, yaw]
+                ori = euler2quat(ori)
+            if len(ori) != 4:
+                raise ValueError('Orientation should be either '
+                                 'euler angles or quaternion')
+            ori_x = ori[0]
+            ori_y = ori[1]
+            ori_z = ori[2]
+            ori_w = ori[3]
+        else:
+            ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
+            ori_x = ee_quat[0]
+            ori_y = ee_quat[1]
+            ori_z = ee_quat[2]
+            ori_w = ee_quat[3]
+        if qinit is None:
+            qinit = self.get_jpos().tolist()
+        elif isinstance(qinit, np.ndarray):
+            qinit = qinit.flatten().tolist()
+        pos_tol = self.cfgs.IK_POSITION_TOLERANCE
+        ori_tol = self.cfgs.IK_ORIENTATION_TOLERANCE
+        jnt_poss = self.num_ik_solver.get_ik(qinit,
+                                             pos[0],
+                                             pos[1],
+                                             pos[2],
+                                             ori_x,
+                                             ori_y,
+                                             ori_z,
+                                             ori_w,
+                                             pos_tol,
+                                             pos_tol,
+                                             pos_tol,
+                                             ori_tol,
+                                             ori_tol,
+                                             ori_tol)
+        if jnt_poss is None:
+            return None
+        return jnt_poss
 
     def _wait_to_reach_jnt_goal(self, goal, joint_name=None, mode='pos'):
         """
@@ -379,44 +520,73 @@ class UR5eRobotReal(Robot):
         """
         Initialize constants
         """
-        self._home_position = [1.57, -1.5, 2.0, -2.05, -1.57, 0]
-
-        self.arm_jnt_names = [
-            'shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
-            'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint'
-        ]
-
-        self.arm_jnt_names_set = set(self.arm_jnt_names)
-        self.arm_dof = len(self.arm_jnt_names)
-        self.gripper_jnt_names = [
-            'finger_joint', 'left_inner_knuckle_joint',
-            'left_inner_finger_joint', 'right_outer_knuckle_joint',
-            'right_inner_knuckle_joint', 'right_inner_finger_joint'
-        ]
-        self.gripper_close_angle = 0.7
-        self.gripper_open_angle = 0
-        self.gripper_jnt_names_set = set(self.gripper_jnt_names)
-        self.rvl_joint_names = self.arm_jnt_names + self.gripper_jnt_names
-        self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
-        self.ee_link = 'wrist_3_link-tool0_fixed_joint'
-
-        # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
-        self._max_torques = [150, 150, 150, 28, 28, 28]
-        # a random value for robotiq joints
-        self._max_torques.append(20)
-        # self.camera = PyBulletCamera(p, self.cfgs)
+        self._home_position = self.cfgs.HOME_POSITION
 
         robot_description = self.cfgs.ROBOT_DESCRIPTION
         urdf_string = rospy.get_param(robot_description)
         self.num_ik_solver = trac_ik.IK(self.cfgs.ROBOT_BASE_FRAME,
                                         self.cfgs.ROBOT_EE_FRAME,
                                         urdf_string=urdf_string)
+        _, self.urdf_tree = treeFromParam(robot_description)
+        self.urdf_chain = self.urdf_tree.getChain(self.cfgs.ROBOT_BASE_FRAME,
+                                                  self.cfgs.ROBOT_EE_FRAME)
+        self.arm_jnt_names = self._get_kdl_joint_names()
+        self.arm_jnt_names_set = set(self.arm_jnt_names)
+        self.arm_link_names = self._get_kdl_link_names()
+        self.arm_dof = len(self.arm_joint_names)
+        moveit_commander.roscpp_initialize(sys.argv)
+        self.moveit_group = MoveGroupCommander(self.cfgs.MOVEGROUP_NAME)
+        self.moveit_group.set_planner_id(self.moveit_planner)
+        self.moveit_scene = moveit_commander.PlanningSceneInterface()
+
+        self.jac_solver = kdl.ChainJntToJacSolver(self.urdf_chain)
+        self.fk_solver_pos = kdl.ChainFkSolverPos_recursive(self.urdf_chain)
+        self.fk_solver_vel = kdl.ChainFkSolverVel_recursive(self.urdf_chain)
+
+        self.gripper_jnt_names = [
+            'finger_joint', 'left_inner_knuckle_joint',
+            'left_inner_finger_joint', 'right_outer_knuckle_joint',
+            'right_inner_knuckle_joint', 'right_inner_finger_joint'
+        ]
+        self.gripper_jnt_names_set = set(self.gripper_jnt_names)
+        self.gripper_close_angle = 0.7
+        self.gripper_open_angle = 0
+
+        self.ee_link = self.cfgs.ROBOT_EE_FRAME
+
+        # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
+        self._max_torques = [150, 150, 150, 28, 28, 28]
+        # a random value for robotiq joints
+        self._max_torques.append(20)
 
     def scale_moveit_motion(self, vel_scale=1.0, acc_scale=1.0):
         vel_scale = clamp(vel_scale, 0.0, 1.0)
         acc_scale = clamp(acc_scale, 0.0, 1.0)
         self.moveit_group.set_max_velocity_scaling_factor(vel_scale)
         self.moveit_group.set_max_acceleration_scaling_factor(acc_scale)
+
+    def _get_kdl_link_names(self):
+        num_links = self.urdf_chain.getNrOfSegments()
+        link_names = []
+        for i in range(num_links):
+            link_names.append(self.urdf_chain.getSegment(i).getName())
+        return copy.deepcopy(link_names)
+
+    def _get_kdl_joint_names(self):
+        num_links = self.urdf_chain.getNrOfSegments()
+        num_joints = self.urdf_chain.getNrOfJoints()
+        joint_names = []
+        for i in range(num_links):
+            link = self.urdf_chain.getSegment(i)
+            joint = link.getJoint()
+            joint_type = joint.getType()
+            # JointType definition: [RotAxis,RotX,RotY,RotZ,TransAxis,
+            #                        TransX,TransY,TransZ,None]
+            if joint_type > 1:
+                continue
+            joint_names.append(joint.getName())
+        assert num_joints == len(joint_names)
+        return copy.deepcopy(joint_names)
 
     def _close(self):
         self.monitor.close()

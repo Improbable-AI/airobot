@@ -170,7 +170,7 @@ class Robot(object):
         """
         raise NotImplementedError
 
-    def compute_ik(self, pos, ori=None):
+    def compute_ik(self, pos, ori=None, *args, **kwargs):
         """
         Compute the inverse kinematics solution given the
         position and orientation of the end effector

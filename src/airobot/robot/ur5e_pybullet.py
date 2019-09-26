@@ -18,7 +18,7 @@ from gym.utils import seeding
 import airobot.utils.common as arutil
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.pybullet_cam import PyBulletCamera
-
+from airobot.utils.common import clamp
 
 # import pkgutil
 
@@ -69,10 +69,7 @@ class UR5eRobotPybullet(Robot):
         """
         Move the robot to a pre-defined home pose
         """
-        # 6 joints for the arm, 7th joint for the gripper
-        jnt_positions = [0., -1.5, 2.0, -2.05, -1.57, 0]
-        # jnt_positions = [0., -1.1, 2.2, -2.65, -1.57, 0]
-        success = self.set_jpos(jnt_positions)
+        success = self.set_jpos(self._home_position)
         return success
 
     def reset(self):
@@ -184,8 +181,9 @@ class UR5eRobotPybullet(Robot):
                 raise ValueError('Position should contain 6 or 7 '
                                  'elements if the joint_name is not provided')
             gripper_pos = position[-1]
-            gripper_pos = max(self.gripper_open_angle, gripper_pos)
-            gripper_pos = min(self.gripper_close_angle, gripper_pos)
+            gripper_pos = clamp(gripper_pos,
+                                self.gripper_open_angle,
+                                self.gripper_close_angle)
             position[-1] = gripper_pos
             tgt_pos = position
             p.setJointMotorControlArray(self.robot_id,
@@ -198,8 +196,9 @@ class UR5eRobotPybullet(Robot):
                 gripper_jnt_id = self.gripper_jnt_names.index(joint_name)
                 mimic_factor = self._gripper_mimic_coeff[gripper_jnt_id]
                 finger_jnt_pos = position / float(mimic_factor)
-                finger_jnt_pos = max(self.gripper_open_angle, finger_jnt_pos)
-                finger_jnt_pos = min(self.gripper_close_angle, finger_jnt_pos)
+                finger_jnt_pos = clamp(finger_jnt_pos,
+                                       self.gripper_open_angle,
+                                       self.gripper_close_angle)
                 tgt_pos = finger_jnt_pos
                 max_torque = self._max_torques[-len(self.gripper_jnt_ids)]
                 jnt_id = self.jnt_to_id[self.gripper_jnt_names[0]]
@@ -507,8 +506,11 @@ class UR5eRobotPybullet(Robot):
         Return the end effector pose
 
         Returns:
-            end effector position, quaternion,
-            rotation matrix, euler angles
+            list: x, y, z position of the EE (shape: [3])
+            list: quaternion representation of the EE orientation (shape: [4])
+            list: rotation matrix representation of the EE orientation (shape: [9])
+            list: euler angle representation of the EE orientation (roll, pitch, yaw with
+                static reference frame) (shape: [3])
         """
         info = p.getLinkState(self.robot_id, self.ee_link_id)
         pos = info[4]
@@ -686,6 +688,7 @@ class UR5eRobotPybullet(Robot):
         """
         Initialize constants
         """
+        self._home_position = self.cfgs.HOME_POSITION
         # joint damping for inverse kinematics
         self._ik_jd = 0.05
         self._thread_sleep = 0.001
@@ -709,7 +712,7 @@ class UR5eRobotPybullet(Robot):
         self.gripper_jnt_names_set = set(self.gripper_jnt_names)
         self.rvl_joint_names = self.arm_jnt_names + self.gripper_jnt_names
         self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
-        self.ee_link = 'wrist_3_link-tool0_fixed_joint'
+        self.ee_link = self.cfgs.ROBOT_EE_FRAME
 
         # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
         self._max_torques = [150, 150, 150, 28, 28, 28]
