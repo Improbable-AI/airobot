@@ -25,7 +25,7 @@ def main():
     Move all the joints of the robot in a sine-wave fashion
     """
     robot = ar.create_robot('ur5e', pb=False, robot_cfg={
-                            'host': '128.30.31.59'})
+                            'robot_ip': '128.30.31.59'})
     robot.go_home()
 
     A = 0.4

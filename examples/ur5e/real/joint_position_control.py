@@ -18,9 +18,11 @@ def main():
 
     The pb=False flag is set because we are using the real robot (pb -- pybullet)
     """
+    ## TODO Anthony, better not to put ip here in case the library will be open sourced
+    # make it an command line argument
     home_pos = [1.57, -1.5, 2.0, -2.05, -1.57, 0]
 
-    robot = ar.create_robot('ur5e', pb=False, robot_cfg={'host': '128.30.31.59'})
+    robot = ar.create_robot('ur5e', pb=False, robot_cfg={'robot_ip': '128.30.31.59'})
 
     current_pos = robot.get_jpos()
     print("Current joint configuration (degrees): ")

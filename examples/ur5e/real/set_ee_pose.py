@@ -8,7 +8,7 @@ def main():
     Move the robot end effector to the desired pose
     """
     robot = ar.create_robot('ur5e', pb=False, robot_cfg={
-                            'host': '128.30.31.59'})
+                            'robot_ip': '128.30.31.59'})
     robot.go_home()
     current_pos = robot.get_ee_pose()
     print("current EE pose: ")

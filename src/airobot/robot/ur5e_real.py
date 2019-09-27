@@ -7,27 +7,28 @@ from __future__ import print_function
 
 import copy
 import time
-import PyKDL as kdl
+from abc import ABC
 
+import PyKDL as kdl
 import numpy as np
 import rospy
 from trac_ik_python import trac_ik
-from transforms3d.euler import euler2quat
 from transforms3d.euler import euler2mat
+from transforms3d.euler import euler2quat
 from transforms3d.euler import quat2euler
 
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
 from airobot.utils import tcp_util
 from airobot.utils.common import clamp
+from airobot.utils.common import joints_to_kdl
 from airobot.utils.common import kdl_array_to_numpy
 from airobot.utils.common import kdl_frame_to_numpy
-from airobot.utils.common import joints_to_kdl
 from airobot.utils.common import print_red
 
 
 class UR5eRobotReal(Robot):
-    def __init__(self, cfgs, host, use_cam=False, use_arm=True,
+    def __init__(self, cfgs, robot_ip, use_cam=False, use_arm=True,
                  moveit_planner='RRTConnectkConfigDefault'):
         try:
             rospy.init_node('ur5e', anonymous=True)
@@ -38,9 +39,9 @@ class UR5eRobotReal(Robot):
         if use_arm:
             super(UR5eRobotReal, self).__init__(cfgs=cfgs)
             self.moveit_planner = moveit_planner
-            self.host = host
+            self.robot_ip = robot_ip
             self._init_consts()
-            self.monitor = tcp_util.SecondaryMonitor(self.host)
+            self.monitor = tcp_util.SecondaryMonitor(self.robot_ip)
             self.monitor.wait()  # make contact with robot before anything
 
     def send_program(self, prog):
@@ -64,7 +65,7 @@ class UR5eRobotReal(Robot):
         Return:
             None
         """
-        prog = "textmsg(%s)" % msg
+        prog = 'textmsg(%s)' % msg
         self.send_program(prog)
 
     def _is_running(self):
@@ -270,7 +271,7 @@ class UR5eRobotReal(Robot):
 
             waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
             waypoints = current_pos + waypoints_sp / float(path_len) * \
-                delta_xyz
+                        delta_xyz
 
             for i in range(waypoints.shape[0]):
                 tgt_jnt_poss = \
