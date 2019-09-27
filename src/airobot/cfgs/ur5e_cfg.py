@@ -25,6 +25,11 @@ _C.TIMEOUT_LIMIT = 5
 _C.CAM_SIM = get_sim_cam_cfg()
 _C.CAM_REALSENSE = get_realsense_cam_cfg()
 _C.CAM_KINECT = CN()
+# default host and port for socket used to
+# communicate with the gripper through the
+# UR controller
+_C.SOCKET_HOST = "127.0.0.1"
+_C.SOCKET_PORT = 65532
 
 
 def get_cfg():

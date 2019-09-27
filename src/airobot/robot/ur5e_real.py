@@ -18,8 +18,9 @@ from tf.transformations import quaternion_from_euler
 from tf.transformations import euler_matrix
 
 from airobot.robot.robot import Robot
+from airobot.end_effectors.robotiq_gripper import Robotiq_2F140
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
-from airobot.utils import tcp_util
+from airobot.utils.tcp_util import SecondaryMonitor
 from airobot.utils.common import clamp
 from airobot.utils.common import joints_to_kdl
 from airobot.utils.common import kdl_array_to_numpy
@@ -40,9 +41,12 @@ class UR5eRobotReal(Robot):
             super(UR5eRobotReal, self).__init__(cfgs=cfgs)
             self.moveit_planner = moveit_planner
             self.robot_ip = robot_ip
-            self._init_consts()
-            self.monitor = tcp_util.SecondaryMonitor(self.robot_ip)
+            self.monitor = SecondaryMonitor(self.robot_ip)
             self.monitor.wait()  # make contact with robot before anything
+            self.gripper = Robotiq_2F140(montior=self.monitor,
+                                         socker_host=self.cfgs.SOCKET_HOST,
+                                         socker_port=self.cfgs.SOCKET_PORT)
+            self._init_consts()
 
     def send_program(self, prog):
         """
@@ -50,7 +54,7 @@ class UR5eRobotReal(Robot):
 
         Args:
             prog (str): URScript program which will be sent and run on
-            the UR5e machine
+                the UR5e machine
 
         """
         self.monitor.send_program(prog)
@@ -79,13 +83,33 @@ class UR5eRobotReal(Robot):
         self.set_jpos(self._home_position, wait=True)
 
     def set_gripper_pos(self, position):
-        raise NotImplementedError
+        """
+        Method to send a position command to the gripper
+        by creating a URScript program which runs on the robot
+        and forwards the control command to the gripper
+
+        Args:
+            position (float): Desired gripper position,
+                0.0 is fully open, 0.7 is fully closed
+        """
+        position = clamp(position,
+                         self.gripper_open_angle,
+                         self.gripper_close_angle)
+        urscript = self.gripper._get_new_urscript()
+        urscript._set_gripper_position(position)
+        self.monitor.send_program(urscript())
 
     def open_gripper(self):
-        raise NotImplementedError
+        """
+        Commands the gripper to fully open (0.0)
+        """
+        self.set_gripper_pos(self.gripper_open_angle)
 
     def close_gripper(self):
-        raise NotImplementedError
+        """
+        Commands the gripper to fully close (0.7)
+        """
+        self.set_gripper_pos(self.gripper_close_angle)
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
@@ -106,19 +130,13 @@ class UR5eRobotReal(Robot):
         success = False
 
         if joint_name is None:
-            # if len(position) == 6:
-            #     gripper_pos = self.get_jpos(self.gripper_jnt_names[0])
-            #     position.append(gripper_pos)
-            if len(position) != 6:
+            if (len(position) != 6 or len(position != 7):
                 raise ValueError('position should contain 6 or 7 elements if'
                                  'joint_name is not provided')
-
-            # gripper_pos = position[-1]
-            # gripper_pos = max(self.gripper_close_angle, gripper_pos)
-            # gripper_pos = min(self.gripper_open_angle, gripper_pos))
-
-            # position[-1] = gripper_pos
-
+            if len(position) == 7:
+                gripper_pos = position[-1]
+                self.set_gripper_pos(gripper_pos)
+                position = position[:-1]
             target_pos = position
         else:
             if joint_name is self.gripper_jnt_names:
@@ -336,9 +354,9 @@ class UR5eRobotReal(Robot):
         Returns:
             list: x, y, z position of the EE (shape: [3])
             list: quaternion representation ([x, y, z, w]) of the EE orientation (shape: [4])
-            list: rotation matrix representation of the EE orientation 
+            list: rotation matrix representation of the EE orientation
                 (shape: [9])
-            list: euler angle representation of the EE orientation (roll, 
+            list: euler angle representation of the EE orientation (roll,
                 pitch, yaw with static reference frame) (shape: [3])
         """
         pose_data = self.monitor.get_cartesian_info()
