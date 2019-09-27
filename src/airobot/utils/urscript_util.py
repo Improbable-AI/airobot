@@ -1,10 +1,12 @@
 #! /usr/bin/env python
 
 """
-Tools for creating URScript messages, for communicating with the real UR robots over 
-TCP/IP by creating URScript programs and sending them for execution on the robot's system
+Tools for creating URScript messages, for communicating with the real UR
+robots over TCP/IP by creating URScript programs and sending them for 
+execution on the robot's system
 
-built off of urscript.py, part of python-urx library (https://github.com/anthonysimeonov/python-urx/blob/master/urx/urscript.py)
+built off of urscript.py, part of python-urx library 
+(https://github.com/anthonysimeonov/python-urx/blob/master/urx/urscript.py)
 """
 
 import logging

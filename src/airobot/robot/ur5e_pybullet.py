@@ -322,7 +322,7 @@ class UR5eRobotPybullet(Robot):
                                     force=torque)
         return True
 
-    def set_ee_pose(self, pos, ori=None, *args, **kwargs):
+    def set_ee_pose(self, pos, ori=None, wait=True, *args, **kwargs):
         """
         Move the end effector to the specifed pose
         Args:
@@ -335,8 +335,8 @@ class UR5eRobotPybullet(Robot):
             the moment when the function exits
         """
         jnt_pos = self.compute_ik(pos, ori)
-        self.set_jpos(jnt_pos)
-        return jnt_pos
+        success = self.set_jpos(jnt_pos, wait=wait)
+        return success
 
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, *args, **kwargs):
         """
@@ -367,8 +367,9 @@ class UR5eRobotPybullet(Robot):
         waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
         waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
         for i in range(waypoints.shape[0]):
-            tgt_jnt_poss = self.set_ee_pose(waypoints[i, :].flatten().tolist(),
-                                            quat)
+            tgt_jnt_poss = self.compute_ik(waypoints[i, :].flatten().tolist(),
+                                           quat)
+            self.set_jpos(tgt_jnt_poss)
             tgt_jnt_poss = np.array(tgt_jnt_poss)
             start_time = time.time()
             while True:

@@ -13,6 +13,7 @@ import numpy as np
 import rospy
 from trac_ik_python import trac_ik
 from transforms3d.euler import euler2quat, euler2mat
+from transforms3d.quat import quat2euler
 
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
@@ -21,6 +22,8 @@ from airobot.utils.common import clamp
 from airobot.utils.common import kdl_array_to_numpy
 from airobot.utils.common import kdl_frame_to_numpy
 from airobot.utils.common import joints_to_kdl
+from airobot.utils.common import print_red
+
 
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, host, use_cam=False, use_arm=True,
@@ -74,6 +77,15 @@ class UR5eRobotReal(Robot):
         """
         # 6 joints for the arm, 7th joint for the gripper
         self.set_jpos(self._home_position, wait=True)
+
+    def set_gripper_pos(self, position):
+        raise NotImplementedError
+
+    def open_gripper(self):
+        raise NotImplementedError
+
+    def close_gripper(self):
+        raise NotImplementedError
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
@@ -144,6 +156,8 @@ class UR5eRobotReal(Robot):
             wait (bool, optional): [description]. Defaults to False.
         """
         velocity = copy.deepcopy(velocity)
+        success = False
+
         if joint_name is None:
             # if (len(velocity) == 6):
             #     gripper_vel = self.get_jvel(self.gripper_jnt_names[0])
@@ -173,11 +187,15 @@ class UR5eRobotReal(Robot):
                                                            acc)
         self.send_program(prog)
 
-        # TODO see about getting back joint velocity info from the robot to
-        # use for success flag
+        if wait:
+            success = self._wait_to_reach_jnt_goal(target_vel,
+                                                   joint_name=joint_name,
+                                                   mode='vel')
 
-    def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, wait=False,
-                    use_ik=False, *args, **kwargs):
+        return success
+
+    def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, wait=True,
+                    linear_path=False, *args, **kwargs):
         """
         Set cartesian space pose of end effector
 
@@ -192,61 +210,96 @@ class UR5eRobotReal(Robot):
                 Defaults to 0.05.
 
         Returns:
-            [type]: [description]
+            bool: success or failure to move the robot to the goal pose
         """
+        success = False
         if ori is None:
             ori = self.get_ee_pose()[-1]  # last index of return is euler angle
         ee_pos = [pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]]
-        prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % (
-            ee_pos[0],
-            ee_pos[1],
-            ee_pos[2],
-            ee_pos[3],
-            ee_pos[4],
-            ee_pos[5],
-            acc,
-            vel,
-            0.0)
-        self.send_program(prog)
+        if linear_path:
+            if len(ori == 4):
+                # assume incoming orientation is quaternion
+                ori = quat2euler(ori)
+            prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % (
+                ee_pos[0],
+                ee_pos[1],
+                ee_pos[2],
+                ee_pos[3],
+                ee_pos[4],
+                ee_pos[5],
+                acc,
+                vel,
+                0.0)
+            self.send_program(prog)
+        else:
+            jnt_pos = self.compute_ik(pos, ori)  # ik can handle quaternion
+            self.set_jpos(jnt_pos)
 
-        # if wait:
-        # TODO implement blocking version
+        if wait:
+            if linear_path:
+                success = self._wait_to_reach_ee_goal(ee_pos)
+            else:
+                success = self._wait_to_reach_jnt_goal(jnt_pos)
 
-        # TODO implement computeIK version
+        return success
 
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True,
-                    *args, **kwargs):
+                    linear_path=False, *args, **kwargs):
         """Move end effector in straight line while maintaining orientation
 
         Args:
             delta_xyz (list): Goal change in x, y, z position of end effector
             eef_step (float, optional): [description]. Defaults to 0.005.
         """
-        # success = True
+        success = True
         ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
 
-        # current_pos = np.array(ee_pos)
-        # delta_xyz = np.array(delta_xyz)
-        # path_len = np.linalg.norm(delta_xyz)
-        # num_pts = int(np.ceil(path_len / float(eef_step)))
-        # if num_pts <= 1:
-        #     num_pts = 2
+        if linear_path:
+            ee_pos[0] += delta_xyz[0]
+            ee_pos[1] += delta_xyz[1]
+            ee_pos[2] += delta_xyz[2]
 
-        # waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
-        # waypoints = current_pos + waypoints_sp / float(path_len) * delta_xyz
+            success = self.set_ee_pose(ee_pos, ee_euler, wait=wait,
+                                       linear_path=linear_path)
+        else:
+            current_pos = np.array(ee_pos)
+            delta_xyz = np.array(delta_xyz)
+            path_len = np.linalg.norm(delta_xyz)
+            num_pts = int(np.ceil(path_len / float(eef_step)))
+            if num_pts <= 1:
+                num_pts = 2
 
-        # for i in range(waypoints.shape[0]):
-        #     self.set_ee_pose(waypoints[i, :].flatten().tolist(), ee_quat)
-        #     time.sleep(0.01)
+            waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
+            waypoints = current_pos + waypoints_sp / float(path_len) * \
+                delta_xyz
 
-        # or instead of this ^ just
-        ee_pos[0] += delta_xyz[0]
-        ee_pos[1] += delta_xyz[1]
-        ee_pos[2] += delta_xyz[2]
+            for i in range(waypoints.shape[0]):
+                tgt_jnt_poss = \
+                    self.set_ee_pose(waypoints[i, :].flatten().tolist(),
+                                     ee_quat)
+                self.set_jpos(tgt_jnt_poss)
+                tgt_jnt_poss = np.array(tgt_jnt_poss)
+                start_time = time.time()
+                while True:
+                    if (time.time() - start_time >
+                            self.cfgs.TIMEOUT_LIMIT):
+                        pt_str = "Unable to move to joint angles (%s)" \
+                                 " within %f s" % (str(tgt_jnt_poss.tolist()),
+                                                   self.cfgs.TIMEOUT_LIMIT)
+                        print_red(pt_str)
+                        success = False
+                        return success
+                    new_jnt_poss = self.get_jpos()
+                    new_jnt_poss = np.array(new_jnt_poss)
+                    jnt_diff = new_jnt_poss - tgt_jnt_poss
+                    error = np.max(np.abs(jnt_diff))
+                    if error < self.cfgs.MAX_JOINT_ERROR:
+                        break
+                time.sleep(0.001)
+            success = True
+        return success
 
-        self.set_ee_pose(ee_pos, ee_euler, wait=wait)
-
-    def get_jpos(self, joint_name=None, wait=False):
+    def get_jpos(self, joint_name=None):
         """Get current joint angles of robot
 
         Args:
@@ -255,12 +308,12 @@ class UR5eRobotReal(Robot):
         Return:
             jpos (list): list of current joint positions in radians
         """
-        jdata = self.monitor.get_joint_data(wait)
+        jdata = self.monitor.get_joint_data()
         jpos = [jdata["q_actual0"], jdata["q_actual1"], jdata["q_actual2"],
                 jdata["q_actual3"], jdata["q_actual4"], jdata["q_actual5"]]
         return jpos
 
-    def get_jvel(self, joint_name=None, wait=False):
+    def get_jvel(self, joint_name=None):
         """Get current joint angular velocities of robot
 
         Args:
@@ -269,15 +322,13 @@ class UR5eRobotReal(Robot):
         Return:
             jvel (list): list of current joint angular velocities in radians/s
         """
-        jdata = self.monitor.get_joint_data(wait)
+        jdata = self.monitor.get_joint_data()
         jvel = [jdata["qd_actual0"], jdata["qd_actual1"], jdata["qd_actual2"],
                 jdata["qd_actual3"], jdata["qd_actual4"], jdata["qd_actual5"]]
         return jvel
 
-    def get_ee_pose(self, wait=False):
+    def get_ee_pose(self):
         """Get current cartesian pose of the EE, in the robot's base frame
-
-        TODO: Anthony, why do we need to wait here?
 
         Args:
             wait (bool, optional): [description]. Defaults to False.
@@ -285,11 +336,12 @@ class UR5eRobotReal(Robot):
         Returns:
             list: x, y, z position of the EE (shape: [3])
             list: quaternion representation of the EE orientation (shape: [4])
-            list: rotation matrix representation of the EE orientation (shape: [9])
-            list: euler angle representation of the EE orientation (roll, pitch, yaw with
-                static reference frame) (shape: [3])
+            list: rotation matrix representation of the EE orientation 
+                (shape: [9])
+            list: euler angle representation of the EE orientation (roll, 
+                pitch, yaw with static reference frame) (shape: [3])
         """
-        pose_data = self.monitor.get_cartesian_info(wait)
+        pose_data = self.monitor.get_cartesian_info()
         if pose_data:
             pos = [pose_data["X"], pose_data["Y"], pose_data["Z"]]
             euler_ori = [pose_data["Rx"], pose_data["Ry"], pose_data["Rz"]]
@@ -301,7 +353,6 @@ class UR5eRobotReal(Robot):
                                   euler_ori[1],
                                   euler_ori[2]).flatten().tolist()
         else:
-            # TODO Anthony, fill in this part
             raise RuntimeError('Cannot get pose information!')
         return pos, quat_ori, rot_mat, euler_ori
 
@@ -345,7 +396,7 @@ class UR5eRobotReal(Robot):
         if jpos.size != self.arm_dof:
             raise ValueError('Length of the joint angles '
                              'does not match the robot DOF')
-        assert joint_positions.size == self.arm_dof
+        assert jpos.size == self.arm_dof
         kdl_jnt_angles = joints_to_kdl(jpos)
 
         kdl_end_frame = kdl.Frame()
@@ -478,7 +529,7 @@ class UR5eRobotReal(Robot):
                 pt_str = 'Unable to move to joint goals [mode: %s] (%s)' \
                          ' within %f s' % (mode, str(goal),
                                            self.cfgs.TIMEOUT_LIMIT)
-                arutil.print_red(pt_str)
+                print_red(pt_str)
                 return success
             if self._reach_jnt_goal(goal, joint_name, mode=mode):
                 success = True
@@ -516,6 +567,69 @@ class UR5eRobotReal(Robot):
         else:
             return False
 
+    def _wait_to_reach_ee_goal(self, goal):
+        """
+        Block the code to wait for the end effector to reach its
+        specified goal pose (must be below both position and
+        orientation threshold). Max waiting time is
+        self.cfgs.TIMEOUT_LIMIT
+
+        Args:
+            goal (list): Goal pose for end effector
+
+        Returns:
+            bool: If end effector reached goal or not
+        """
+        success = False
+        start_time = time.time()
+        while True:
+            if not self._is_running():
+                raise RuntimeError("Robot stopped")
+
+            if time.time() - start_time > self.cfgs.TIMEOUT_LIMIT:
+                pt_str = "Unable to move to end effector goal:" \
+                         "%s within %f s" % (str(goal),
+                                             self.cfgs.TIMEOUT_LIMIT)
+                print_red(pt_str)
+                return success
+            if self._reach_ee_goal(goal):
+                success = True
+                break
+            time.sleep(0.001)
+        return success
+
+    def _reach_ee_goal(self, goal):
+        """
+        Check if end effector reached goal or not. Returns true
+        if both position and orientation goals have been reached
+        within specified tolerance
+
+        Args:
+            goal (list): Goal pose (position and orientation) of the
+                end effector
+
+        Returns:
+            bool: If goal pose is reached or not
+        """
+        goal_pos = np.array(goal[0:3])
+        goal_ori = np.array(goal[3:])
+
+        new_ee_pose = self.get_ee_pose()
+        new_ee_pos = np.array(new_ee_pose[0])
+        new_ee_ori = np.array(new_ee_pose[-1])
+
+        pos_diff = new_ee_pos - goal_pos
+        ori_diff = new_ee_ori - goal_ori
+
+        pos_error = np.max(np.abs(pos_diff))
+        ori_error = np.max(np.abs(ori_diff))
+
+        if pos_error < self.cfgs.MAX_EE_POSITION_ERROR and \
+                ori_error < self.cfgs.MAX_EE_ORIENTATION_ERROR:
+            return True
+        else:
+            return False
+
     def _init_consts(self):
         """
         Initialize constants
@@ -528,6 +642,7 @@ class UR5eRobotReal(Robot):
                                         self.cfgs.ROBOT_EE_FRAME,
                                         urdf_string=urdf_string)
         _, self.urdf_tree = treeFromParam(robot_description)
+        # TODO get base transform from gripper_tip, from urdf tree or chain
         self.urdf_chain = self.urdf_tree.getChain(self.cfgs.ROBOT_BASE_FRAME,
                                                   self.cfgs.ROBOT_EE_FRAME)
         self.arm_jnt_names = self._get_kdl_joint_names()
