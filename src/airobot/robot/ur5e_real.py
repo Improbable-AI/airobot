@@ -13,9 +13,9 @@ import PyKDL as kdl
 import numpy as np
 import rospy
 from trac_ik_python import trac_ik
-from transforms3d.euler import euler2mat
-from transforms3d.euler import euler2quat
-from transforms3d.euler import quat2euler
+from tf.transformations import euler_from_quaternion
+from tf.transformations import quaternion_from_euler
+from tf.transformations import euler_matrix
 
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
@@ -202,8 +202,8 @@ class UR5eRobotReal(Robot):
         Args:
             pos (list): Desired x, y, z positions in the robot's base frame to
                 move to
-            ori (list, optional): Desired euler angle orientation of the end
-                effector. Defaults to None.
+            ori (list, optional): Desired euler angle orientation (roll, pitch, yaw)
+                or quaternion ([x, y, z, w]) of the end effector. It Defaults to None.
             acc (float, optional): Acceleration of end effector during
                 beginning of movement. Defaults to 0.1.
             vel (float, optional): Velocity of end effector during movement.
@@ -215,11 +215,11 @@ class UR5eRobotReal(Robot):
         success = False
         if ori is None:
             ori = self.get_ee_pose()[-1]  # last index of return is euler angle
+        if len(ori == 4):
+            # assume incoming orientation is quaternion
+            ori = euler_from_quaternion(ori)
         ee_pos = [pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]]
         if linear_path:
-            if len(ori == 4):
-                # assume incoming orientation is quaternion
-                ori = quat2euler(ori)
             prog = 'movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)' % (
                 ee_pos[0],
                 ee_pos[1],
@@ -335,7 +335,7 @@ class UR5eRobotReal(Robot):
 
         Returns:
             list: x, y, z position of the EE (shape: [3])
-            list: quaternion representation of the EE orientation (shape: [4])
+            list: quaternion representation ([x, y, z, w]) of the EE orientation (shape: [4])
             list: rotation matrix representation of the EE orientation 
                 (shape: [9])
             list: euler angle representation of the EE orientation (roll, 
@@ -345,16 +345,24 @@ class UR5eRobotReal(Robot):
         if pose_data:
             pos = [pose_data["X"], pose_data["Y"], pose_data["Z"]]
             euler_ori = [pose_data["Rx"], pose_data["Ry"], pose_data["Rz"]]
-
-            rot_mat = euler2mat(euler_ori[0],
-                                euler_ori[1],
-                                euler_ori[2]).tolist()
-            quat_ori = euler2quat(euler_ori[0],
-                                  euler_ori[1],
-                                  euler_ori[2]).flatten().tolist()
+            rot_mat = euler_matrix(*euler_ori)[:3, :3].tolist()
+            quat_ori = quaternion_from_euler(*euler_ori).tolist()
         else:
             raise RuntimeError('Cannot get pose information!')
         return pos, quat_ori, rot_mat, euler_ori
+
+    def get_images(self, get_rgb=True, get_depth=True, **kwargs):
+        """
+        Return rgba/depth images
+
+        Args:
+            get_rgb (bool): return rgb image if True, None otherwise
+            get_depth (bool): return depth image if True, None otherwise
+
+        Returns:
+            np.ndarray: rgba and depth images
+        """
+        return self.camera.get_images(get_rgb, get_depth)
 
     def get_jacobian(self, joint_angles):
         """
@@ -465,7 +473,7 @@ class UR5eRobotReal(Robot):
         if ori is not None:
             if len(ori) == 3:
                 # [roll, pitch, yaw]
-                ori = euler2quat(ori)
+                ori = quaternion_from_euler(*ori)
             if len(ori) != 4:
                 raise ValueError('Orientation should be either '
                                  'euler angles or quaternion')
