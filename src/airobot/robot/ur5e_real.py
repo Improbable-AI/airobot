@@ -12,8 +12,9 @@ import PyKDL as kdl
 import numpy as np
 import rospy
 from trac_ik_python import trac_ik
-from transforms3d.euler import euler2quat, euler2mat
-from transforms3d.quat import quat2euler
+from transforms3d.euler import euler2quat
+from transforms3d.euler import euler2mat
+from transforms3d.euler import quat2euler
 
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
@@ -50,8 +51,6 @@ class UR5eRobotReal(Robot):
             prog (str): URScript program which will be sent and run on
             the UR5e machine
 
-        Return:
-            None
         """
         self.monitor.send_program(prog)
 
@@ -110,8 +109,8 @@ class UR5eRobotReal(Robot):
             #     gripper_pos = self.get_jpos(self.gripper_jnt_names[0])
             #     position.append(gripper_pos)
             if len(position) != 6:
-                raise ValueError("position should contain 6 or 7 elements if"
-                                 "joint_name is not provided")
+                raise ValueError('position should contain 6 or 7 elements if'
+                                 'joint_name is not provided')
 
             # gripper_pos = position[-1]
             # gripper_pos = max(self.gripper_close_angle, gripper_pos)
@@ -129,7 +128,7 @@ class UR5eRobotReal(Robot):
                 rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
                 current_pos[rvl_jnt_idx] = target_pos_joint
                 target_pos = copy.deepcopy(current_pos)
-        prog = "movej([%f, %f, %f, %f, %f, %f])" % (target_pos[0],
+        prog = 'movej([%f, %f, %f, %f, %f, %f])' % (target_pos[0],
                                                     target_pos[1],
                                                     target_pos[2],
                                                     target_pos[3],
@@ -139,7 +138,7 @@ class UR5eRobotReal(Robot):
         if wait:
             success = self._wait_to_reach_jnt_goal(target_pos,
                                                    joint_name=joint_name,
-                                                   mode="pos")
+                                                   mode='pos')
 
         return success
 
@@ -164,8 +163,8 @@ class UR5eRobotReal(Robot):
             #     velocity.append(gripper_vel)
 
             if len(velocity) != 6:
-                raise ValueError("Velocity should contain 6 or 7 elements"
-                                 "if the joint name is not provided")
+                raise ValueError('Velocity should contain 6 or 7 elements'
+                                 'if the joint name is not provided')
 
             target_vel = velocity
 
@@ -178,7 +177,7 @@ class UR5eRobotReal(Robot):
                 rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
                 target_vel[rvl_jnt_idx] = target_vel_joint
 
-        prog = "speedj([%f, %f, %f, %f, %f, %f], a=%f)" % (target_vel[0],
+        prog = 'speedj([%f, %f, %f, %f, %f, %f], a=%f)' % (target_vel[0],
                                                            target_vel[1],
                                                            target_vel[2],
                                                            target_vel[3],
@@ -220,7 +219,7 @@ class UR5eRobotReal(Robot):
             if len(ori == 4):
                 # assume incoming orientation is quaternion
                 ori = quat2euler(ori)
-            prog = "movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)" % (
+            prog = 'movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)' % (
                 ee_pos[0],
                 ee_pos[1],
                 ee_pos[2],
@@ -323,8 +322,8 @@ class UR5eRobotReal(Robot):
             jvel (list): list of current joint angular velocities in radians/s
         """
         jdata = self.monitor.get_joint_data()
-        jvel = [jdata["qd_actual0"], jdata["qd_actual1"], jdata["qd_actual2"],
-                jdata["qd_actual3"], jdata["qd_actual4"], jdata["qd_actual5"]]
+        jvel = [jdata['qd_actual0'], jdata['qd_actual1'], jdata['qd_actual2'],
+                jdata['qd_actual3'], jdata['qd_actual4'], jdata['qd_actual5']]
         return jvel
 
     def get_ee_pose(self):
@@ -501,7 +500,7 @@ class UR5eRobotReal(Robot):
                                              ori_tol)
         if jnt_poss is None:
             return None
-        return jnt_poss
+        return list(jnt_poss)
 
     def _wait_to_reach_jnt_goal(self, goal, joint_name=None, mode='pos'):
         """
@@ -587,8 +586,8 @@ class UR5eRobotReal(Robot):
                 raise RuntimeError("Robot stopped")
 
             if time.time() - start_time > self.cfgs.TIMEOUT_LIMIT:
-                pt_str = "Unable to move to end effector goal:" \
-                         "%s within %f s" % (str(goal),
+                pt_str = 'Unable to move to end effector goal:' \
+                         '%s within %f s' % (str(goal),
                                              self.cfgs.TIMEOUT_LIMIT)
                 print_red(pt_str)
                 return success

@@ -16,7 +16,7 @@ _C.ROBOT_EE_FRAME = 'gripper_tip'
 _C.IK_POSITION_TOLERANCE = 0.01
 # inverse kinematics orientation tolerance (rad)
 _C.IK_ORIENTATION_TOLERANCE = 0.1
-_C.HOME_POSITION = [0, -1.5, 2.0, -2.05, -1.57, 0]
+_C.HOME_POSITION = [0, -1.513, 2.020, -2.078, -1.571, 0]
 _C.MAX_JOINT_ERROR = 0.01
 _C.MAX_JOINT_VEL_ERROR = 0.1
 _C.MAX_EE_POSITION_ERROR = 0.01
