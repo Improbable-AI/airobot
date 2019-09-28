@@ -7,18 +7,20 @@ from __future__ import print_function
 
 import copy
 import time
-from abc import ABC
+# from abc import ABC
 
 import PyKDL as kdl
 import numpy as np
 import rospy
 from trac_ik_python import trac_ik
+from kdl_parser_py.urdf import treeFromParam
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
 from tf.transformations import euler_matrix
+from tf.transformations import euler_from_matrix
 
 from airobot.robot.robot import Robot
-from airobot.end_effectors.robotiq_gripper import Robotiq_2F140
+from airobot.end_effectors.robotiq_gripper import Robotiq2F140
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
 from airobot.utils.tcp_util import SecondaryMonitor
 from airobot.utils.common import clamp
@@ -41,12 +43,13 @@ class UR5eRobotReal(Robot):
             super(UR5eRobotReal, self).__init__(cfgs=cfgs)
             self.moveit_planner = moveit_planner
             self.robot_ip = robot_ip
+            self._init_consts()
             self.monitor = SecondaryMonitor(self.robot_ip)
             self.monitor.wait()  # make contact with robot before anything
-            self.gripper = Robotiq_2F140(montior=self.monitor,
-                                         socker_host=self.cfgs.SOCKET_HOST,
-                                         socker_port=self.cfgs.SOCKET_PORT)
-            self._init_consts()
+            self.gripper = Robotiq2F140(montior=self.monitor,
+                                        socker_host=self.cfgs.SOCKET_HOST,
+                                        socker_port=self.cfgs.SOCKET_PORT)
+            self._set_tcp_offset()
 
     def send_program(self, prog):
         """
@@ -130,7 +133,7 @@ class UR5eRobotReal(Robot):
         success = False
 
         if joint_name is None:
-            if (len(position) != 6 or len(position != 7):
+            if len(position) != 6 or len(position) != 7:
                 raise ValueError('position should contain 6 or 7 elements if'
                                  'joint_name is not provided')
             if len(position) == 7:
@@ -675,6 +678,7 @@ class UR5eRobotReal(Robot):
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.arm_link_names = self._get_kdl_link_names()
         self.arm_dof = len(self.arm_joint_names)
+        self.gripper_tip_pos, self.gripper_tip_ori = self._get_tip_transform()
         moveit_commander.roscpp_initialize(sys.argv)
         self.moveit_group = MoveGroupCommander(self.cfgs.MOVEGROUP_NAME)
         self.moveit_group.set_planner_id(self.moveit_planner)
@@ -728,6 +732,28 @@ class UR5eRobotReal(Robot):
             joint_names.append(joint.getName())
         assert num_joints == len(joint_names)
         return copy.deepcopy(joint_names)
+
+    def _get_tip_transform(self):
+        gripper_tip_id = self.arm_link_names.index(self.cfgs.ROBOT_EE_FRAME)
+        gripper_tip_link = self.urdf_chain.getSegment(gripper_tip_id)
+        gripper_tip_tf = kdl_frame_to_numpy(gripper_tip_link.getFrameToTip())
+        gripper_tip_pos = gripper_tip_tf[:3, 3].flatten()
+        gripper_tip_rot_mat = np.eye(4)
+        gripper_tip_rot_mat[:3, :3] = gripper_tip_tf[:3, :3]
+        gripper_tip_euler = euler_from_matrix(gripper_tip_rot_mat).flatten()
+        return gripper_tip_pos.tolist(), gripper_tip_euler.tolist()
+
+    def _set_tcp_offset(self):
+        tcp_offset_prog = 'set_tcp(%f, %f, %f, %f, %f, %f)' % (
+            self.gripper_tip_pos[0],
+            self.gripper_tip_pos[1],
+            self.gripper_tip_pos[2],
+            self.gripper_tip_ori[0],
+            self.gripper_tip_ori[1],
+            self.gripper_tip_ori[2]
+        )
+
+        self.send_program(tcp_offset_prog)
 
     def _close(self):
         self.monitor.close()

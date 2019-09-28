@@ -90,7 +90,7 @@ class RobotiqScript(URScript):
         self._socket_set_var(ACT, 1, self.socket_name)
 
 
-class Robotiq2F140(object):
+class Robotiq_2F140(object):
 
     def __init__(self,
                  monitor,
