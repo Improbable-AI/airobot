@@ -49,7 +49,9 @@ class UR5eRobotReal(Robot):
             self.monitor.wait()  # make contact with robot before anything
             self.gripper = Robotiq2F140(montior=self.monitor,
                                         socker_host=self.cfgs.SOCKET_HOST,
-                                        socker_port=self.cfgs.SOCKET_PORT)
+                                        socker_port=self.cfgs.SOCKET_PORT,
+                                        open_angle=self.gripper_open_angle,
+                                        close_angle=self.gripper_close_angle)
             self._set_tcp_offset()
 
     def send_program(self, prog):
@@ -85,35 +87,6 @@ class UR5eRobotReal(Robot):
         """
         # 6 joints for the arm, 7th joint for the gripper
         self.set_jpos(self._home_position, wait=True)
-
-    def set_gripper_pos(self, position):
-        """
-        Method to send a position command to the gripper
-        by creating a URScript program which runs on the robot
-        and forwards the control command to the gripper
-
-        Args:
-            position (float): Desired gripper position,
-                0.0 is fully open, 0.7 is fully closed
-        """
-        position = clamp(position,
-                         self.gripper_open_angle,
-                         self.gripper_close_angle)
-        urscript = self.gripper._get_new_urscript()
-        urscript._set_gripper_position(position)
-        self.monitor.send_program(urscript())
-
-    def open_gripper(self):
-        """
-        Commands the gripper to fully open (0.0)
-        """
-        self.set_gripper_pos(self.gripper_open_angle)
-
-    def close_gripper(self):
-        """
-        Commands the gripper to fully close (0.7)
-        """
-        self.set_gripper_pos(self.gripper_close_angle)
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """

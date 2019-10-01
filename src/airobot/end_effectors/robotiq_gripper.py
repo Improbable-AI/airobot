@@ -2,6 +2,8 @@ import logging
 import os
 
 from airobot.utils.urscript_util import URScript
+from airobot.utils.common import clamp
+
 
 # Gripper Variables
 ACT = "ACT"
@@ -44,19 +46,19 @@ class RobotiqScript(URScript):
         self._socket_send_string("GET {}".format(var_name))
         self._socket_read_byte_list(nbytes)
 
-    def _get_gripper_fault(self):
+    def get_gripper_fault(self):
         self._rq_get_var(FLT, 2)
 
-    def _get_gripper_object(self):
+    def get_gripper_object(self):
         self._rq_get_var(OBJ, 1)
 
-    def _get_gripper_status(self):
+    def get_gripper_status(self):
         self._rq_get_var(STA, 1)
 
-    def _set_gripper_activate(self):
+    def set_gripper_activate(self):
         self._socket_set_var(GTO, 1, self.socket_name)
 
-    def _set_gripper_force(self, value):
+    def set_gripper_force(self, value):
         """
         FOR is the variable
         range is 0 - 255
@@ -66,7 +68,7 @@ class RobotiqScript(URScript):
         value = self._constrain_unsigned_char(value)
         self._socket_set_var(FOR, value, self.socket_name)
 
-    def _set_gripper_position(self, value):
+    def set_gripper_position(self, value):
         """
         SPE is the variable
         range is 0 - 255
@@ -76,7 +78,7 @@ class RobotiqScript(URScript):
         value = self._constrain_unsigned_char(value)
         self._socket_set_var(POS, value, self.socket_name)
 
-    def _set_gripper_speed(self, value):
+    def set_gripper_speed(self, value):
         """
         SPE is the variable
         range is 0 - 255
@@ -86,7 +88,7 @@ class RobotiqScript(URScript):
         value = self._constrain_unsigned_char(value)
         self._socket_set_var(SPE, value, self.socket_name)
 
-    def _set_robot_activate(self):
+    def set_robot_activate(self):
         self._socket_set_var(ACT, 1, self.socket_name)
 
 
@@ -96,14 +98,22 @@ class Robotiq2F140(object):
                  monitor,
                  socket_host,
                  socket_port,
+                 open_angle,
+                 close_angle,
                  socket_name="gripper_socket",
                  payload=0.85,
                  speed=255,
-                 force=50):
+                 force=50,
+                 output_range=255):
         self.monitor = monitor
         self.payload = payload
         self.speed = speed
         self.force = force
+        self.open_angle = open_angle
+        self.close_angle = close_angle
+        self.input_range = close_angle - open_angle
+        self.output_range = output_range
+        self.pos_range_scaling = (self.output_range/self.input_range)
         self.socket_host = socket_host
         self.socket_port = socket_port
         self.socket_name = socket_name
@@ -123,14 +133,47 @@ class Robotiq2F140(object):
         return urscript
 
     def activate_gripper(self):
+        """
+        Sen URScript command to activate the gripper
+        """
         urscript = self._get_new_urscript()
 
-        urscript._set_gripper_force(self.force)
-        urscript._set_gripper_speed(self.speed)
+        urscript.set_gripper_force(self.force)
+        urscript.set_gripper_speed(self.speed)
 
-        urscript._set_robot_activate()
-        urscript._set_gripper_activate()
-
-        urscript._sleep(0.1)
+        urscript.set_robot_activate()
+        urscript.set_gripper_activate()
 
         self.monitor.send_program(urscript())
+
+    def set_gripper_pos(self, position):
+        """
+        Method to send a position command to the gripper
+        by creating a URScript program which runs on the robot
+        and forwards the control command to the gripper
+
+        Args:
+            position (float): Desired gripper position,
+                fully open and closed position values specified
+                upon construction
+        """
+        position = clamp(position,
+                         self.open_angle,
+                         self.close_angle)
+        position = position * self.pos_range_scaling
+
+        urscript = self._get_new_urscript()
+        urscript.set_gripper_position(position)
+        self.monitor.send_program(urscript())
+
+    def open_gripper(self):
+        """
+        Commands the gripper to fully open
+        """
+        self.set_gripper_pos(self.open_angle)
+
+    def close_gripper(self):
+        """
+        Commands the gripper to fully close
+        """
+        self.set_gripper_pos(self.close_angle)
