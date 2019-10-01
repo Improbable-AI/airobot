@@ -12,6 +12,7 @@ import time
 import PyKDL as kdl
 import numpy as np
 import rospy
+import moveit_commander
 from trac_ik_python import trac_ik
 from kdl_parser_py.urdf import treeFromParam
 from tf.transformations import euler_from_quaternion
