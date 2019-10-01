@@ -29,7 +29,7 @@ _C.CAM_KINECT = CN()
 # communicate with the gripper through the
 # UR controller
 _C.SOCKET_HOST = "127.0.0.1"
-_C.SOCKET_PORT = 65532
+_C.SOCKET_PORT = 63352
 
 
 def get_cfg():

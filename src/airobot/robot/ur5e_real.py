@@ -7,12 +7,14 @@ from __future__ import print_function
 
 import copy
 import time
+import sys
 # from abc import ABC
 
 import PyKDL as kdl
 import numpy as np
 import rospy
 import moveit_commander
+from moveit_commander import MoveGroupCommander
 from trac_ik_python import trac_ik
 from kdl_parser_py.urdf import treeFromParam
 from tf.transformations import euler_from_quaternion
@@ -47,11 +49,11 @@ class UR5eRobotReal(Robot):
             self._init_consts()
             self.monitor = SecondaryMonitor(self.robot_ip)
             self.monitor.wait()  # make contact with robot before anything
-            self.gripper = Robotiq2F140(montior=self.monitor,
-                                        socker_host=self.cfgs.SOCKET_HOST,
-                                        socker_port=self.cfgs.SOCKET_PORT,
-                                        open_angle=self.gripper_open_angle,
-                                        close_angle=self.gripper_close_angle)
+            self.gripper = Robotiq2F140(self.monitor,
+                                        self.cfgs.SOCKET_HOST,
+                                        self.cfgs.SOCKET_PORT,
+                                        self.gripper_open_angle,
+                                        self.gripper_close_angle)
             self._set_tcp_offset()
 
     def send_program(self, prog):
@@ -107,12 +109,13 @@ class UR5eRobotReal(Robot):
         success = False
 
         if joint_name is None:
-            if len(position) != 6 or len(position) != 7:
+            if len(position) != 6 and len(position) != 7:
+                print("length of position vector: " + str(len(position)))
                 raise ValueError('position should contain 6 or 7 elements if'
                                  'joint_name is not provided')
             if len(position) == 7:
                 gripper_pos = position[-1]
-                self.set_gripper_pos(gripper_pos)
+                self.gripper.set_gripper_pos(gripper_pos)
                 position = position[:-1]
             target_pos = position
         else:
@@ -266,7 +269,7 @@ class UR5eRobotReal(Robot):
 
             waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
             waypoints = current_pos + waypoints_sp / float(path_len) * \
-                        delta_xyz
+                delta_xyz
 
             for i in range(waypoints.shape[0]):
                 tgt_jnt_poss = \
@@ -651,7 +654,7 @@ class UR5eRobotReal(Robot):
         self.arm_jnt_names = self._get_kdl_joint_names()
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.arm_link_names = self._get_kdl_link_names()
-        self.arm_dof = len(self.arm_joint_names)
+        self.arm_dof = len(self.arm_jnt_names)
         self.gripper_tip_pos, self.gripper_tip_ori = self._get_tip_transform()
         moveit_commander.roscpp_initialize(sys.argv)
         self.moveit_group = MoveGroupCommander(self.cfgs.MOVEGROUP_NAME)
@@ -714,11 +717,11 @@ class UR5eRobotReal(Robot):
         gripper_tip_pos = gripper_tip_tf[:3, 3].flatten()
         gripper_tip_rot_mat = np.eye(4)
         gripper_tip_rot_mat[:3, :3] = gripper_tip_tf[:3, :3]
-        gripper_tip_euler = euler_from_matrix(gripper_tip_rot_mat).flatten()
-        return gripper_tip_pos.tolist(), gripper_tip_euler.tolist()
+        gripper_tip_euler = euler_from_matrix(gripper_tip_rot_mat)
+        return list(gripper_tip_pos), list(gripper_tip_euler)
 
     def _set_tcp_offset(self):
-        tcp_offset_prog = 'set_tcp(%f, %f, %f, %f, %f, %f)' % (
+        tcp_offset_prog = 'set_tcp(p[%f, %f, %f, %f, %f, %f])' % (
             self.gripper_tip_pos[0],
             self.gripper_tip_pos[1],
             self.gripper_tip_pos[2],
@@ -729,5 +732,5 @@ class UR5eRobotReal(Robot):
 
         self.send_program(tcp_offset_prog)
 
-    def _close(self):
+    def close(self):
         self.monitor.close()

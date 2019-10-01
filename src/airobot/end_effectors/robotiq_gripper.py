@@ -144,6 +144,8 @@ class Robotiq2F140(object):
         urscript.set_robot_activate()
         urscript.set_gripper_activate()
 
+        urscript._sleep(0.1)
+
         self.monitor.send_program(urscript())
 
     def set_gripper_pos(self, position):
@@ -160,7 +162,8 @@ class Robotiq2F140(object):
         position = clamp(position,
                          self.open_angle,
                          self.close_angle)
-        position = position * self.pos_range_scaling
+        position = int(position * self.pos_range_scaling)
+        position = min(position, self.output_range)
 
         urscript = self._get_new_urscript()
         urscript.set_gripper_position(position)
