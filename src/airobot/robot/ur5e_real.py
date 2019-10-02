@@ -37,7 +37,7 @@ from airobot.utils.common import print_red
 
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, robot_ip, use_cam=False, use_arm=True,
-                 use_tcp=True, moveit_planner='RRTConnectkConfigDefault'):
+                 use_tcp=False, moveit_planner='RRTConnectkConfigDefault'):
         try:
             rospy.init_node('ur5e', anonymous=True)
         except rospy.exceptions.ROSException:
@@ -58,11 +58,11 @@ class UR5eRobotReal(Robot):
                                             self.cfgs.SOCKET_PORT,
                                             self.gripper_open_angle,
                                             self.gripper_close_angle)
+                self._set_tcp_offset()
             else:
                 self.gripper = Robotiq2F140Sim(self.cfgs.GRIPPER_SIM_TOPIC,
                                                self.gripper_open_angle,
                                                self.gripper_close_angle)
-            self._set_tcp_offset()
 
     def __del__(self):
         self.monitor.close()
@@ -113,7 +113,7 @@ class UR5eRobotReal(Robot):
         self.gripper.open_gripper()
 
     def set_jpos(self, position, joint_name=None, wait=True,
-                 plan=False, *args, **kwargs):
+                 plan=True, *args, **kwargs):
         """
         Method to send a joint position command to the robot
 
@@ -154,13 +154,16 @@ class UR5eRobotReal(Robot):
             self._send_program(prog)
         else:
             if plan:
+                self.moveit_group.set_joint_value_target(tgt_pos)
                 return self.moveit_group.go(tgt_pos, wait=wait)
             else:
                 self._pub_joint_positions(tgt_pos)
                 # TODO implement non-TCP + non-Moveit version of
                 # wait to reach joint goal, for now just return true
                 success = True
-        if wait:
+
+        # in plan mode, moveit already checks this
+        if wait and not plan:
             success = self._wait_to_reach_jnt_goal(tgt_pos,
                                                    joint_name=joint_name,
                                                    mode='pos')
@@ -195,15 +198,18 @@ class UR5eRobotReal(Robot):
                 tgt_vel = [0.0] * len(self.arm_jnt_names)
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_vel[arm_jnt_idx] = velocity
-
-        prog = 'speedj([%f, %f, %f, %f, %f, %f], a=%f)' % (tgt_vel[0],
-                                                           tgt_vel[1],
-                                                           tgt_vel[2],
-                                                           tgt_vel[3],
-                                                           tgt_vel[4],
-                                                           tgt_vel[5],
-                                                           acc)
-        self._send_program(prog)
+        if self.use_tcp:
+            prog = 'speedj([%f, %f, %f, %f, %f, %f], a=%f)' % (tgt_vel[0],
+                                                               tgt_vel[1],
+                                                               tgt_vel[2],
+                                                               tgt_vel[3],
+                                                               tgt_vel[4],
+                                                               tgt_vel[5],
+                                                               acc)
+            self._send_program(prog)
+        else:
+            # TODO non-TCP way
+            pass
 
         if wait:
             success = self._wait_to_reach_jnt_goal(target_vel,
@@ -212,8 +218,7 @@ class UR5eRobotReal(Robot):
 
         return success
 
-    def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, wait=True,
-                    linear_path=False, *args, **kwargs):
+    def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, wait=True, *args, **kwargs):
         """
         Set cartesian space pose of end effector
 
@@ -232,12 +237,22 @@ class UR5eRobotReal(Robot):
         """
         success = False
         if ori is None:
-            ori = self.get_ee_pose()[-1]  # last index of return is euler anglexs
-        if len(ori == 4):
+            pose = self.get_ee_pose()[-1]  # last index of return is euler anglexs
+            quat = pose[1]
+            euler = pose[-1]
+        elif len(ori) == 4:
+            quat = ori
             # assume incoming orientation is quaternion
-            ori = euler_from_quaternion(ori)
-        ee_pos = [pos[0], pos[1], pos[2], ori[0], ori[1], ori[2]]
-        if linear_path:
+            euler = euler_from_quaternion(quat)
+        elif len(ori) == 3:
+            euler = ori
+            quat = quaternion_from_euler(*euler)
+        else:
+            raise ValueError('Orientaion should be quaternion or'
+                             'euler angles')
+
+        if self.use_tcp:
+            ee_pos = [pos[0], pos[1], pos[2], euler[0], euler[1], euler[2]]
             prog = 'movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)' % (
                 ee_pos[0],
                 ee_pos[1],
@@ -250,10 +265,18 @@ class UR5eRobotReal(Robot):
                 0.0)
             self._send_program(prog)
             if wait:
-                success = self._wait_to_reach_ee_goal(ee_pos)
+                success = self._wait_to_reach_ee_goal(pos, quat)
         else:
-            jnt_pos = self.compute_ik(pos, ori)  # ik can handle quaternion
-            success = self.set_jpos(jnt_pos, wait=wait)
+            pose = moveit_group.get_current_pose()
+            pose.pose.position.x = pos[0]
+            pose.pose.position.y = pos[1]
+            pose.pose.position.z = pos[2]
+            pose.pose.orientation.x = quat[0]
+            pose.pose.orientation.y = quat[1]
+            pose.pose.orientation.z = quat[2]
+            pose.pose.orientation.w = quat[3]
+            self.moveit_group.set_pose_target(pose)
+            success = self.moveit_group.go(wait=True)
         return success
 
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True,
