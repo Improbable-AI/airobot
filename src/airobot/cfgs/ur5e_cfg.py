@@ -11,6 +11,7 @@ _C.PYBULLET_URDF = 'ur5e_2f140_pybullet.urdf'
 _C.MOVEGROUP_NAME = 'manipulator'
 # base frame for the arm
 _C.ROBOT_BASE_FRAME = 'base_link'
+_C.ROSTOPIC_JOINT_STATES = '/joint_states'
 # end-effector frame of the arm
 _C.ROBOT_EE_FRAME = 'gripper_tip'
 # namespace of the trajectory follower client

@@ -6,37 +6,36 @@ from __future__ import division
 from __future__ import print_function
 
 import copy
-import time
 import sys
+import threading
+import time
 
 import PyKDL as kdl
+import moveit_commander
 import numpy as np
 import rospy
-import moveit_commander
-from moveit_commander import MoveGroupCommander
-from trac_ik_python import trac_ik
+import tf
 from actionlib import SimpleActionClient
-from trajectory_msgs.msg import JointTrajectory
-from trajectory_msgs.msg import JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryAction
-from control_msgs.msg import FollowJointTrajectoryGoal
 from kdl_parser_py.urdf import treeFromParam
+from moveit_commander import MoveGroupCommander
+from sensor_msgs.msg import JointState
+from tf.transformations import euler_from_matrix
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
-from tf.transformations import euler_matrix
-from tf.transformations import euler_from_matrix
-from control_msgs.msg import FollowJointTrajectoryActionGoal
-from std_msgs.msg import Float64MultiArray
+from tf.transformations import quaternion_matrix
+from trac_ik_python import trac_ik
 
 from airobot.robot.robot import Robot
-from airobot.end_effectors.robotiq_gripper import Robotiq2F140, Robotiq2F140Sim
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
-from airobot.utils.ur_tcp_util import SecondaryMonitor
 from airobot.utils.common import clamp
 from airobot.utils.common import joints_to_kdl
 from airobot.utils.common import kdl_array_to_numpy
 from airobot.utils.common import kdl_frame_to_numpy
 from airobot.utils.common import print_red
+from airobot.utils.moveit_util import MoveitScene
+from airobot.utils.ros_util import get_tf_transform
+from airobot.utils.ur_tcp_util import SecondaryMonitor
 
 
 class UR5eRobotReal(Robot):
@@ -61,25 +60,28 @@ class UR5eRobotReal(Robot):
                 # self.gripper = Robotiq2F140(cfgs, self.tcp_monitor)
 
     def __del__(self):
+        self.stop()
+
+    def stop(self):
         self.tcp_monitor.close()
+        # self.set_jvel([0] * len(self.arm_jnt_names))
+        if hasattr(self, 'tcp_monitor'):
+            self.tcp_monitor.close()
 
     def _initialize_tcp_comm(self):
         self.tcp_monitor = SecondaryMonitor(self.robot_ip)
 
         self.tcp_monitor.wait()  # make contact with robot before anything
-        # TODO make one gripper class, use a flag to switch
-        # between ros control and tcp control
-        
+
         self._set_tcp_offset()
-        
+
     def set_comm_mode(self, use_ros=True):
         """
-        Method to set whether to use TCP/IP to communicate with the
-        real robot or to use ROS
+        Method to set whether to use ros or urscript to control the real robot
 
         Arguments:
-            use_tcp (bool): True if we should use TCP/IP, False if
-                we should use ROS
+            use_ros (bool): True if we should use ros and moveit, False if
+                we should use urscript
         """
         self.use_ros = use_ros
 
@@ -118,10 +120,9 @@ class UR5eRobotReal(Robot):
         Move the robot to a pre-defined home pose
         """
         self.set_jpos(self._home_position, wait=True)
-        self.gripper.open_gripper()
+        # self.gripper.open_gripper()
 
-    def set_jpos(self, position, joint_name=None, wait=True,
-                 plan=True, *args, **kwargs):
+    def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
         Method to send a joint position command to the robot
 
@@ -161,17 +162,10 @@ class UR5eRobotReal(Robot):
                                                         tgt_pos[5])
             self._tcp_send_program(prog)
         else:
-            if plan:
-                self.moveit_group.set_joint_value_target(tgt_pos)
-                return self.moveit_group.go(tgt_pos, wait=wait)
-            else:
-                self._pub_joint_positions(tgt_pos)
-                # TODO implement non-TCP + non-Moveit version of
-                # wait to reach joint goal, for now just return true
-                success = True
+            self.moveit_group.set_joint_value_target(tgt_pos)
+            return self.moveit_group.go(tgt_pos, wait=wait)
 
-        # in plan mode, moveit already checks this
-        if wait and not plan:
+        if wait:
             success = self._wait_to_reach_jnt_goal(tgt_pos,
                                                    joint_name=joint_name,
                                                    mode='pos')
@@ -310,6 +304,7 @@ class UR5eRobotReal(Robot):
                                        ik_first=False)
         else:
             cur_pos = np.array(ee_pos)
+            cur_quat = ee_quat
             delta_xyz = np.array(delta_xyz)
             path_len = np.linalg.norm(delta_xyz)
             num_pts = int(np.ceil(path_len / float(eef_step)))
@@ -317,75 +312,90 @@ class UR5eRobotReal(Robot):
                 num_pts = 2
             waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
             waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
-
-            way_jnt_positions = []
-            qinit = self.get_jpos()
-            g = FollowJointTrajectoryGoal()
-            g.trajectory = JointTrajectory()
-            g.trajectory.joint_names = self.arm_jnt_names
-            g.trajectory.points = [
-                JointTrajectoryPoint(positions=qinit,
-                                     velocities=[0] * len(self.arm_jnt_names),
-                                     time_from_start=rospy.Duration(0.0))
-            ]
+            moveit_waypoints = []
+            wpose = self.moveit_group.get_current_pose().pose
             for i in range(waypoints.shape[0]):
-                tgt_jnt_poss = self.compute_ik(waypoints[i, :].flatten(),
-                                               ee_quat,
-                                               qinit=qinit)
-                if tgt_jnt_poss is None:
-                    rospy.logerr('No IK solution found; '
-                                 'check if target_pose is valid')
-                    return False
-                way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
-                qinit = copy.deepcopy(tgt_jnt_poss)
-                g.trajectory.points.append(
-                    JointTrajectoryPoint(positions=tgt_jnt_poss,
-                                         velocities=[0] * len(self.arm_jnt_names),
-                                         time_from_start=rospy.Duration(0.05 * i))
-                )
-            # http://docs.ros.org/diamondback/api/control_msgs/html/msg/FollowJointTrajectoryResult.html
-            self.traj_follower_client.send_goal(g)
-            self.traj_follower_client.wait_for_result()
-            res = self.traj_follower_client.get_result()
-            success = res.error_code == 0
+                wpose.position.x = waypoints[i, 0]
+                wpose.position.y = waypoints[i, 1]
+                wpose.position.z = waypoints[i, 2]
+                wpose.orientation.x = cur_quat[0]
+                wpose.orientation.y = cur_quat[1]
+                wpose.orientation.z = cur_quat[2]
+                wpose.orientation.w = cur_quat[3]
+                moveit_waypoints.append(copy.deepcopy(wpose))
+            (plan, fraction) = self.moveit_group.compute_cartesian_path(
+                moveit_waypoints,  # waypoints to follow
+                eef_step,  # eef_step
+                0.0)  # jump_threshold
+            success = self.moveit_group.execute(plan, wait=wait)
+            # delta_xyz = np.array(delta_xyz)
+            # path_len = np.linalg.norm(delta_xyz)
+            # num_pts = int(np.ceil(path_len / float(eef_step)))
+            # if num_pts <= 1:
+            #     num_pts = 2
+            # waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
+            # waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
+            #
+            # way_jnt_positions = []
+            # qinit = self.get_jpos()
+            # g = FollowJointTrajectoryGoal()
+            # g.trajectory = JointTrajectory()
+            # g.trajectory.joint_names = self.arm_jnt_names
+            # g.trajectory.points = [
+            #     JointTrajectoryPoint(positions=qinit,
+            #                          velocities=[0] * len(self.arm_jnt_names),
+            #                          time_from_start=rospy.Duration(0.0))
+            # ]
+            # for i in range(waypoints.shape[0]):
+            #     tgt_jnt_poss = self.compute_ik(waypoints[i, :].flatten(),
+            #                                    ee_quat,
+            #                                    qinit=qinit)
+            #     if tgt_jnt_poss is None:
+            #         rospy.logerr('No IK solution found; '
+            #                      'check if target_pose is valid')
+            #         return False
+            #     way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
+            #     qinit = copy.deepcopy(tgt_jnt_poss)
+            #     g.trajectory.points.append(
+            #         JointTrajectoryPoint(positions=tgt_jnt_poss,
+            #                              velocities=[0] * len(self.arm_jnt_names),
+            #                              time_from_start=rospy.Duration(0.05 * i))
+            #     )
+            # # http://docs.ros.org/diamondback/api/control_msgs/html/msg/FollowJointTrajectoryResult.html
+            # self.traj_follower_client.send_goal(g)
+            # self.traj_follower_client.wait_for_result()
+            # res = self.traj_follower_client.get_result()
+            # success = res.error_code == 0
         return success
 
     def get_jpos(self, joint_name=None):
-        """Get current joint angles of robot
-
-        Args:
-            joint_name (str, optional): Defaults to None.
-
-        Return:
-            jpos (list): list of current joint positions in radians
-        """
-        if not self.use_ros:
-            jdata = self.tcp_monitor.get_joint_data()
-            jpos = [jdata["q_actual0"], jdata["q_actual1"], jdata["q_actual2"],
-                    jdata["q_actual3"], jdata["q_actual4"], jdata["q_actual5"]]
+        self._j_state_lock.acquire()
+        if joint_name is not None:
+            if joint_name not in self.arm_jnt_names:
+                raise TypeError('Joint name [%s] not recognized!' % joint_name)
+            jpos = self._j_pos[joint_name]
         else:
-            raise NotImplementedError
+            jpos = []
+            for joint in self.arm_jnt_names:
+                jpos.append(self._j_pos[joint])
+        self._j_state_lock.release()
         return jpos
 
     def get_jvel(self, joint_name=None):
-        """Get current joint angular velocities of robot
-
-        Args:
-            joint_name (str, optional): Defaults to None.
-
-        Return:
-            jvel (list): list of current joint angular velocities in radians/s
-        """
-        jdata = self.tcp_monitor.get_joint_data()
-        jvel = [jdata['qd_actual0'], jdata['qd_actual1'], jdata['qd_actual2'],
-                jdata['qd_actual3'], jdata['qd_actual4'], jdata['qd_actual5']]
+        self._j_state_lock.acquire()
+        if joint_name is not None:
+            if joint_name not in self.arm_jnt_names:
+                raise TypeError('Joint name [%s] not recognized!' % joint_name)
+            jvel = self._j_vel[joint_name]
+        else:
+            jvel = []
+            for joint in self.arm_jnt_names:
+                jvel.append(self._j_vel[joint])
+        self._j_state_lock.release()
         return jvel
 
     def get_ee_pose(self):
         """Get current cartesian pose of the EE, in the robot's base frame
-
-        Args:
-            wait (bool, optional): [description]. Defaults to False.
 
         Returns:
             list: x, y, z position of the EE (shape: [3])
@@ -395,15 +405,12 @@ class UR5eRobotReal(Robot):
             list: euler angle representation of the EE orientation (roll,
                 pitch, yaw with static reference frame) (shape: [3])
         """
-        pose_data = self.tcp_monitor.get_cartesian_info()
-        if pose_data:
-            pos = [pose_data["X"], pose_data["Y"], pose_data["Z"]]
-            euler_ori = [pose_data["Rx"], pose_data["Ry"], pose_data["Rz"]]
-            rot_mat = euler_matrix(*euler_ori)[:3, :3].tolist()
-            quat_ori = quaternion_from_euler(*euler_ori).tolist()
-        else:
-            raise RuntimeError('Cannot get pose information!')
-        return pos, quat_ori, rot_mat, euler_ori
+        pos, quat = get_tf_transform(self.tf_listener,
+                                     self.cfgs.ROBOT_BASE_FRAME,
+                                     self.cfgs.ROBOT_EE_FRAME)
+        rot_mat = quaternion_matrix(quat)[:3, :3].tolist()
+        euler_ori = list(euler_from_quaternion(quat))
+        return pos, quat, rot_mat, euler_ori
 
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
@@ -747,7 +754,33 @@ class UR5eRobotReal(Robot):
         moveit_commander.roscpp_initialize(sys.argv)
         self.moveit_group = MoveGroupCommander(self.cfgs.MOVEGROUP_NAME)
         self.moveit_group.set_planner_id(self.moveit_planner)
-        self.moveit_scene = moveit_commander.PlanningSceneInterface()
+        self.moveit_scene = MoveitScene()
+
+        # add a virtual base support frame of the real robot:
+        ur_base_name = 'ur_base'
+        ur_base_attached = False
+        for i in range(1):
+            self.moveit_scene.add_static_obj(ur_base_name,
+                                             [0, 0, -0.5],
+                                             [0, 0, 0, 1],
+                                             size=[0.25, 0.50, 1.0],
+                                             obj_type='box',
+                                             ref_frame='/base_link')
+            time.sleep(1)
+            obj_dict, obj_adict = self.moveit_scene.get_objects()
+            if ur_base_name in obj_dict.keys():
+                ur_base_attached = True
+                break
+        if not ur_base_attached:
+            print_red('Fail to add the UR base support as a collision object. '
+                      'Be careful when you use moveit to plan the path! You can'
+                      'try again to add the base manually.')
+        self.moveit_scene.add_static_obj('ur_base',
+                                         [0, 0, -0.5],
+                                         [0, 0, 0, 1],
+                                         size=[0.25, 0.50, 1.0],
+                                         obj_type='box',
+                                         ref_frame='/base_link')
 
         self.traj_follower_client = SimpleActionClient(self.cfgs.TRAJ_FOLLOW_CLIENT_NS,
                                                        FollowJointTrajectoryAction)
@@ -766,6 +799,14 @@ class UR5eRobotReal(Robot):
 
         self.ee_link = self.cfgs.ROBOT_EE_FRAME
 
+        self._j_pos = dict()
+        self._j_vel = dict()
+        self._j_torq = dict()
+        self._j_state_lock = threading.RLock()
+        self.tf_listener = tf.TransformListener()
+        rospy.Subscriber(self.cfgs.ROSTOPIC_JOINT_STATES, JointState,
+                         self._callback_joint_states)
+
         # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
         self._max_torques = [150, 150, 150, 28, 28, 28]
         # a random value for robotiq joints
@@ -776,6 +817,27 @@ class UR5eRobotReal(Robot):
         acc_scale = clamp(acc_scale, 0.0, 1.0)
         self.moveit_group.set_max_velocity_scaling_factor(vel_scale)
         self.moveit_group.set_max_acceleration_scaling_factor(acc_scale)
+
+    def _callback_joint_states(self, msg):
+        """
+        ROS subscriber callback for arm joint states
+
+        Args:
+            msg (sensor_msgs/JointState): Contains message published in topic
+
+        Returns:
+
+        """
+        self._j_state_lock.acquire()
+        for idx, name in enumerate(msg.name):
+            if name in self.arm_jnt_names:
+                if idx < len(msg.position):
+                    self._j_pos[name] = msg.position[idx]
+                if idx < len(msg.velocity):
+                    self._j_vel[name] = msg.velocity[idx]
+                if idx < len(msg.effort):
+                    self._j_torq[name] = msg.effort[idx]
+        self._j_state_lock.release()
 
     def _get_kdl_link_names(self):
         num_links = self.urdf_chain.getNrOfSegments()
@@ -821,26 +883,6 @@ class UR5eRobotReal(Robot):
         )
 
         self._tcp_send_program(tcp_offset_prog)
-
-    def _pub_joint_positions(self, positions):
-        """
-        Internal publisher function for sending desired joint positions
-        to ROS controller
-
-        Arguments:
-            positions (list): List of desired angles for arm to move to,
-                by now we have checked to make sure it's of correct
-                dimension (1 X 6)
-        """
-        goal_positions = FloatMulti64Array()
-        goal_positions.data = positions
-        self.joint_pub.publish(goal_positions)
-
-    def _setup_pub_sub(self):
-        self.joint_pub = rospy.Publisher(
-            '/joint_group_position_controller/command',
-            Float64MultiArray,
-            queue_size=10)
 
     def _tcp_send_program(self, prog):
         """

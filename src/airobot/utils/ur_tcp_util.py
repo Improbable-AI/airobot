@@ -513,6 +513,9 @@ class SecondaryMonitor(Thread):
         self.start()
         self.wait()  # make sure we got some data before someone calls us
 
+    def __del__(self):
+        self.close()
+
     def send_program(self, prog):
         """
         Send program to robot in URRobot format. If another program

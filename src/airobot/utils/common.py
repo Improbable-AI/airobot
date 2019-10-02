@@ -5,7 +5,6 @@ from __future__ import print_function
 import PyKDL as kdl
 import numpy as np 
 
-
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
 

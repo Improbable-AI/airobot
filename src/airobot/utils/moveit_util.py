@@ -3,7 +3,7 @@ import sys
 import moveit_commander
 from geometry_msgs.msg import PoseStamped
 from moveit_commander import conversions
-
+import time
 
 class MoveitScene(object):
     """
@@ -16,6 +16,7 @@ class MoveitScene(object):
         """
         moveit_commander.roscpp_initialize(sys.argv)
         self.scene = moveit_commander.PlanningSceneInterface()
+        time.sleep(1)
 
     def add_static_obj(self, obj_name, pos, ori, size=None,
                        obj_type='box', ref_frame='/base_link',
@@ -127,6 +128,11 @@ class MoveitScene(object):
         # remove attached objects
         for key in objs_attached.keys():
             self.unlink_obj(objs_attached[key].link_name, key)
+
+    def get_objects(self):
+        objs = self.scene.get_objects()
+        objs_attached = self.scene.get_attached_objects()
+        return objs, objs_attached
 
     def unlink_obj(self, ref_frame, obj_name=None, delete=True):
         """
