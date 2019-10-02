@@ -672,9 +672,9 @@ class UR5eRobotReal(Robot):
                 raise RuntimeError("Robot stopped")
 
             if time.time() - start_time > self.cfgs.TIMEOUT_LIMIT:
-                pt_str = 'Unable to move to end effector goal:' \
-                         '%s within %f s' % (str(pos), str(ori),
-                                             self.cfgs.TIMEOUT_LIMIT)
+                pt_str = 'Unable to move to end effector position:' \
+                         '%s and orientaion: %s within %f s' % (str(pos), str(ori),
+                                                                self.cfgs.TIMEOUT_LIMIT)
                 print_red(pt_str)
                 return success
             if self._reach_ee_goal(pos, ori):
