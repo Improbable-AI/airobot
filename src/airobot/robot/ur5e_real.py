@@ -20,6 +20,7 @@ from control_msgs.msg import FollowJointTrajectoryAction
 from kdl_parser_py.urdf import treeFromParam
 from moveit_commander import MoveGroupCommander
 from sensor_msgs.msg import JointState
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from tf.transformations import euler_from_matrix
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
@@ -53,11 +54,25 @@ class UR5eRobotReal(Robot):
             self.gazebo_sim = rospy.get_param('sim')
             self._tcp_initialized = False
             self._init_consts()
+
+            self.tcp_monitor = None
             if not self.gazebo_sim:
                 self.robot_ip = rospy.get_param('robot_ip')
                 self.set_comm_mode()
                 self._initialize_tcp_comm()
-                # self.gripper = Robotiq2F140(cfgs, self.tcp_monitor)
+
+                self.gripper = Robotiq2F140(cfgs=cfgs,
+                                            use_ros=self.use_ros,
+                                            monitor=self.tcp_monitor)
+
+                self._joint_angles = dict()
+                self._joint_velocities = dict()
+                self._joint_efforts = dict()
+                rospy.Subcriber(self.cfgs.ROSTOPIC_JOINT_STATE,
+                                JointState,
+                                self._joint_state_callback)
+
+                self._setup_pub_sub()
 
     def __del__(self):
         self.stop()
@@ -161,14 +176,15 @@ class UR5eRobotReal(Robot):
                                                         tgt_pos[4],
                                                         tgt_pos[5])
             self._tcp_send_program(prog)
+
+            if wait:
+                success = self._wait_to_reach_jnt_goal(
+                    tgt_pos,
+                    joint_name=joint_name,
+                    mode='pos')
         else:
             self.moveit_group.set_joint_value_target(tgt_pos)
-            return self.moveit_group.go(tgt_pos, wait=wait)
-
-        if wait:
-            success = self._wait_to_reach_jnt_goal(tgt_pos,
-                                                   joint_name=joint_name,
-                                                   mode='pos')
+            success = self.moveit_group.go(tgt_pos, wait=wait)
 
         return success
 
@@ -210,11 +226,10 @@ class UR5eRobotReal(Robot):
                                                                acc)
             self._tcp_send_program(prog)
         else:
-            # TODO non-TCP way
-            pass
+            self._pub_joint_vel(tgt_vel)
 
         if wait:
-            success = self._wait_to_reach_jnt_goal(target_vel,
+            success = self._wait_to_reach_jnt_goal(tgt_vel,
                                                    joint_name=joint_name,
                                                    mode='vel')
 
@@ -275,7 +290,7 @@ class UR5eRobotReal(Robot):
                 if wait:
                     success = self._wait_to_reach_ee_goal(pos, quat)
         else:
-            pose = moveit_group.get_current_pose()
+            pose = self.moveit_group.get_current_pose()
             pose.pose.position.x = pos[0]
             pose.pose.position.y = pos[1]
             pose.pose.position.z = pos[2]
@@ -661,7 +676,7 @@ class UR5eRobotReal(Robot):
 
             if time.time() - start_time > self.cfgs.TIMEOUT_LIMIT:
                 pt_str = 'Unable to move to end effector goal:' \
-                         '%s within %f s' % (str(goal),
+                         '%s within %f s' % (str(pos), str(ori),
                                              self.cfgs.TIMEOUT_LIMIT)
                 print_red(pt_str)
                 return success
@@ -884,13 +899,46 @@ class UR5eRobotReal(Robot):
 
         self._tcp_send_program(tcp_offset_prog)
 
-    def _tcp_send_program(self, prog):
+    def _joint_state_callback(self, msg):
         """
-        Method to send URScript program to the TCP/IP monitor
+        ROS subscriber callback function, to receive published
+        joint state information
 
         Args:
-            prog (str): URScript program which will be sent and run on
-                the UR5e machine
-
+            msg (JointState): ROS msg with state information
         """
-        self.tcp_monitor.send_program(prog)
+        for ind, name in enumerate(msg.name):
+            if name in self.arm_jnt_names:
+                if ind < len(msg.position):
+                    self._joint_angles[name] = msg.position[ind]
+                if ind < len(msg.velocity):
+                    self._joint_velocities[name] = msg.velocity[ind]
+                if ind < len(msg.effort):
+                    self._joint_efforts[name] = msg.effort[ind]
+
+    def _pub_joint_vel(self, velocity):
+        """
+        Received joint velocity command, puts it in a ROS trajectory
+        msg, and uses internal publisher to send to /joint_speed topic
+        on the real robot
+
+        Args:
+            velocity (list): List of desired joint velocities
+                (length and order have already been checked)
+        """
+        goal_speed_msg = JointTrajectory()
+        goal_speed_msg.points.apppend(
+            JointTrajectoryPoint(
+                velocities=velocity))
+        self.joint_vel_pub.publish(goal_speed_msg)
+
+    def _setup_pub_sub(self):
+        """
+        Initialize all the publishers and subscribers used internally
+        """
+        # for publishing joint speed to real robot
+        self.joint_vel_pub = rospy.Publisher(
+            self.cfgs.JOINT_SPEED_TOPIC,
+            JointTrajectory,
+            queue_size=10
+        )

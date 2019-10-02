@@ -2,10 +2,10 @@
 
 """
 Tools for creating URScript messages, for communicating with the real UR
-robots over TCP/IP by creating URScript programs and sending them for 
+robots over TCP/IP by creating URScript programs and sending them for
 execution on the robot's system
 
-built off of urscript.py, part of python-urx library 
+built off of urscript.py, part of python-urx library
 (https://github.com/anthonysimeonov/python-urx/blob/master/urx/urscript.py)
 """
 
@@ -60,13 +60,13 @@ class URScript(object):
         self.header = ""
         self.program = ""
 
-    def add_header_to_program(self, header_line):
+    def _add_header_to_program(self, header_line):
         self.header = "{}\n{}".format(self.header, header_line)
 
-    def add_line_to_program(self, new_line):
+    def _add_line_to_program(self, new_line):
         self.program = "{}\n\t{}".format(self.program, new_line)
 
-    def _constrain_unsigned_char(self, value):
+    def constrain_unsigned_char(self, value):
         """
         Ensure that unsigned char values are constrained
         to between 0 and 255.
@@ -78,78 +78,112 @@ class URScript(object):
             value = 255
         return value
 
-    def _set_analog_inputrange(self, port, vrange):
-        if port in CONTROLLER_PORTS:
-            assert (vrange in CONTROLLER_VOLTAGE)
-        elif port in TOOL_PORTS:
-            assert (vrange in TOOL_VOLTAGE)
-        msg = "set_analog_inputrange({},{})".format(port, vrange)
-        self.add_line_to_program(msg)
-
-    def _set_analog_output(self, input_id, signal_level):
-        assert (input_id in [0, 1])
-        assert (signal_level in [0, 1])
-        msg = "set_analog_output({}, {})".format(input_id, signal_level)
-        self.add_line_to_program(msg)
-
-    def _set_analog_outputdomain(self, port, domain):
-        assert (domain in OUTPUT_DOMAIN_VOLTAGE)
-        msg = "set_analog_outputdomain({},{})".format(port, domain)
-        self.add_line_to_program(msg)
-
-    def _set_payload(self, mass, cog=None):
-        msg = "set_payload({}".format(mass)
-        if cog:
-            assert (len(cog) == 3)
-            msg = "{},{}".format(msg, cog)
-        msg = "{})".format(msg)
-        self.add_line_to_program(msg)
-
-    def _set_runstate_outputs(self, outputs=None):
-        if not outputs:
-            outputs = []
-        msg = "set_runstate_outputs({})".format(outputs)
-        self.add_line_to_program(msg)
-
-    def _set_tool_voltage(self, voltage):
-        assert (voltage in [0, 12, 24])
-        msg = "set_tool_voltage({})".format(voltage)
-        self.add_line_to_program(msg)
-
-    def _sleep(self, value):
+    def sleep(self, value):
         msg = "sleep({})".format(value)
-        self.add_line_to_program(msg)
+        self._add_line_to_program(msg)
 
-    def _socket_close(self, socket_name):
-        msg = "socket_close(\"{}\")".format(socket_name)
-        self.add_line_to_program(msg)
-
-    def _socket_get_var(self, var, socket_name):
-        msg = "socket_get_var(\"{}\",\"{}\")".format(var, socket_name)
-        self.add_line_to_program(msg)
-        self._sync()
-
-    def _socket_open(self, socket_host, socket_port, socket_name):
+    def socket_open(self, socket_host, socket_port, socket_name):
         msg = "socket_open(\"{}\",{},\"{}\")".format(socket_host,
                                                      socket_port,
                                                      socket_name)
-        self.add_line_to_program(msg)
+        self._add_line_to_program(msg)
 
-    def _socket_read_byte_list(self, nbytes, socket_name):
-        msg = "global var_value = socket_read_byte_list({},\"{}\")".format(nbytes, socket_name)  # noqa
-        self.add_line_to_program(msg)
+    def socket_close(self, socket_name):
+        msg = "socket_close(\"{}\")".format(socket_name)
+        self._add_line_to_program(msg)
+
+    def socket_get_var(self, var, socket_name):
+        msg = "socket_get_var(\"{}\",\"{}\")".format(var, socket_name)
+        self._add_line_to_program(msg)
         self._sync()
 
-    def _socket_send_string(self, message, socket_name):
-        msg = "socket_send_string(\"{}\",\"{}\")".format(message, socket_name)  # noqa
-        self.add_line_to_program(msg)
+    def socket_set_var(self, var, value, socket_name):
+        msg = "socket_set_var(\"{}\",{},\"{}\")".format(
+            var,
+            value,
+            socket_name)
+        self._add_line_to_program(msg)
         self._sync()
 
-    def _socket_set_var(self, var, value, socket_name):
-        msg = "socket_set_var(\"{}\",{},\"{}\")".format(var, value, socket_name)  # noqa
-        self.add_line_to_program(msg)
+    def socket_read_byte_list(self, nbytes, socket_name):
+        msg = "global var_value = socket_read_byte_list({},\"{}\")".format(
+            nbytes,
+            socket_name)
+        self._add_line_to_program(msg)
         self._sync()
 
-    def _sync(self):
+    def socket_send_string(self, message, socket_name):
+        msg = "socket_send_string(\"{}\",\"{}\")".format(
+            message,
+            socket_name)
+        self._add_line_to_program(msg)
+        self._sync()
+
+    def sync(self):
         msg = "sync()"
-        self.add_line_to_program(msg)
+        self._add_line_to_program(msg)
+
+
+class Robotiq2F140URScript(URScript):
+    """
+    Class for creating Robotiq 2F140 specific URScript
+    messages to send to the UR robot, for setting gripper
+    related variables
+    """
+    def __init__(self,
+                 socket_host,
+                 socket_port,
+                 socket_name):
+        self.socket_host = socket_host
+        self.socket_port = socket_port
+        self.socket_name = socket_name
+        super(Robotiq2F140URScript, self).__init__()
+
+        # reset gripper connection
+        self.socket_close(self.socket_name)
+        self.socket_open(
+            self.socket_host,
+            self.socket_port,
+            self.socket_name
+        )
+
+    def set_activate(self):
+        """
+        Activate the gripper, by setting some internal
+        variables on the UR controller to 1
+        """
+        self.socket_set_var('ACT', 1, self.socket_name)
+        self.socket_set_var('GTO', 1, self.socket_name)
+
+    def set_gripper_position(self, position):
+        """
+        Control the gripper position by setting internal
+        position variable to desired position value on
+        UR controller
+
+        Args:
+            position (int): Position value, ranges from 0-255
+        """
+        position = self.constrain_unsigned_char(position)
+        self.socket_set_var('POS', position, self.socket_name)
+
+    def set_gripper_speed(self, speed):
+        """
+        Set what speed the gripper should move
+
+        Args:
+            speed (int): Desired gripper speed, ranges from 0-255
+        """
+        speed = self.constrain_unsigned_char(speed)
+        self.socket_set_var('SPE', speed, self.socket_name)
+
+    def set_gripper_force(self, force):
+        """
+        Set maximum gripper force
+
+        Args:
+            force (int): Desired maximum gripper force, ranges
+                from 0-255
+        """
+        force = self.constrain_unsigned_char(force)
+        self.socket_set_var('FOR', force, self.socket_name)
