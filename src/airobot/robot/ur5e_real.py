@@ -109,33 +109,27 @@ class UR5eRobotReal(Robot):
         success = False
 
         if joint_name is None:
-            if len(position) != 6 and len(position) != 7:
-                print("length of position vector: " + str(len(position)))
-                raise ValueError('position should contain 6 or 7 elements if'
+            if len(position) != 6:
+                raise ValueError('position should contain 6 elements if'
                                  'joint_name is not provided')
-            if len(position) == 7:
-                gripper_pos = position[-1]
-                self.gripper.set_gripper_pos(gripper_pos)
-                position = position[:-1]
-            target_pos = position
+            tgt_pos = position
         else:
-            if joint_name is self.gripper_jnt_names:
-                pass  # don't do anything with gripper yet
+            if joint_name not in self.arm_jnt_names_set:
+                raise TypeError('Joint name [%s] is not in the arm'
+                                ' joint list!' % joint_name)
             else:
-                target_pos_joint = position
-                current_pos = self.get_jpos()
-                rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
-                current_pos[rvl_jnt_idx] = target_pos_joint
-                target_pos = copy.deepcopy(current_pos)
-        prog = 'movej([%f, %f, %f, %f, %f, %f])' % (target_pos[0],
-                                                    target_pos[1],
-                                                    target_pos[2],
-                                                    target_pos[3],
-                                                    target_pos[4],
-                                                    target_pos[5])
+                tgt_pos = self.get_jpos()
+                arm_jnt_idx = self.arm_jnt_names.index(joint_name)
+                tgt_pos[arm_jnt_idx] = position
+        prog = 'movej([%f, %f, %f, %f, %f, %f])' % (tgt_pos[0],
+                                                    tgt_pos[1],
+                                                    tgt_pos[2],
+                                                    tgt_pos[3],
+                                                    tgt_pos[4],
+                                                    tgt_pos[5])
         self.send_program(prog)
         if wait:
-            success = self._wait_to_reach_jnt_goal(target_pos,
+            success = self._wait_to_reach_jnt_goal(tgt_pos,
                                                    joint_name=joint_name,
                                                    mode='pos')
 
@@ -157,31 +151,25 @@ class UR5eRobotReal(Robot):
         success = False
 
         if joint_name is None:
-            # if (len(velocity) == 6):
-            #     gripper_vel = self.get_jvel(self.gripper_jnt_names[0])
-            #     velocity.append(gripper_vel)
-
             if len(velocity) != 6:
-                raise ValueError('Velocity should contain 6 or 7 elements'
+                raise ValueError('Velocity should contain 6 elements'
                                  'if the joint name is not provided')
-
-            target_vel = velocity
-
+            tgt_vel = velocity
         else:
-            if joint_name in self.gripper_jnt_names:
-                pass
+            if joint_name not in self.arm_jnt_names_set:
+                raise TypeError('Joint name [%s] is not in the arm'
+                                ' joint list!' % joint_name)
             else:
-                target_vel_joint = velocity
-                target_vel = [0.0] * 7
-                rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
-                target_vel[rvl_jnt_idx] = target_vel_joint
+                tgt_vel = [0.0] * len(self.arm_jnt_names)
+                arm_jnt_idx = self.arm_jnt_names.index(joint_name)
+                tgt_vel[arm_jnt_idx] = velocity
 
-        prog = 'speedj([%f, %f, %f, %f, %f, %f], a=%f)' % (target_vel[0],
-                                                           target_vel[1],
-                                                           target_vel[2],
-                                                           target_vel[3],
-                                                           target_vel[4],
-                                                           target_vel[5],
+        prog = 'speedj([%f, %f, %f, %f, %f, %f], a=%f)' % (tgt_vel[0],
+                                                           tgt_vel[1],
+                                                           tgt_vel[2],
+                                                           tgt_vel[3],
+                                                           tgt_vel[4],
+                                                           tgt_vel[5],
                                                            acc)
         self.send_program(prog)
 
@@ -212,7 +200,7 @@ class UR5eRobotReal(Robot):
         """
         success = False
         if ori is None:
-            ori = self.get_ee_pose()[-1]  # last index of return is euler angle
+            ori = self.get_ee_pose()[-1]  # last index of return is euler anglexs
         if len(ori == 4):
             # assume incoming orientation is quaternion
             ori = euler_from_quaternion(ori)
@@ -229,16 +217,11 @@ class UR5eRobotReal(Robot):
                 vel,
                 0.0)
             self.send_program(prog)
+            if wait:
+                success = self._wait_to_reach_ee_goal(ee_pos)
         else:
             jnt_pos = self.compute_ik(pos, ori)  # ik can handle quaternion
-            self.set_jpos(jnt_pos)
-
-        if wait:
-            if linear_path:
-                success = self._wait_to_reach_ee_goal(ee_pos)
-            else:
-                success = self._wait_to_reach_jnt_goal(jnt_pos)
-
+            success = self.set_jpos(jnt_pos, wait=wait)
         return success
 
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True,
@@ -249,7 +232,6 @@ class UR5eRobotReal(Robot):
             delta_xyz (list): Goal change in x, y, z position of end effector
             eef_step (float, optional): [description]. Defaults to 0.005.
         """
-        success = True
         ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
 
         if linear_path:
@@ -260,41 +242,31 @@ class UR5eRobotReal(Robot):
             success = self.set_ee_pose(ee_pos, ee_euler, wait=wait,
                                        linear_path=linear_path)
         else:
-            current_pos = np.array(ee_pos)
+            cur_pos = np.array(ee_pos)
             delta_xyz = np.array(delta_xyz)
             path_len = np.linalg.norm(delta_xyz)
             num_pts = int(np.ceil(path_len / float(eef_step)))
             if num_pts <= 1:
                 num_pts = 2
-
             waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
-            waypoints = current_pos + waypoints_sp / float(path_len) * \
-                delta_xyz
+            waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
 
+            way_jnt_positions = []
+            qinit = self.get_jpos()
             for i in range(waypoints.shape[0]):
-                tgt_jnt_poss = \
-                    self.set_ee_pose(waypoints[i, :].flatten().tolist(),
-                                     ee_quat)
-                self.set_jpos(tgt_jnt_poss)
-                tgt_jnt_poss = np.array(tgt_jnt_poss)
-                start_time = time.time()
-                while True:
-                    if (time.time() - start_time >
-                            self.cfgs.TIMEOUT_LIMIT):
-                        pt_str = "Unable to move to joint angles (%s)" \
-                                 " within %f s" % (str(tgt_jnt_poss.tolist()),
-                                                   self.cfgs.TIMEOUT_LIMIT)
-                        print_red(pt_str)
-                        success = False
-                        return success
-                    new_jnt_poss = self.get_jpos()
-                    new_jnt_poss = np.array(new_jnt_poss)
-                    jnt_diff = new_jnt_poss - tgt_jnt_poss
-                    error = np.max(np.abs(jnt_diff))
-                    if error < self.cfgs.MAX_JOINT_ERROR:
-                        break
-                time.sleep(0.001)
-            success = True
+                tgt_jnt_poss = self.compute_ik(waypoints[i, :].flatten(),
+                                               ee_quat,
+                                               qinit=qinit)
+                if tgt_jnt_poss is None:
+                    rospy.logerr('No IK solution found; '
+                                 'check if target_pose is valid')
+                    return False
+                way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
+                qinit = copy.deepcopy(tgt_jnt_poss)
+
+            success = False
+            for jnt_poss in way_jnt_positions:
+                success = self.set_jpos(jnt_poss)
         return success
 
     def get_jpos(self, joint_name=None):
