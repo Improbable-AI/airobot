@@ -48,30 +48,21 @@ class UR5eRobotReal(Robot):
             self.moveit_planner = moveit_planner
             self.robot_ip = robot_ip
             self._init_consts()
+            self.gripper = Robotiq2F140(cfgs, self.tcp_monitor)
             self.set_comm_mode(use_tcp)
             self._tcp_initialized = False
-            if self.use_tcp:
-                self.initialize_tcp()
-            else:
-                self.gripper = Robotiq2F140Sim(self.cfgs.GRIPPER_SIM_TOPIC,
-                                               self.gripper_open_angle,
-                                               self.gripper_close_angle)
+            self._initialize_tcp_comm()
 
     def __del__(self):
-        if self.use_tcp:
-            self.monitor.close()
+        self.tcp_monitor.close()
 
-    def initialize_tcp(self):
-        self.monitor = SecondaryMonitor(self.robot_ip)
+    def _initialize_tcp_comm(self):
+        self.tcp_monitor = SecondaryMonitor(self.robot_ip)
 
-        self.monitor.wait()  # make contact with robot before anything
+        self.tcp_monitor.wait()  # make contact with robot before anything
         # TODO make one gripper class, use a flag to switch
         # between ros control and tcp control
-        self.gripper = Robotiq2F140(self.monitor,
-                                    self.cfgs.SOCKET_HOST,
-                                    self.cfgs.SOCKET_PORT,
-                                    self.gripper_open_angle,
-                                    self.gripper_close_angle)
+        
         self._set_tcp_offset()
         
     def set_comm_mode(self, use_tcp):
@@ -84,8 +75,7 @@ class UR5eRobotReal(Robot):
                 we should use ROS
         """
         self.use_tcp = use_tcp
-        if not self._tcp_initialized:
-            self.initialize_tcp()
+        self.gripper.set_comm_mode(use_tcp)
 
     def _send_program(self, prog):
         """
@@ -99,7 +89,7 @@ class UR5eRobotReal(Robot):
         # TODO return the status info
         # such as if the robot gives any error,
         # the execution is successful or not
-        self.monitor.send_program(prog)
+        self.tcp_monitor.send_program(prog)
 
     def output_pendant_msg(self, msg):
         """
@@ -115,7 +105,7 @@ class UR5eRobotReal(Robot):
         self._send_program(prog)
 
     def _is_running(self):
-        return self.monitor.running
+        return self.tcp_monitor.running
 
     def go_home(self):
         """
@@ -352,7 +342,7 @@ class UR5eRobotReal(Robot):
             jpos (list): list of current joint positions in radians
         """
         if self.use_tcp:
-            jdata = self.monitor.get_joint_data()
+            jdata = self.tcp_monitor.get_joint_data()
             jpos = [jdata["q_actual0"], jdata["q_actual1"], jdata["q_actual2"],
                     jdata["q_actual3"], jdata["q_actual4"], jdata["q_actual5"]]
         return jpos
@@ -366,7 +356,7 @@ class UR5eRobotReal(Robot):
         Return:
             jvel (list): list of current joint angular velocities in radians/s
         """
-        jdata = self.monitor.get_joint_data()
+        jdata = self.tcp_monitor.get_joint_data()
         jvel = [jdata['qd_actual0'], jdata['qd_actual1'], jdata['qd_actual2'],
                 jdata['qd_actual3'], jdata['qd_actual4'], jdata['qd_actual5']]
         return jvel
@@ -385,7 +375,7 @@ class UR5eRobotReal(Robot):
             list: euler angle representation of the EE orientation (roll,
                 pitch, yaw with static reference frame) (shape: [3])
         """
-        pose_data = self.monitor.get_cartesian_info()
+        pose_data = self.tcp_monitor.get_cartesian_info()
         if pose_data:
             pos = [pose_data["X"], pose_data["Y"], pose_data["Z"]]
             euler_ori = [pose_data["Rx"], pose_data["Ry"], pose_data["Rz"]]
@@ -749,8 +739,7 @@ class UR5eRobotReal(Robot):
             'right_inner_knuckle_joint', 'right_inner_finger_joint'
         ]
         self.gripper_jnt_names_set = set(self.gripper_jnt_names)
-        self.gripper_close_angle = 0.7
-        self.gripper_open_angle = 0
+
 
         self.ee_link = self.cfgs.ROBOT_EE_FRAME
 
@@ -839,4 +828,4 @@ class UR5eRobotReal(Robot):
                 the UR5e machine
 
         """
-        self.monitor.send_program(prog)
+        self.tcp_monitor.send_program(prog)

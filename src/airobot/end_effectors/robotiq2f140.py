@@ -2,12 +2,15 @@ from airobot.end_effectors.ee import EndEffector
 
 
 class Robotiq2F140(Camera):
-    def __init__(self, cfgs, use_tcp):
+    def __init__(self, cfgs, tcp_monitor, use_tcp=False):
         super(Robotiq2F140, self).__init__(cfgs=cfgs)
+        self.tcp_monitor = tcp_monitor
         self.use_tcp = use_tcp
         self._tcp_initialized = False
         self._ros_initialized = False
         self.set_comm_mode(self.use_tcp)
+        self._initialize_ros_comm()
+        self._initialize_tcp_comm()
 
     def __del__(self):
         self.close_tcp()
@@ -35,15 +38,5 @@ class Robotiq2F140(Camera):
         self._tcp_initialized = True
         pass
 
-    def _check_initialization(self, tcp=False):
-        # make sure the initialization only happens once
-        if tcp:
-            if not self._tcp_initialized:
-                self._initialize_tcp_comm()
-        else:
-            if not self._ros_initialized:
-                self._initialize_ros_comm()
-
     def set_comm_mode(self, tcp=False):
         self.use_tcp = tcp
-        self._check_initialization(self.use_tcp)

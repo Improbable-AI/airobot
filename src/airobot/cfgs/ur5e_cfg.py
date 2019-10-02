@@ -3,6 +3,7 @@ from yacs.config import CfgNode as CN
 from airobot.cfgs.arm import get_cfg_defaults
 from airobot.cfgs.pybullet_camera import get_sim_cam_cfg
 from airobot.cfgs.realsense_camera import get_realsense_cam_cfg
+from airobot.cfgs.robotiq2f140 import get_robotiq2f140_cfg
 
 _C = get_cfg_defaults()
 _C.ROBOT_DESCRIPTION = '/robot_description'
@@ -27,6 +28,8 @@ _C.TIMEOUT_LIMIT = 5
 _C.CAM_SIM = get_sim_cam_cfg()
 _C.CAM_REALSENSE = get_realsense_cam_cfg()
 _C.CAM_KINECT = CN()
+_C.GRIPPER = get_robotiq2f140_cfg()
+
 # default host and port for socket used to
 # communicate with the gripper through the
 # UR controller
