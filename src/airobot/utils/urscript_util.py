@@ -42,7 +42,7 @@ class URScript(object):
         self.program = ""
 
     def __call__(self):
-        if (self.program == ""):
+        if self.program == "":
             self.logger.debug(u"urscript program is empty")
             return ""
 

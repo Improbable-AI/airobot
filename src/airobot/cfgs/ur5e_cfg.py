@@ -14,7 +14,7 @@ _C.ROBOT_BASE_FRAME = 'base_link'
 # end-effector frame of the arm
 _C.ROBOT_EE_FRAME = 'gripper_tip'
 # namespace of the trajectory follower client
-_C.TRAJ_FOLLOW_CLIENT_NS = 'arm_controller/follow_joint_trajectory'
+_C.TRAJ_FOLLOW_CLIENT_NS = 'follow_joint_trajectory'
 # inverse kinematics position tolerance (m)
 _C.IK_POSITION_TOLERANCE = 0.01
 # inverse kinematics orientation tolerance (rad)
@@ -32,11 +32,7 @@ _C.CAM_REALSENSE = get_realsense_cam_cfg()
 _C.CAM_KINECT = CN()
 _C.GRIPPER = get_robotiq2f140_cfg()
 
-# default host and port for socket used to
-# communicate with the gripper through the
-# UR controller
-_C.SOCKET_HOST = "127.0.0.1"
-_C.SOCKET_PORT = 63352
+
 
 
 def get_cfg():

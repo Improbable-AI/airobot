@@ -40,8 +40,8 @@ from airobot.utils.common import print_red
 
 
 class UR5eRobotReal(Robot):
-    def __init__(self, cfgs, robot_ip, use_cam=False, use_arm=True,
-                 use_tcp=False, moveit_planner='RRTConnectkConfigDefault'):
+    def __init__(self, cfgs, use_cam=False, use_arm=True,
+                 moveit_planner='RRTConnectkConfigDefault'):
         try:
             rospy.init_node('ur5e', anonymous=True)
         except rospy.exceptions.ROSException:
@@ -51,12 +51,14 @@ class UR5eRobotReal(Robot):
         if use_arm:
             super(UR5eRobotReal, self).__init__(cfgs=cfgs)
             self.moveit_planner = moveit_planner
-            self.robot_ip = robot_ip
-            self._init_consts()
-            self.gripper = Robotiq2F140(cfgs, self.tcp_monitor)
-            self.set_comm_mode(use_tcp)
+            self.gazebo_sim = rospy.get_param('sim')
             self._tcp_initialized = False
-            self._initialize_tcp_comm()
+            self._init_consts()
+            if not self.gazebo_sim:
+                self.robot_ip = rospy.get_param('robot_ip')
+                self.set_comm_mode()
+                self._initialize_tcp_comm()
+                # self.gripper = Robotiq2F140(cfgs, self.tcp_monitor)
 
     def __del__(self):
         self.tcp_monitor.close()
@@ -70,7 +72,7 @@ class UR5eRobotReal(Robot):
         
         self._set_tcp_offset()
         
-    def set_comm_mode(self, use_tcp):
+    def set_comm_mode(self, use_ros=True):
         """
         Method to set whether to use TCP/IP to communicate with the
         real robot or to use ROS
@@ -79,8 +81,7 @@ class UR5eRobotReal(Robot):
             use_tcp (bool): True if we should use TCP/IP, False if
                 we should use ROS
         """
-        self.use_tcp = use_tcp
-        self.gripper.set_comm_mode(use_tcp)
+        self.use_ros = use_ros
 
     def _tcp_send_program(self, prog):
         """
@@ -151,7 +152,7 @@ class UR5eRobotReal(Robot):
                 tgt_pos = self.get_jpos()
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_pos[arm_jnt_idx] = position
-        if self.use_tcp:
+        if not self.use_ros:
             prog = 'movej([%f, %f, %f, %f, %f, %f])' % (tgt_pos[0],
                                                         tgt_pos[1],
                                                         tgt_pos[2],
@@ -205,7 +206,7 @@ class UR5eRobotReal(Robot):
                 tgt_vel = [0.0] * len(self.arm_jnt_names)
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_vel[arm_jnt_idx] = velocity
-        if self.use_tcp:
+        if not self.use_ros:
             prog = 'speedj([%f, %f, %f, %f, %f, %f], a=%f)' % (tgt_vel[0],
                                                                tgt_vel[1],
                                                                tgt_vel[2],
@@ -259,7 +260,7 @@ class UR5eRobotReal(Robot):
             raise ValueError('Orientaion should be quaternion or'
                              'euler angles')
 
-        if self.use_tcp:
+        if not self.use_ros:
             if ik_first:
                 jnt_pos = self.compute_ik(pos, quat)  # ik can handle quaternion
                 # use movej instead of movel
@@ -301,7 +302,7 @@ class UR5eRobotReal(Robot):
         """
         ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
 
-        if self.use_tcp:
+        if not self.use_ros:
             ee_pos[0] += delta_xyz[0]
             ee_pos[1] += delta_xyz[1]
             ee_pos[2] += delta_xyz[2]
@@ -358,7 +359,7 @@ class UR5eRobotReal(Robot):
         Return:
             jpos (list): list of current joint positions in radians
         """
-        if self.use_tcp:
+        if not self.use_ros:
             jdata = self.tcp_monitor.get_joint_data()
             jpos = [jdata["q_actual0"], jdata["q_actual1"], jdata["q_actual2"],
                     jdata["q_actual3"], jdata["q_actual4"], jdata["q_actual5"]]
@@ -762,7 +763,6 @@ class UR5eRobotReal(Robot):
             'right_inner_knuckle_joint', 'right_inner_finger_joint'
         ]
         self.gripper_jnt_names_set = set(self.gripper_jnt_names)
-
 
         self.ee_link = self.cfgs.ROBOT_EE_FRAME
 
