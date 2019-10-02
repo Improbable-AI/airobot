@@ -28,7 +28,7 @@ from tf.transformations import quaternion_matrix
 from trac_ik_python import trac_ik
 
 from airobot.robot.robot import Robot
-from airobot.end_effectors.ee import Robotiq2F140
+from airobot.end_effectors.robotiq2f140 import Robotiq2F140
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
 from airobot.utils.common import clamp
 from airobot.utils.common import joints_to_kdl
@@ -56,26 +56,26 @@ class UR5eRobotReal(Robot):
             self._tcp_initialized = False
             self._init_consts()
 
-            self.tcp_monitor = None
             if not self.gazebo_sim:
                 self.robot_ip = rospy.get_param('robot_ip')
                 self.set_comm_mode()
-                self.gripper = Robotiq2F140(cfgs=cfgs,
-                                            use_ros=self.use_ros,
-                                            monitor=self.tcp_monitor)
+                self.gripper = Robotiq2F140(cfgs,
+                                            self.use_ros)
 
                 self._setup_pub_sub()
                 # TODO temperalily disable tcp until we figure out
                 # a better way to kill the program
                 if not self.use_ros:
                     self._initialize_tcp_comm()
+                    self.gripper.tcp_monitor = self.tcp_monitor
                 # self.gripper = Robotiq2F140(cfgs, self.tcp_monitor)
+            else:
+                raise NotImplementedError
 
     def __del__(self):
         self.stop()
 
     def stop(self):
-        self.tcp_monitor.close()
         # self.set_jvel([0] * len(self.arm_jnt_names))
         if hasattr(self, 'tcp_monitor'):
             self.tcp_monitor.close()
@@ -823,6 +823,7 @@ class UR5eRobotReal(Robot):
         self._max_torques = [150, 150, 150, 28, 28, 28]
         # a random value for robotiq joints
         self._max_torques.append(20)
+        time.sleep(1.5)
 
     def scale_moveit_motion(self, vel_scale=1.0, acc_scale=1.0):
         vel_scale = clamp(vel_scale, 0.0, 1.0)

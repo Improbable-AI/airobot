@@ -1,3 +1,5 @@
+import rospy
+
 from std_msgs.msg import String
 
 from airobot.end_effectors.ee import EndEffector
@@ -27,9 +29,11 @@ class Robotiq2F140(EndEffector):
 
         self._tcp_initialized = False
         self._ros_initialized = False
-        self.set_comm_mode(self.use_ros)
-        self._initialize_ros_comm()
-        self._initialize_tcp_comm()
+        self.set_comm_mode(use_ros)
+        if self.use_ros:
+            self._initialize_ros_comm()
+        else:
+            self._initialize_tcp_comm()
 
     def __del__(self):
         """
@@ -58,16 +62,16 @@ class Robotiq2F140(EndEffector):
         """
         urscript = self._get_new_urscript()
 
-        urscript.set_gripper_force(self.cfgs.GRIPPER.DEFAULT_FORCE)
-        urscript.set_gripper_speed(self.cfgs.GRIPPER.DEFAULT_SPEED)
-        urscript.set_robot_activate()
+        # urscript.set_gripper_force(self.cfgs.GRIPPER.DEFAULT_FORCE)
+        # urscript.set_gripper_speed(self.cfgs.GRIPPER.DEFAULT_SPEED)
+        urscript.set_activate()
 
         urscript.sleep(0.1)
 
         if self.use_ros:
             self.pub_command.publish(urscript())
         else:
-            self.monitor.send_program(urscript())
+            self.tcp_monitor.send_program(urscript())
 
     def set_position(self, position):
         """
@@ -88,11 +92,12 @@ class Robotiq2F140(EndEffector):
         position = int(position * self.cfgs.GRIPPER.POSITION_SCALING)
 
         urscript.set_gripper_position(position)
+        urscript.sleep(2.0)
 
         if self.use_ros:
             self.pub_command.publish(urscript())
         else:
-            self.monitor.send_program(urscript())
+            self.tcp_monitor.send_program(urscript())
 
     def open(self):
         """
@@ -116,9 +121,10 @@ class Robotiq2F140(EndEffector):
         Set up the internal publisher to send gripper command
         URScript programs to the robot thorugh ROS
         """
-        self.pub_command(self.cfgs.GRIPPER.COMMAND_TOPIC,
-                         String,
-                         queue_size=10)
+        self.pub_command = rospy.Publisher(
+            self.cfgs.GRIPPER.COMMAND_TOPIC,
+            String,
+            queue_size=10)
         self._ros_initialized = True
 
     def _initialize_tcp_comm(self):
