@@ -48,17 +48,10 @@ class UR5eRobotReal(Robot):
             self.moveit_planner = moveit_planner
             self.robot_ip = robot_ip
             self._init_consts()
-            self._set_comm_mode(use_tcp)
+            self.set_comm_mode(use_tcp)
+            self._tcp_initialized = False
             if self.use_tcp:
-                self.monitor = SecondaryMonitor(self.robot_ip)
-                self.monitor_ini
-                self.monitor.wait()  # make contact with robot before anything
-                self.gripper = Robotiq2F140(self.monitor,
-                                            self.cfgs.SOCKET_HOST,
-                                            self.cfgs.SOCKET_PORT,
-                                            self.gripper_open_angle,
-                                            self.gripper_close_angle)
-                self._set_tcp_offset()
+                self.initialize_tcp()
             else:
                 self.gripper = Robotiq2F140Sim(self.cfgs.GRIPPER_SIM_TOPIC,
                                                self.gripper_open_angle,
@@ -67,8 +60,21 @@ class UR5eRobotReal(Robot):
     def __del__(self):
         if self.use_tcp:
             self.monitor.close()
+
+    def initialize_tcp(self):
+        self.monitor = SecondaryMonitor(self.robot_ip)
+
+        self.monitor.wait()  # make contact with robot before anything
+        # TODO make one gripper class, use a flag to switch
+        # between ros control and tcp control
+        self.gripper = Robotiq2F140(self.monitor,
+                                    self.cfgs.SOCKET_HOST,
+                                    self.cfgs.SOCKET_PORT,
+                                    self.gripper_open_angle,
+                                    self.gripper_close_angle)
+        self._set_tcp_offset()
         
-    def _set_comm_mode(self, use_tcp):
+    def set_comm_mode(self, use_tcp):
         """
         Method to set whether to use TCP/IP to communicate with the
         real robot or to use ROS
@@ -78,6 +84,8 @@ class UR5eRobotReal(Robot):
                 we should use ROS
         """
         self.use_tcp = use_tcp
+        if not self._tcp_initialized:
+            self.initialize_tcp()
 
     def _send_program(self, prog):
         """
