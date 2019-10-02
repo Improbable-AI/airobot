@@ -55,7 +55,7 @@ class UR5eRobotReal(Robot):
                                         self.gripper_open_angle,
                                         self.gripper_close_angle)
             self._set_tcp_offset()
-            
+
     def output_pendant_msg(self, msg):
         """
         Method to display a text message on the UR5e teach pendant
@@ -76,8 +76,8 @@ class UR5eRobotReal(Robot):
         """
         Move the robot to a pre-defined home pose
         """
-        # 6 joints for the arm, 7th joint for the gripper
         self.set_jpos(self._home_position, wait=True)
+        self.gripper.open_gripper()
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """

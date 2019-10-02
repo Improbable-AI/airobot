@@ -6,16 +6,16 @@ from airobot.utils.common import clamp
 
 
 # Gripper Variables
-ACT = "ACT"
-GTO = "GTO"
-ATR = "ATR"
-ARD = "ARD"
-FOR = "FOR"
-SPE = "SPE"
-OBJ = "OBJ"
-STA = "STA"
-FLT = "FLT"
-POS = "POS"
+ACT = 'ACT'
+GTO = 'GTO'
+ATR = 'ATR'
+ARD = 'ARD'
+FOR = 'FOR'
+SPE = 'SPE'
+OBJ = 'OBJ'
+STA = 'STA'
+FLT = 'FLT'
+POS = 'POS'
 
 
 class RobotiqScript(URScript):
@@ -43,7 +43,7 @@ class RobotiqScript(URScript):
             self.add_header_to_program(rq_script)
 
     def _rq_get_var(self, var_name, nbytes):
-        self._socket_send_string("GET {}".format(var_name))
+        self._socket_send_string('GET {}'.format(var_name))
         self._socket_read_byte_list(nbytes)
 
     def get_gripper_fault(self):
@@ -93,14 +93,13 @@ class RobotiqScript(URScript):
 
 
 class Robotiq2F140(object):
-
     def __init__(self,
                  monitor,
                  socket_host,
                  socket_port,
                  open_angle,
                  close_angle,
-                 socket_name="gripper_socket",
+                 socket_name='gripper_socket',
                  payload=0.85,
                  speed=255,
                  force=50,
@@ -117,7 +116,7 @@ class Robotiq2F140(object):
         self.socket_host = socket_host
         self.socket_port = socket_port
         self.socket_name = socket_name
-        self.logger = logging.getLogger(u"robotiq")
+        self.logger = logging.getLogger(u'robotiq')
 
     def _get_new_urscript(self):
         """
