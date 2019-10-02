@@ -20,6 +20,7 @@ from airobot.robot.robot import Robot
 from airobot.sensor.camera.pybullet_cam import PyBulletCamera
 from airobot.utils.common import clamp
 
+
 # import pkgutil
 
 
@@ -138,8 +139,7 @@ class UR5eRobotPybullet(Robot):
         Returns:
             return if the action is sucessful or not
         """
-        success = self.set_jpos(self.gripper_open_angle,
-                                self.gripper_jnt_names[0])
+        success = self._set_gripper_pos(self.gripper_open_angle)
         return success
 
     def close_gripper(self):
@@ -149,8 +149,7 @@ class UR5eRobotPybullet(Robot):
         Returns:
             return if the action is sucessful or not
         """
-        success = self.set_jpos(self.gripper_close_angle,
-                                self.gripper_jnt_names[0])
+        success = self._set_gripper_pos(self.gripper_close_angle)
         return success
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
@@ -735,3 +734,35 @@ class UR5eRobotPybullet(Robot):
         self.gripper_jnt_ids = [
             self.jnt_to_id[jnt] for jnt in self.gripper_jnt_names
         ]
+
+    def _set_gripper_pos(self, position):
+        """
+        Set the gripper position. We make a separate function apart from
+        set_jpos to make the api consistent with the real robot. set_jpos
+        is only used to control the robot arm
+
+        Args:
+            position (float): joint position
+
+        Returns:
+            A boolean variable representing if the action is successful at
+            the moment when the function exits
+        """
+        joint_name = self.gripper_jnt_names[0]
+        gripper_pos = position[-1]
+        tgt_pos = clamp(gripper_pos,
+                        self.gripper_open_angle,
+                        self.gripper_close_angle)
+        max_torque = self._max_torques[-1]
+        jnt_id = self.jnt_to_id[joint_name]
+        p.setJointMotorControl2(self.robot_id,
+                                jnt_id,
+                                p.POSITION_CONTROL,
+                                targetPosition=tgt_pos,
+                                force=max_torque)
+        success = False
+        if not self._step_sim_mode and wait:
+            success = self._wait_to_reach_jnt_goal(tgt_pos,
+                                                   joint_name=joint_name,
+                                                   mode='pos')
+        return success
