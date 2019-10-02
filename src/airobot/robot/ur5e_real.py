@@ -21,9 +21,11 @@ from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
 from tf.transformations import euler_matrix
 from tf.transformations import euler_from_matrix
+from control_msgs.msg import FollowJointTrajectoryActionGoal
+from std_msgs.msg import Float64MultiArray
 
 from airobot.robot.robot import Robot
-from airobot.end_effectors.robotiq_gripper import Robotiq2F140
+from airobot.end_effectors.robotiq_gripper import Robotiq2F140, Robotiq2F140Sim
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
 from airobot.utils.tcp_util import SecondaryMonitor
 from airobot.utils.common import clamp
@@ -35,7 +37,7 @@ from airobot.utils.common import print_red
 
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, robot_ip, use_cam=False, use_arm=True,
-                 moveit_planner='RRTConnectkConfigDefault'):
+                 use_tcp=True, moveit_planner='RRTConnectkConfigDefault'):
         try:
             rospy.init_node('ur5e', anonymous=True)
         except rospy.exceptions.ROSException:
@@ -47,17 +49,45 @@ class UR5eRobotReal(Robot):
             self.moveit_planner = moveit_planner
             self.robot_ip = robot_ip
             self._init_consts()
-            self.monitor = SecondaryMonitor(self.robot_ip)
-            self.monitor.wait()  # make contact with robot before anything
-            self.gripper = Robotiq2F140(self.monitor,
-                                        self.cfgs.SOCKET_HOST,
-                                        self.cfgs.SOCKET_PORT,
-                                        self.gripper_open_angle,
-                                        self.gripper_close_angle)
+            self._set_comm_mode(use_tcp)
+            if self.use_tcp:
+                self.monitor = SecondaryMonitor(self.robot_ip)
+                self.monitor.wait()  # make contact with robot before anything
+                self.gripper = Robotiq2F140(self.monitor,
+                                            self.cfgs.SOCKET_HOST,
+                                            self.cfgs.SOCKET_PORT,
+                                            self.gripper_open_angle,
+                                            self.gripper_close_angle)
+            else:
+                self.gripper = Robotiq2F140Sim(self.cfgs.GRIPPER_SIM_TOPIC,
+                                               self.gripper_open_angle,
+                                               self.gripper_close_angle)
             self._set_tcp_offset()
 
     def __del__(self):
         self.monitor.close()
+        
+    def _set_comm_mode(self, use_tcp):
+        """
+        Method to set whether to use TCP/IP to communicate with the
+        real robot or to use ROS
+
+        Arguments:
+            use_tcp (bool): True if we should use TCP/IP, False if
+                we should use ROS
+        """
+        self.use_tcp = use_tcp
+
+    def _send_program(self, prog):
+        """
+        Method to send URScript program to the TCP/IP monitor
+
+        Args:
+            prog (str): URScript program which will be sent and run on
+                the UR5e machine
+
+        """
+        self.monitor.send_program(prog)
 
     def output_pendant_msg(self, msg):
         """
@@ -82,7 +112,8 @@ class UR5eRobotReal(Robot):
         self.set_jpos(self._home_position, wait=True)
         self.gripper.open_gripper()
 
-    def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
+    def set_jpos(self, position, joint_name=None, wait=True,
+                 plan=False, *args, **kwargs):
         """
         Method to send a joint position command to the robot
 
@@ -113,13 +144,22 @@ class UR5eRobotReal(Robot):
                 tgt_pos = self.get_jpos()
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_pos[arm_jnt_idx] = position
-        prog = 'movej([%f, %f, %f, %f, %f, %f])' % (tgt_pos[0],
-                                                    tgt_pos[1],
-                                                    tgt_pos[2],
-                                                    tgt_pos[3],
-                                                    tgt_pos[4],
-                                                    tgt_pos[5])
-        self._send_program(prog)
+        if self.use_tcp:
+            prog = 'movej([%f, %f, %f, %f, %f, %f])' % (tgt_pos[0],
+                                                        tgt_pos[1],
+                                                        tgt_pos[2],
+                                                        tgt_pos[3],
+                                                        tgt_pos[4],
+                                                        tgt_pos[5])
+            self._send_program(prog)
+        else:
+            if plan:
+                return self.moveit_group.go(tgt_pos, wait=wait)
+            else:
+                self._pub_joint_positions(tgt_pos)
+                # TODO implement non-TCP + non-Moveit version of
+                # wait to reach joint goal, for now just return true
+                success = True
         if wait:
             success = self._wait_to_reach_jnt_goal(tgt_pos,
                                                    joint_name=joint_name,
@@ -270,9 +310,10 @@ class UR5eRobotReal(Robot):
         Return:
             jpos (list): list of current joint positions in radians
         """
-        jdata = self.monitor.get_joint_data()
-        jpos = [jdata["q_actual0"], jdata["q_actual1"], jdata["q_actual2"],
-                jdata["q_actual3"], jdata["q_actual4"], jdata["q_actual5"]]
+        if self.use_tcp:
+            jdata = self.monitor.get_joint_data()
+            jpos = [jdata["q_actual0"], jdata["q_actual1"], jdata["q_actual2"],
+                    jdata["q_actual3"], jdata["q_actual4"], jdata["q_actual5"]]
         return jpos
 
     def get_jvel(self, joint_name=None):
@@ -727,6 +768,26 @@ class UR5eRobotReal(Robot):
         )
 
         self._send_program(tcp_offset_prog)
+
+    def _pub_joint_positions(self, positions):
+        """
+        Internal publisher function for sending desired joint positions
+        to ROS controller
+
+        Arguments:
+            positions (list): List of desired angles for arm to move to,
+                by now we have checked to make sure it's of correct
+                dimension (1 X 6)
+        """
+        goal_positions = FloatMulti64Array()
+        goal_positions.data = positions
+        self.joint_pub.publish(goal_positions)
+
+    def _setup_pub_sub(self):
+        self.joint_pub = rospy.Publisher(
+            '/joint_group_position_controller/command',
+            Float64MultiArray,
+            queue_size=10)
 
     def _send_program(self, prog):
         """
