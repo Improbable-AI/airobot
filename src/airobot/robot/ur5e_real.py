@@ -59,16 +59,17 @@ class UR5eRobotReal(Robot):
             if not self.gazebo_sim:
                 self.robot_ip = rospy.get_param('robot_ip')
                 self.set_comm_mode()
-                self.gripper = Robotiq2F140(cfgs,
-                                            self.use_ros)
+
 
                 self._setup_pub_sub()
                 # TODO temperalily disable tcp until we figure out
                 # a better way to kill the program
                 if not self.use_ros:
                     self._initialize_tcp_comm()
-                    self.gripper.tcp_monitor = self.tcp_monitor
-                # self.gripper = Robotiq2F140(cfgs, self.tcp_monitor)
+                tcp_monitor = None if self.use_ros else self.tcp_monitor
+                self.gripper = Robotiq2F140(cfgs,
+                                            self.use_ros,
+                                            tcp_monitor=tcp_monitor)
             else:
                 raise NotImplementedError
 
@@ -76,7 +77,7 @@ class UR5eRobotReal(Robot):
         self.stop()
 
     def stop(self):
-        # self.set_jvel([0] * len(self.arm_jnt_names))
+        self.set_jvel([0] * len(self.arm_jnt_names))
         if hasattr(self, 'tcp_monitor'):
             self.tcp_monitor.close()
 
