@@ -173,39 +173,23 @@ class UR5eRobotPybullet(Robot):
         position = copy.deepcopy(position)
         success = False
         if joint_name is None:
-            if len(position) == 6:
-                # copy the current gripper joint position
-                gripper_pos = self.get_jpos(self.gripper_jnt_names[0])
-                position.append(gripper_pos)
-            if len(position) != 7:
-                raise ValueError('Position should contain 6 or 7 '
+            if len(position) != 6:
+                raise ValueError('Position should contain 6'
                                  'elements if the joint_name is not provided')
-            gripper_pos = position[-1]
-            gripper_pos = clamp(gripper_pos,
-                                self.gripper_open_angle,
-                                self.gripper_close_angle)
-            position[-1] = gripper_pos
             tgt_pos = position
             p.setJointMotorControlArray(self.robot_id,
-                                        self.actuator_ids,
+                                        self.arm_jnt_ids,
                                         p.POSITION_CONTROL,
                                         targetPositions=tgt_pos,
                                         forces=self._max_torques)
         else:
-            if joint_name in self.gripper_jnt_names:
-                gripper_jnt_id = self.gripper_jnt_names.index(joint_name)
-                mimic_factor = self._gripper_mimic_coeff[gripper_jnt_id]
-                finger_jnt_pos = position / float(mimic_factor)
-                finger_jnt_pos = clamp(finger_jnt_pos,
-                                       self.gripper_open_angle,
-                                       self.gripper_close_angle)
-                tgt_pos = finger_jnt_pos
-                max_torque = self._max_torques[-len(self.gripper_jnt_ids)]
-                jnt_id = self.jnt_to_id[self.gripper_jnt_names[0]]
+            if joint_name not in self.arm_jnt_names_set:
+                raise TypeError('Joint name [%s] is not in the arm'
+                                ' joint list!' % joint_name)
             else:
                 tgt_pos = position
-                rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
-                max_torque = self._max_torques[rvl_jnt_idx]
+                arm_jnt_idx = self.arm_jnt_names.index(joint_name)
+                max_torque = self._max_torques[arm_jnt_idx]
                 jnt_id = self.jnt_to_id[joint_name]
             p.setJointMotorControl2(self.robot_id,
                                     jnt_id,
@@ -239,31 +223,23 @@ class UR5eRobotPybullet(Robot):
         success = False
         if joint_name is None:
             velocity = copy.deepcopy(velocity)
-            if len(velocity) == 6:
-                # copy the current gripper joint position
-                gripper_vel = self.get_jvel(self.gripper_jnt_names[0])
-                velocity.append(gripper_vel)
-            if len(velocity) != 7:
-                raise ValueError('Velocity should contain 6 or 7 elements '
+            if len(velocity) != 6:
+                raise ValueError('Velocity should contain 6 elements '
                                  'if the joint_name is not provided')
             tgt_vel = velocity
             p.setJointMotorControlArray(self.robot_id,
-                                        self.actuator_ids,
+                                        self.arm_jnt_ids,
                                         p.VELOCITY_CONTROL,
                                         targetVelocities=tgt_vel,
                                         forces=self._max_torques)
         else:
-            if joint_name in self.gripper_jnt_names:
-                gripper_jnt_id = self.gripper_jnt_names.index(joint_name)
-                mimic_factor = self._gripper_mimic_coeff[gripper_jnt_id]
-                finger_jnt_vel = velocity / float(mimic_factor)
-                tgt_vel = finger_jnt_vel
-                max_torque = self._max_torques[-len(self.gripper_jnt_ids)]
-                jnt_id = self.jnt_to_id[self.gripper_jnt_names[0]]
+            if joint_name not in self.arm_jnt_names_set:
+                raise TypeError('Joint name [%s] is not in the arm'
+                                ' joint list!' % joint_name)
             else:
                 tgt_vel = velocity
-                rvl_jnt_idx = self.rvl_joint_names.index(joint_name)
-                max_torque = self._max_torques[rvl_jnt_idx]
+                arm_jnt_idx = self.arm_jnt_names.index(joint_name)
+                max_torque = self._max_torques[arm_jnt_idx]
                 jnt_id = self.jnt_to_id[joint_name]
             p.setJointMotorControl2(self.robot_id,
                                     jnt_id,
@@ -308,7 +284,7 @@ class UR5eRobotPybullet(Robot):
             if len(torque) != 6:
                 raise ValueError('Joint torques should contain 6 elements')
             p.setJointMotorControlArray(self.robot_id,
-                                        self.actuator_ids[:-1],
+                                        self.arm_jnt_ids,
                                         p.TORQUE_CONTROL,
                                         forces=torque)
         else:
@@ -356,7 +332,6 @@ class UR5eRobotPybullet(Robot):
             raise AssertionError('move_ee_xyz() can '
                                  'only be called in realtime'
                                  ' simulation mode')
-        success = True
         pos, quat, rot_mat, euler = self.get_ee_pose()
         cur_pos = np.array(pos)
         delta_xyz = np.array(delta_xyz)
@@ -366,27 +341,14 @@ class UR5eRobotPybullet(Robot):
             num_pts = 2
         waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
         waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
+        way_jnt_positions = []
         for i in range(waypoints.shape[0]):
             tgt_jnt_poss = self.compute_ik(waypoints[i, :].flatten().tolist(),
                                            quat)
-            self.set_jpos(tgt_jnt_poss)
-            tgt_jnt_poss = np.array(tgt_jnt_poss)
-            start_time = time.time()
-            while True:
-                if time.time() - start_time > self.cfgs.TIMEOUT_LIMIT:
-                    pt_str = 'Unable to move to joint angles (%s)' \
-                             ' within %f s' % (str(tgt_jnt_poss.tolist()),
-                                               self.cfgs.TIMEOUT_LIMIT)
-                    arutil.print_red(pt_str)
-                    success = False
-                    return success
-                new_jnt_poss = self.get_jpos()
-                new_jnt_poss = np.array(new_jnt_poss)
-                jnt_diff = new_jnt_poss - tgt_jnt_poss
-                error = np.max(np.abs(jnt_diff))
-                if error < self.cfgs.MAX_JOINT_ERROR:
-                    break
-                time.sleep(0.001)
+            way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
+        success = False
+        for jnt_poss in way_jnt_positions:
+            success = self.set_jpos(jnt_poss)
         return success
 
     def enable_torque_control(self, joint_name=None):
@@ -401,10 +363,10 @@ class UR5eRobotPybullet(Robot):
 
         """
         if joint_name is None:
-            tgt_vels = [0.0] * len(self.actuator_ids[:-1])
-            forces = [0.0] * len(self.actuator_ids[:-1])
+            tgt_vels = [0.0] * len(self.arm_jnt_ids)
+            forces = [0.0] * len(self.arm_jnt_ids)
             p.setJointMotorControlArray(self.robot_id,
-                                        self.actuator_ids[:-1],
+                                        self.arm_jnt_ids,
                                         p.VELOCITY_CONTROL,
                                         targetVelocities=tgt_vels,
                                         forces=forces)
@@ -429,13 +391,13 @@ class UR5eRobotPybullet(Robot):
 
         """
         if joint_name is None:
-            self.set_jvel([0.0] * 7)
+            self.set_jvel([0.0] * 6)
         else:
             self.set_jvel(0.0, joint_name)
 
     def get_jpos(self, joint_name=None):
         """
-        Return the joint position(s)
+        Return the joint position(s) of the arm
 
         Args:
             joint_name: If it's None, it will return joint positions
@@ -447,7 +409,7 @@ class UR5eRobotPybullet(Robot):
             the joint_name
         """
         if joint_name is None:
-            states = p.getJointStates(self.robot_id, self.actuator_ids)
+            states = p.getJointStates(self.robot_id, self.arm_jnt_ids)
             pos = [state[0] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
@@ -456,7 +418,7 @@ class UR5eRobotPybullet(Robot):
 
     def get_jvel(self, joint_name=None):
         """
-        Return the joint velocity(ies)
+        Return the joint velocity(ies) of the arm
 
         Args:
             joint_name: If it's None, it will return joint velocities
@@ -468,7 +430,7 @@ class UR5eRobotPybullet(Robot):
             the joint_name
         """
         if joint_name is None:
-            states = p.getJointStates(self.robot_id, self.actuator_ids)
+            states = p.getJointStates(self.robot_id, self.arm_jnt_ids)
             vel = [state[1] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
@@ -494,7 +456,7 @@ class UR5eRobotPybullet(Robot):
             the joint_name
         """
         if joint_name is None:
-            states = p.getJointStates(self.robot_id, self.actuator_ids)
+            states = p.getJointStates(self.robot_id, self.arm_jnt_ids)
             # state[3] is appliedJointMotorTorque
             torque = [state[3] for state in states]
         else:
@@ -556,7 +518,7 @@ class UR5eRobotPybullet(Robot):
         """
         return self.camera.get_images(get_rgb, get_depth)
 
-    def compute_ik(self, pos, ori=None):
+    def compute_ik(self, pos, ori=None, *args, **kwargs):
         """
         Compute the inverse kinematics solution given the
         position and orientation of the end effector
@@ -587,7 +549,7 @@ class UR5eRobotPybullet(Robot):
                                                     pos,
                                                     jointDamping=self._ik_jds)
         jnt_poss = list(jnt_poss)
-        return jnt_poss[:len(self.actuator_ids)]
+        return jnt_poss[:len(self.arm_jnt_ids)]
 
     def _mimic_gripper(self, joint_val):
         """
@@ -757,15 +719,16 @@ class UR5eRobotPybullet(Robot):
             jnt_name = info[1].decode('UTF-8')
             self.jnt_to_id[jnt_name] = info[0]
 
-        # joint ids for the actuators
-        # only the first joint in the gripper is the actuator
-        # in the simulation
-        act_joint_names = self.arm_jnt_names + [self.gripper_jnt_names[0]]
-        self.actuator_ids = [self.jnt_to_id[jnt] for jnt in act_joint_names]
-        # joint ids for all joints
-        self.rvl_jnt_ids = [
-            self.jnt_to_id[jnt] for jnt in self.rvl_joint_names
-        ]
+        # # joint ids for the actuators
+        # # only the first joint in the gripper is the actuator
+        # # in the simulation
+        # act_joint_names = self.arm_jnt_names + [self.gripper_jnt_names[0]]
+        # self.actuator_ids = [self.jnt_to_id[jnt] for jnt in act_joint_names]
+
+        # # joint ids for all joints
+        # self.rvl_jnt_ids = [
+        #     self.jnt_to_id[jnt] for jnt in self.rvl_joint_names
+        # ]
 
         self.ee_link_id = self.jnt_to_id[self.ee_link]
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
