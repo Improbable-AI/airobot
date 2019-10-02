@@ -16,6 +16,8 @@ _C.SOCKET_NAME = 'gripper_socket'
 _C.DEFAULT_SPEED = 255
 _C.DEFAULT_FORCE = 50
 
+_C.COMMAND_TOPIC = '/ur_driver/URScript'
+
 # default maximum values for gripper state varibles
 # minimum values are all 0
 _C.POSITION_RANGE = 255

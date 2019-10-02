@@ -95,7 +95,7 @@ class URScript(object):
     def socket_get_var(self, var, socket_name):
         msg = "socket_get_var(\"{}\",\"{}\")".format(var, socket_name)
         self._add_line_to_program(msg)
-        self._sync()
+        self.sync()
 
     def socket_set_var(self, var, value, socket_name):
         msg = "socket_set_var(\"{}\",{},\"{}\")".format(
@@ -103,21 +103,21 @@ class URScript(object):
             value,
             socket_name)
         self._add_line_to_program(msg)
-        self._sync()
+        self.sync()
 
     def socket_read_byte_list(self, nbytes, socket_name):
         msg = "global var_value = socket_read_byte_list({},\"{}\")".format(
             nbytes,
             socket_name)
         self._add_line_to_program(msg)
-        self._sync()
+        self.sync()
 
     def socket_send_string(self, message, socket_name):
         msg = "socket_send_string(\"{}\",\"{}\")".format(
             message,
             socket_name)
         self._add_line_to_program(msg)
-        self._sync()
+        self.sync()
 
     def sync(self):
         msg = "sync()"
@@ -153,7 +153,7 @@ class Robotiq2F140URScript(URScript):
         variables on the UR controller to 1
         """
         self.socket_set_var('ACT', 1, self.socket_name)
-        self.socket_set_var('GTO', 1, self.socket_name)
+        # self.socket_set_var('GTO', 1, self.socket_name)
 
     def set_gripper_position(self, position):
         """
