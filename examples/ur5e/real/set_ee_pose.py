@@ -1,4 +1,5 @@
 import time
+import sys
 
 import airobot as ar
 
@@ -7,8 +8,9 @@ def main():
     """
     Move the robot end effector to the desired pose
     """
+    robot_ip = sys.argv[1]
     robot = ar.create_robot('ur5e', pb=False, robot_cfg={
-                            'robot_ip': '128.30.31.59'})
+                            'robot_ip': robot_ip})
     robot.go_home()
     current_pos = robot.get_ee_pose()
     print("current EE pose: ")

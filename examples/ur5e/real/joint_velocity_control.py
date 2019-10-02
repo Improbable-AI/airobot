@@ -1,5 +1,6 @@
 import math
 import time
+import sys
 
 import airobot as ar
 
@@ -24,8 +25,9 @@ def main():
     """
     Move all the joints of the robot in a sine-wave fashion
     """
+    robot_ip = sys.argv[1]
     robot = ar.create_robot('ur5e', pb=False, robot_cfg={
-                            'robot_ip': '128.30.31.59'})
+                            'robot_ip': robot_ip})
     robot.go_home()
 
     A = 0.4

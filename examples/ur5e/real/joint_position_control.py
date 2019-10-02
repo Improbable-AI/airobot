@@ -1,4 +1,5 @@
 import time
+import sys
 
 import airobot as ar
 
@@ -18,46 +19,11 @@ def main():
 
     The pb=False flag is set because we are using the real robot (pb -- pybullet)
     """
-    ## TODO Anthony, better not to put ip here in case the library will be open sourced
     # make it an command line argument
     home_pos = [1.57, -1.5, 2.0, -2.05, -1.57, 0]
+    robot_ip = str(sys.argv[1])
 
-    robot = ar.create_robot('ur5e', pb=False, robot_cfg={'robot_ip': '128.30.31.59'})
-
-    current_pos = robot.get_jpos()
-    print("Current joint configuration (degrees): ")
-    print(rad2deg(current_pos))
-
-    robot.go_home()
-    current_pos = robot.get_jpos()
-    print("Current joint configuration (degrees): ")
-    print(rad2deg(current_pos))
-    # time.sleep(1)
-
-    goal_pos = current_pos 
-    goal_pos[0] += 0.1
-
-    # goal_pos[0] = home_pos[0]
-    # goal_pos[1] = home_pos[1]
-    # goal_pos[2] = home_pos[2]
-    # goal_pos[3] = home_pos[3]
-    # goal_pos[4] = home_pos[4]
-    # goal_pos[5] = home_pos[5]
-
-    # print("Goal joint configuration (degrees): ")
-    # print(rad2deg(goal_pos))
-
-    robot.set_jpos(goal_pos, wait=False)
-    time.sleep(1)
-
-    # robot.set_jpos(goal_pos[0], 'shoulder_pan_joint')
-    # robot.set_jpos(goal_pos[1], 'shoulder_lift_joint')
-    # robot.set_jpos(goal_pos[2], 'elbow_joint')
-    # robot.set_jpos(goal_pos[3], 'wrist_1_joint')
-    # robot.set_jpos(goal_pos[4], 'wrist_2_joint')
-    # robot.set_jpos(goal_pos[5], 'wrist_3_joint')
-
-    time.sleep(1)
+    robot = ar.create_robot('ur5e', pb=False, robot_cfg={'robot_ip': robot_ip})
     
     robot.close()
 
