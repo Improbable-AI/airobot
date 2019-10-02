@@ -87,6 +87,9 @@ class UR5eRobotReal(Robot):
                 the UR5e machine
 
         """
+        # TODO return the status info
+        # such as if the robot gives any error,
+        # the execution is successful or not
         self.monitor.send_program(prog)
 
     def output_pendant_msg(self, msg):
@@ -218,7 +221,8 @@ class UR5eRobotReal(Robot):
 
         return success
 
-    def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, wait=True, *args, **kwargs):
+    def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, wait=True,
+                    ik_first=False, *args, **kwargs):
         """
         Set cartesian space pose of end effector
 
@@ -252,20 +256,25 @@ class UR5eRobotReal(Robot):
                              'euler angles')
 
         if self.use_tcp:
-            ee_pos = [pos[0], pos[1], pos[2], euler[0], euler[1], euler[2]]
-            prog = 'movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)' % (
-                ee_pos[0],
-                ee_pos[1],
-                ee_pos[2],
-                ee_pos[3],
-                ee_pos[4],
-                ee_pos[5],
-                acc,
-                vel,
-                0.0)
-            self._send_program(prog)
-            if wait:
-                success = self._wait_to_reach_ee_goal(pos, quat)
+            if ik_first:
+                jnt_pos = self.compute_ik(pos, quat)  # ik can handle quaternion
+                # use movej instead of movel
+                success = self.set_jpos(jnt_pos, wait=wait)
+            else:
+                ee_pos = [pos[0], pos[1], pos[2], euler[0], euler[1], euler[2]]
+                prog = 'movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)' % (
+                    ee_pos[0],
+                    ee_pos[1],
+                    ee_pos[2],
+                    ee_pos[3],
+                    ee_pos[4],
+                    ee_pos[5],
+                    acc,
+                    vel,
+                    0.0)
+                self._send_program(prog)
+                if wait:
+                    success = self._wait_to_reach_ee_goal(pos, quat)
         else:
             pose = moveit_group.get_current_pose()
             pose.pose.position.x = pos[0]
