@@ -56,6 +56,9 @@ class UR5eRobotReal(Robot):
                                         self.gripper_close_angle)
             self._set_tcp_offset()
 
+    def __del__(self):
+        self.monitor.close()
+
     def output_pendant_msg(self, msg):
         """
         Method to display a text message on the UR5e teach pendant
@@ -296,7 +299,7 @@ class UR5eRobotReal(Robot):
             list: x, y, z position of the EE (shape: [3])
             list: quaternion representation ([x, y, z, w]) of the EE orientation (shape: [4])
             list: rotation matrix representation of the EE orientation
-                (shape: [9])
+                (shape: [3, 3])
             list: euler angle representation of the EE orientation (roll,
                 pitch, yaw with static reference frame) (shape: [3])
         """
@@ -534,7 +537,7 @@ class UR5eRobotReal(Robot):
         else:
             return False
 
-    def _wait_to_reach_ee_goal(self, goal):
+    def _wait_to_reach_ee_goal(self, pos, ori):
         """
         Block the code to wait for the end effector to reach its
         specified goal pose (must be below both position and
@@ -542,7 +545,11 @@ class UR5eRobotReal(Robot):
         self.cfgs.TIMEOUT_LIMIT
 
         Args:
-            goal (list): Goal pose for end effector
+            pos (list): goal position
+            ori (list or np.ndarray): goal orientation. It can be:
+                quaternion ([qx, qy, qz, qw])
+                rotation matrix ([3, 3])
+                euler angles ([roll, pitch, yaw])
 
         Returns:
             bool: If end effector reached goal or not
@@ -559,40 +566,67 @@ class UR5eRobotReal(Robot):
                                              self.cfgs.TIMEOUT_LIMIT)
                 print_red(pt_str)
                 return success
-            if self._reach_ee_goal(goal):
+            if self._reach_ee_goal(pos, ori):
                 success = True
                 break
             time.sleep(0.001)
         return success
 
-    def _reach_ee_goal(self, goal):
+    def _reach_ee_goal(self, pos, ori):
         """
         Check if end effector reached goal or not. Returns true
         if both position and orientation goals have been reached
         within specified tolerance
 
         Args:
-            goal (list): Goal pose (position and orientation) of the
-                end effector
+            pos (list np.ndarray): goal position
+            ori (list or np.ndarray): goal orientation. It can be:
+                quaternion ([qx, qy, qz, qw])
+                rotation matrix ([3, 3])
+                euler angles ([roll, pitch, yaw])
 
         Returns:
             bool: If goal pose is reached or not
         """
-        goal_pos = np.array(goal[0:3])
-        goal_ori = np.array(goal[3:])
+        if not isinstance(pos, np.ndarray):
+            goal_pos = np.array(pos)
+        else:
+            goal_pos = pos
+        if not isinstance(ori, np.ndarray):
+            goal_ori = np.array(ori)
+        else:
+            goal_ori = ori
 
+        if goal_ori.size == 3:
+            goal_ori = quaternion_from_euler(goal_ori[0],
+                                             goal_ori[1],
+                                             goal_ori[2])
+            goal_ori = np.array(goal_ori)
+        elif goal_ori.size == 9:
+            rot = np.eye(4)
+            rot[:3, :3] = goal_ori
+            goal_ori = quaternion_from_matrix(rot)
+            goal_ori = np.array(goal_ori)
+        elif goal_ori.size != 4:
+            raise TypeError('Orientation must be in one '
+                            'of the following forms:'
+                            'rotation matrix, euler angles, or quaternion')
+        goal_ori = goal_ori.flatten()
+        goal_pos = goal_pos.flatten()
         new_ee_pose = self.get_ee_pose()
+
         new_ee_pos = np.array(new_ee_pose[0])
-        new_ee_ori = np.array(new_ee_pose[-1])
+        new_ee_quat = new_ee_pose[1]
 
-        pos_diff = new_ee_pos - goal_pos
-        ori_diff = new_ee_ori - goal_ori
-
+        pos_diff = new_ee_pos.flatten() - goal_pos
         pos_error = np.max(np.abs(pos_diff))
-        ori_error = np.max(np.abs(ori_diff))
+
+        quat_diff = quaternion_multiply(quaternion_inverse(goal_ori),
+                                        new_ee_quat)
+        rot_similarity = np.abs(quat_diff[3])
 
         if pos_error < self.cfgs.MAX_EE_POSITION_ERROR and \
-                ori_error < self.cfgs.MAX_EE_ORIENTATION_ERROR:
+                rot_similarity > 1 - self.cfgs.MAX_EE_ORIENTATION_ERROR:
             return True
         else:
             return False
@@ -609,7 +643,7 @@ class UR5eRobotReal(Robot):
                                         self.cfgs.ROBOT_EE_FRAME,
                                         urdf_string=urdf_string)
         _, self.urdf_tree = treeFromParam(robot_description)
-        # TODO get base transform from gripper_tip, from urdf tree or chain
+
         self.urdf_chain = self.urdf_tree.getChain(self.cfgs.ROBOT_BASE_FRAME,
                                                   self.cfgs.ROBOT_EE_FRAME)
         self.arm_jnt_names = self._get_kdl_joint_names()
@@ -617,6 +651,7 @@ class UR5eRobotReal(Robot):
         self.arm_link_names = self._get_kdl_link_names()
         self.arm_dof = len(self.arm_jnt_names)
         self.gripper_tip_pos, self.gripper_tip_ori = self._get_tip_transform()
+
         moveit_commander.roscpp_initialize(sys.argv)
         self.moveit_group = MoveGroupCommander(self.cfgs.MOVEGROUP_NAME)
         self.moveit_group.set_planner_id(self.moveit_planner)
@@ -703,6 +738,3 @@ class UR5eRobotReal(Robot):
 
         """
         self.monitor.send_program(prog)
-
-    def close(self):
-        self.monitor.close()
