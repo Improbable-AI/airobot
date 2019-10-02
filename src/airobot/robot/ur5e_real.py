@@ -8,7 +8,6 @@ from __future__ import print_function
 import copy
 import time
 import sys
-# from abc import ABC
 
 import PyKDL as kdl
 import numpy as np
@@ -27,7 +26,7 @@ from std_msgs.msg import Float64MultiArray
 from airobot.robot.robot import Robot
 from airobot.end_effectors.robotiq_gripper import Robotiq2F140, Robotiq2F140Sim
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
-from airobot.utils.tcp_util import SecondaryMonitor
+from airobot.utils.ur_tcp_util import SecondaryMonitor
 from airobot.utils.common import clamp
 from airobot.utils.common import joints_to_kdl
 from airobot.utils.common import kdl_array_to_numpy
@@ -52,6 +51,7 @@ class UR5eRobotReal(Robot):
             self._set_comm_mode(use_tcp)
             if self.use_tcp:
                 self.monitor = SecondaryMonitor(self.robot_ip)
+                self.monitor_ini
                 self.monitor.wait()  # make contact with robot before anything
                 self.gripper = Robotiq2F140(self.monitor,
                                             self.cfgs.SOCKET_HOST,
@@ -65,7 +65,8 @@ class UR5eRobotReal(Robot):
                                                self.gripper_close_angle)
 
     def __del__(self):
-        self.monitor.close()
+        if self.use_tcp:
+            self.monitor.close()
         
     def _set_comm_mode(self, use_tcp):
         """

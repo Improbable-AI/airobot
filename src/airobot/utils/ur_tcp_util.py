@@ -19,7 +19,7 @@ from threading import Thread, Condition, Lock
 
 """
 Code built off of ursecmon.py in python-urx library
-(https://github.com/anthonysimeonov/python-urx/blob/master/urx/ursecmon.py)
+(https://github.com/SintefManufacturing/python-urx/blob/master/urx/ursecmon.py)
 written by Oliver Roulet-Dubonnet (see original author info below)
 __author__ = "Olivier Roulet-Dubonnet"
 __copyright__ = "Copyright 2011-2013, Sintef Raufoss Manufacturing"
