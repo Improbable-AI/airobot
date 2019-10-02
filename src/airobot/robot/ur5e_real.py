@@ -55,18 +55,7 @@ class UR5eRobotReal(Robot):
                                         self.gripper_open_angle,
                                         self.gripper_close_angle)
             self._set_tcp_offset()
-
-    def send_program(self, prog):
-        """
-        Method to send URScript program to the TCP/IP monitor
-
-        Args:
-            prog (str): URScript program which will be sent and run on
-                the UR5e machine
-
-        """
-        self.monitor.send_program(prog)
-
+            
     def output_pendant_msg(self, msg):
         """
         Method to display a text message on the UR5e teach pendant
@@ -78,7 +67,7 @@ class UR5eRobotReal(Robot):
             None
         """
         prog = 'textmsg(%s)' % msg
-        self.send_program(prog)
+        self._send_program(prog)
 
     def _is_running(self):
         return self.monitor.running
@@ -127,7 +116,7 @@ class UR5eRobotReal(Robot):
                                                     tgt_pos[3],
                                                     tgt_pos[4],
                                                     tgt_pos[5])
-        self.send_program(prog)
+        self._send_program(prog)
         if wait:
             success = self._wait_to_reach_jnt_goal(tgt_pos,
                                                    joint_name=joint_name,
@@ -171,7 +160,7 @@ class UR5eRobotReal(Robot):
                                                            tgt_vel[4],
                                                            tgt_vel[5],
                                                            acc)
-        self.send_program(prog)
+        self._send_program(prog)
 
         if wait:
             success = self._wait_to_reach_jnt_goal(target_vel,
@@ -216,7 +205,7 @@ class UR5eRobotReal(Robot):
                 acc,
                 vel,
                 0.0)
-            self.send_program(prog)
+            self._send_program(prog)
             if wait:
                 success = self._wait_to_reach_ee_goal(ee_pos)
         else:
@@ -702,7 +691,18 @@ class UR5eRobotReal(Robot):
             self.gripper_tip_ori[2]
         )
 
-        self.send_program(tcp_offset_prog)
+        self._send_program(tcp_offset_prog)
+
+    def _send_program(self, prog):
+        """
+        Method to send URScript program to the TCP/IP monitor
+
+        Args:
+            prog (str): URScript program which will be sent and run on
+                the UR5e machine
+
+        """
+        self.monitor.send_program(prog)
 
     def close(self):
         self.monitor.close()
