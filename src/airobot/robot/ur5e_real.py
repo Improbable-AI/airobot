@@ -56,7 +56,10 @@ class UR5eRobotReal(Robot):
             if not self.gazebo_sim:
                 self.robot_ip = rospy.get_param('robot_ip')
                 self.set_comm_mode()
-                self._initialize_tcp_comm()
+                # TODO temperalily disable tcp until we figure out
+                # a better way to kill the program
+                if not self.use_ros:
+                    self._initialize_tcp_comm()
                 # self.gripper = Robotiq2F140(cfgs, self.tcp_monitor)
 
     def __del__(self):
@@ -759,7 +762,7 @@ class UR5eRobotReal(Robot):
         # add a virtual base support frame of the real robot:
         ur_base_name = 'ur_base'
         ur_base_attached = False
-        for i in range(1):
+        for i in range(2):
             self.moveit_scene.add_static_obj(ur_base_name,
                                              [0, 0, -0.5],
                                              [0, 0, 0, 1],
