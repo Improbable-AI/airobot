@@ -28,6 +28,7 @@ from tf.transformations import quaternion_matrix
 from trac_ik_python import trac_ik
 
 from airobot.robot.robot import Robot
+from airobot.end_effectors.ee import Robotiq2F140
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
 from airobot.utils.common import clamp
 from airobot.utils.common import joints_to_kdl
@@ -59,20 +60,16 @@ class UR5eRobotReal(Robot):
             if not self.gazebo_sim:
                 self.robot_ip = rospy.get_param('robot_ip')
                 self.set_comm_mode()
-                self._initialize_tcp_comm()
-
                 self.gripper = Robotiq2F140(cfgs=cfgs,
                                             use_ros=self.use_ros,
                                             monitor=self.tcp_monitor)
 
-                self._joint_angles = dict()
-                self._joint_velocities = dict()
-                self._joint_efforts = dict()
-                rospy.Subcriber(self.cfgs.ROSTOPIC_JOINT_STATE,
-                                JointState,
-                                self._joint_state_callback)
-
                 self._setup_pub_sub()
+                # TODO temperalily disable tcp until we figure out
+                # a better way to kill the program
+                if not self.use_ros:
+                    self._initialize_tcp_comm()
+                # self.gripper = Robotiq2F140(cfgs, self.tcp_monitor)
 
     def __del__(self):
         self.stop()
@@ -774,7 +771,7 @@ class UR5eRobotReal(Robot):
         # add a virtual base support frame of the real robot:
         ur_base_name = 'ur_base'
         ur_base_attached = False
-        for i in range(1):
+        for i in range(2):
             self.moveit_scene.add_static_obj(ur_base_name,
                                              [0, 0, -0.5],
                                              [0, 0, 0, 1],
