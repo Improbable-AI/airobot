@@ -15,6 +15,11 @@ import rospy
 import moveit_commander
 from moveit_commander import MoveGroupCommander
 from trac_ik_python import trac_ik
+from actionlib import SimpleActionClient
+from trajectory_msgs.msg import JointTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint
+from control_msgs.msg import FollowJointTrajectoryAction
+from control_msgs.msg import FollowJointTrajectoryGoal
 from kdl_parser_py.urdf import treeFromParam
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
@@ -77,7 +82,7 @@ class UR5eRobotReal(Robot):
         self.use_tcp = use_tcp
         self.gripper.set_comm_mode(use_tcp)
 
-    def _send_program(self, prog):
+    def _tcp_send_program(self, prog):
         """
         Method to send URScript program to the TCP/IP monitor
 
@@ -102,7 +107,7 @@ class UR5eRobotReal(Robot):
             None
         """
         prog = 'textmsg(%s)' % msg
-        self._send_program(prog)
+        self._tcp_send_program(prog)
 
     def _is_running(self):
         return self.tcp_monitor.running
@@ -153,7 +158,7 @@ class UR5eRobotReal(Robot):
                                                         tgt_pos[3],
                                                         tgt_pos[4],
                                                         tgt_pos[5])
-            self._send_program(prog)
+            self._tcp_send_program(prog)
         else:
             if plan:
                 self.moveit_group.set_joint_value_target(tgt_pos)
@@ -208,7 +213,7 @@ class UR5eRobotReal(Robot):
                                                                tgt_vel[4],
                                                                tgt_vel[5],
                                                                acc)
-            self._send_program(prog)
+            self._tcp_send_program(prog)
         else:
             # TODO non-TCP way
             pass
@@ -271,7 +276,7 @@ class UR5eRobotReal(Robot):
                     acc,
                     vel,
                     0.0)
-                self._send_program(prog)
+                self._tcp_send_program(prog)
                 if wait:
                     success = self._wait_to_reach_ee_goal(pos, quat)
         else:
@@ -287,8 +292,7 @@ class UR5eRobotReal(Robot):
             success = self.moveit_group.go(wait=True)
         return success
 
-    def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True,
-                    linear_path=False, *args, **kwargs):
+    def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True, *args, **kwargs):
         """Move end effector in straight line while maintaining orientation
 
         Args:
@@ -297,13 +301,12 @@ class UR5eRobotReal(Robot):
         """
         ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
 
-        if linear_path:
+        if self.use_tcp:
             ee_pos[0] += delta_xyz[0]
             ee_pos[1] += delta_xyz[1]
             ee_pos[2] += delta_xyz[2]
-
             success = self.set_ee_pose(ee_pos, ee_euler, wait=wait,
-                                       linear_path=linear_path)
+                                       ik_first=False)
         else:
             cur_pos = np.array(ee_pos)
             delta_xyz = np.array(delta_xyz)
@@ -316,6 +319,14 @@ class UR5eRobotReal(Robot):
 
             way_jnt_positions = []
             qinit = self.get_jpos()
+            g = FollowJointTrajectoryGoal()
+            g.trajectory = JointTrajectory()
+            g.trajectory.joint_names = self.arm_jnt_names
+            g.trajectory.points = [
+                JointTrajectoryPoint(positions=qinit,
+                                     velocities=[0] * len(self.arm_jnt_names),
+                                     time_from_start=rospy.Duration(0.0))
+            ]
             for i in range(waypoints.shape[0]):
                 tgt_jnt_poss = self.compute_ik(waypoints[i, :].flatten(),
                                                ee_quat,
@@ -326,10 +337,16 @@ class UR5eRobotReal(Robot):
                     return False
                 way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
                 qinit = copy.deepcopy(tgt_jnt_poss)
-
-            success = False
-            for jnt_poss in way_jnt_positions:
-                success = self.set_jpos(jnt_poss)
+                g.trajectory.points.append(
+                    JointTrajectoryPoint(positions=tgt_jnt_poss,
+                                         velocities=[0] * len(self.arm_jnt_names),
+                                         time_from_start=rospy.Duration(0.05 * i))
+                )
+            # http://docs.ros.org/diamondback/api/control_msgs/html/msg/FollowJointTrajectoryResult.html
+            self.traj_follower_client.send_goal(g)
+            self.traj_follower_client.wait_for_result()
+            res = self.traj_follower_client.get_result()
+            success = res.error_code == 0
         return success
 
     def get_jpos(self, joint_name=None):
@@ -345,6 +362,8 @@ class UR5eRobotReal(Robot):
             jdata = self.tcp_monitor.get_joint_data()
             jpos = [jdata["q_actual0"], jdata["q_actual1"], jdata["q_actual2"],
                     jdata["q_actual3"], jdata["q_actual4"], jdata["q_actual5"]]
+        else:
+            raise NotImplementedError
         return jpos
 
     def get_jvel(self, joint_name=None):
@@ -729,6 +748,10 @@ class UR5eRobotReal(Robot):
         self.moveit_group.set_planner_id(self.moveit_planner)
         self.moveit_scene = moveit_commander.PlanningSceneInterface()
 
+        self.traj_follower_client = SimpleActionClient('follow_joint_trajectory',
+                                                       FollowJointTrajectoryAction)
+        self.traj_follower_client.wait_for_server()
+
         self.jac_solver = kdl.ChainJntToJacSolver(self.urdf_chain)
         self.fk_solver_pos = kdl.ChainFkSolverPos_recursive(self.urdf_chain)
         self.fk_solver_vel = kdl.ChainFkSolverVel_recursive(self.urdf_chain)
@@ -797,7 +820,7 @@ class UR5eRobotReal(Robot):
             self.gripper_tip_ori[2]
         )
 
-        self._send_program(tcp_offset_prog)
+        self._tcp_send_program(tcp_offset_prog)
 
     def _pub_joint_positions(self, positions):
         """
@@ -819,7 +842,7 @@ class UR5eRobotReal(Robot):
             Float64MultiArray,
             queue_size=10)
 
-    def _send_program(self, prog):
+    def _tcp_send_program(self, prog):
         """
         Method to send URScript program to the TCP/IP monitor
 
