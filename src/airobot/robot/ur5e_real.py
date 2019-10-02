@@ -748,7 +748,7 @@ class UR5eRobotReal(Robot):
         self.moveit_group.set_planner_id(self.moveit_planner)
         self.moveit_scene = moveit_commander.PlanningSceneInterface()
 
-        self.traj_follower_client = SimpleActionClient('follow_joint_trajectory',
+        self.traj_follower_client = SimpleActionClient(self.cfgs.TRAJ_FOLLOW_CLIENT_NS,
                                                        FollowJointTrajectoryAction)
         self.traj_follower_client.wait_for_server()
 
