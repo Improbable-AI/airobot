@@ -1,6 +1,9 @@
 import logging
 import os
 
+import rospy
+from control_msgs.msg import GripperCommandActionGoal
+
 from airobot.utils.urscript_util import URScript
 from airobot.utils.common import clamp
 
@@ -167,6 +170,48 @@ class Robotiq2F140(object):
         urscript = self._get_new_urscript()
         urscript.set_gripper_position(position)
         self.monitor.send_program(urscript())
+
+    def open_gripper(self):
+        """
+        Commands the gripper to fully open
+        """
+        self.set_gripper_pos(self.open_angle)
+
+    def close_gripper(self):
+        """
+        Commands the gripper to fully close
+        """
+        self.set_gripper_pos(self.close_angle)
+
+
+class Robotiq2F140Sim(object):
+    def __init__(self,
+                 topic,
+                 open_angle,
+                 close_angle,
+                 output_range=0.7):
+        self.gripper_topic = topic
+        self.open_angle = open_angle
+        self.close_angle = close_angle
+        self.input_range = close_angle - open_angle
+        self.output_range = output_range
+        self.pos_range_scaling = (self.output_range/self.input_range)
+        self.pub = rospy.Publisher(
+            self.gripper_topic, GripperCommandActionGoal, queue_size=10)
+
+    def set_gripper_pos(self, position):
+        """
+        Method to send a position command to the gripper
+        by creating a ROS msg to send to the gripper controller
+
+        Args:
+            position (float): Desired gripper position,
+                fully open and closed position values specified
+                upon construction
+        """
+        gripper_cmd = GripperCommandActionGoal()
+        gripper_cmd.goal = position
+        self.pub.publish(gripper_cmd)
 
     def open_gripper(self):
         """
