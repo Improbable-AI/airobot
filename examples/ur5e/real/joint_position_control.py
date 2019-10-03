@@ -1,4 +1,5 @@
 import airobot as ar
+import time
 
 def main():
     """
@@ -7,18 +8,24 @@ def main():
 
     The pb=False flag is set because we are using the real robot (pb -- pybullet)
     """
-    home_pos = [1.57, -1.5, 2.0, -2.05, -1.57, 0]
-
+    print("creating robot and activating gripper...")
     robot = ar.create_robot('ur5e', pb=False)
+    robot.gripper.activate()
+    time.sleep(1.0)
+
+    print("setting comm mode...")
     robot.set_comm_mode(use_urscript=True)
 
+    print("getting current and goal pos...")
     current_pos = robot.get_jpos()
     goal_pos = current_pos
-    goal_pos[0] += 0.1
+    goal_pos[-1] += 0.2
 
-    robot.set_jpos(goal_pos)
+    print("setting goal pos...")
+    robot.set_jpos(goal_pos, wait=True)
 
-    # robot.stop()
+    print("done")
+    robot.stop()
 
 if __name__ == '__main__':
     main()

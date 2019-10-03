@@ -68,13 +68,15 @@ class UR5eRobotReal(Robot):
 
                 if self.use_urscript:
                     self._initialize_tcp_comm()
-                tcp_monitor = None if not self.use_urscript else self.tcp_monitor
+                tcp_monitor = None if not self.use_urscript else \
+                    self.tcp_monitor
                 self.gripper = Robotiq2F140(cfgs,
-                                            self.use_urscript,
                                             tcp_monitor=tcp_monitor)
 
             else:
                 raise NotImplementedError
+
+        time.sleep(2.0)  # sleep to give subscribers time to connect
 
     def __del__(self):
         self.stop()
@@ -110,9 +112,10 @@ class UR5eRobotReal(Robot):
         # TODO return the status info
         # such as if the robot gives any error,
         # the execution is successful or not
-        self.urscript_pub.publish(prog)
+
         # TODO go back to TCP at some point, after debugging threading
         # self.tcp_monitor.send_program(prog)
+        self.urscript_pub.publish(prog)
 
     def output_pendant_msg(self, msg):
         """
@@ -131,7 +134,8 @@ class UR5eRobotReal(Robot):
         if hasattr(self, 'tcp_monitor'):
             return self.tcp_monitor.running
         else:
-            raise ValueError('No TCP connection established')
+            # raise ValueError('No TCP connection established')
+            return True
 
     def go_home(self):
         """
@@ -806,7 +810,6 @@ class UR5eRobotReal(Robot):
         self._max_torques = [150, 150, 150, 28, 28, 28]
         # a random value for robotiq joints
         self._max_torques.append(20)
-        time.sleep(1.5)
 
     def scale_moveit_motion(self, vel_scale=1.0, acc_scale=1.0):
         vel_scale = clamp(vel_scale, 0.0, 1.0)

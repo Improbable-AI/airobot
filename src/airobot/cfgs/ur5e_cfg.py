@@ -11,9 +11,9 @@ _C.PYBULLET_URDF = 'ur5e_2f140_pybullet.urdf'
 _C.MOVEGROUP_NAME = 'manipulator'
 _C.ROSTOPIC_JOINT_STATES = '/joint_states'
 # base frame for the arm
-_C.ROBOT_BASE_FRAME = 'base_link'
+_C.ROBOT_BASE_FRAME = 'base'
 # end-effector frame of the arm
-_C.ROBOT_EE_FRAME = 'gripper_tip'
+_C.ROBOT_EE_FRAME = 'tool0'
 # namespace of the trajectory follower client
 _C.TRAJ_FOLLOW_CLIENT_NS = 'follow_joint_trajectory'
 _C.JOINT_SPEED_TOPIC = '/joint_speed'
@@ -35,6 +35,7 @@ _C.CAM_SIM = get_sim_cam_cfg()
 _C.CAM_REALSENSE = get_realsense_cam_cfg()
 _C.CAM_KINECT = CN()
 _C.GRIPPER = get_robotiq2f140_cfg()
+
 
 def get_cfg():
     return _C.clone()

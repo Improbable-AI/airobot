@@ -13,7 +13,7 @@ class Robotiq2F140(EndEffector):
     it is attached to UR5e arm. Communication with the gripper
     is either through ROS over through a TCP/IP socket
     """
-    def __init__(self, cfgs, use_tcp=False, tcp_monitor=None):
+    def __init__(self, cfgs, tcp_monitor=None):
         """
         Constructor for Robotiq2F140 class
 
@@ -26,6 +26,8 @@ class Robotiq2F140(EndEffector):
         """
         super(Robotiq2F140, self).__init__(cfgs=cfgs)
         self.tcp_monitor = tcp_monitor
+
+        use_tcp = False if self.tcp_monitor is None else True
 
         self._tcp_initialized = False
         self._ros_initialized = False
@@ -126,6 +128,7 @@ class Robotiq2F140(EndEffector):
             String,
             queue_size=10)
         self._ros_initialized = True
+        rospy.sleep(2.0)
 
     def _initialize_tcp_comm(self):
         """
