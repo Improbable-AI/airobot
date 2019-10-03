@@ -14,8 +14,6 @@ _C.ROSTOPIC_JOINT_STATES = '/joint_states'
 _C.ROBOT_BASE_FRAME = 'base_link'
 # end-effector frame of the arm
 _C.ROBOT_EE_FRAME = 'gripper_tip'
-# namespace of the trajectory follower client
-_C.TRAJ_FOLLOW_CLIENT_NS = 'follow_joint_trajectory'
 _C.JOINT_SPEED_TOPIC = '/joint_speed'
 _C.URSCRIPT_TOPIC = '/ur_driver/URScript'
 # inverse kinematics position tolerance (m)

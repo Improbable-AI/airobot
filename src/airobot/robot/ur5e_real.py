@@ -784,9 +784,6 @@ class UR5eRobotReal(Robot):
             print_red('Fail to add the UR base support as a collision object. '
                       'Be careful when you use moveit to plan the path! You can'
                       'try again to add the base manually.')
-        self.traj_follower_client = SimpleActionClient(self.cfgs.TRAJ_FOLLOW_CLIENT_NS,
-                                                       FollowJointTrajectoryAction)
-        self.traj_follower_client.wait_for_server(timeout=rospy.Duration(self.cfgs.TIMEOUT_LIMIT))
 
         self.jac_solver = kdl.ChainJntToJacSolver(self.urdf_chain)
         self.fk_solver_pos = kdl.ChainFkSolverPos_recursive(self.urdf_chain)
