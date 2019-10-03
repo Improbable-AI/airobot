@@ -24,8 +24,8 @@ def main():
     print("setting goal pos...")
     robot.set_jpos(goal_pos, wait=False)
 
-    # print("done")
-    # robot.stop()
+    print("done")
+    robot.stop()
 
 if __name__ == '__main__':
     main()
