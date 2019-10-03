@@ -11,7 +11,7 @@ _C.PYBULLET_URDF = 'ur5e_2f140_pybullet.urdf'
 _C.MOVEGROUP_NAME = 'manipulator'
 _C.ROSTOPIC_JOINT_STATES = '/joint_states'
 # base frame for the arm
-_C.ROBOT_BASE_FRAME = 'base'
+_C.ROBOT_BASE_FRAME = 'base_link'
 # end-effector frame of the arm
 _C.ROBOT_EE_FRAME = 'gripper_tip'
 # namespace of the trajectory follower client
@@ -23,6 +23,7 @@ _C.IK_POSITION_TOLERANCE = 0.01
 # inverse kinematics orientation tolerance (rad)
 _C.IK_ORIENTATION_TOLERANCE = 0.1
 _C.HOME_POSITION = [0, -1.513, 2.020, -2.078, -1.571, 0]
+# _C.HOME_POSITION = [3.14, -1.513, 2.020, -2.078, -1.571, 0]
 _C.MAX_JOINT_ERROR = 0.01
 _C.MAX_JOINT_VEL_ERROR = 0.1
 _C.MAX_EE_POSITION_ERROR = 0.01

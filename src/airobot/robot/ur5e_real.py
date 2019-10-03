@@ -72,6 +72,7 @@ class UR5eRobotReal(Robot):
                 self.gripper = Robotiq2F140(cfgs,
                                             self.use_urscript,
                                             tcp_monitor=tcp_monitor)
+
             else:
                 raise NotImplementedError
 
@@ -79,7 +80,6 @@ class UR5eRobotReal(Robot):
         self.stop()
 
     def stop(self):
-        self.set_jvel([0] * len(self.arm_jnt_names))
         if hasattr(self, 'tcp_monitor'):
             self.tcp_monitor.close()
 
@@ -325,28 +325,27 @@ class UR5eRobotReal(Robot):
             cur_pos = np.array(ee_pos)
             cur_quat = ee_quat
             delta_xyz = np.array(delta_xyz)
-            path_len = np.linalg.norm(delta_xyz)
-            num_pts = int(np.ceil(path_len / float(eef_step)))
-            if num_pts <= 1:
-                num_pts = 2
-            waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
-            waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
+            end_pos = cur_pos + delta_xyz
             moveit_waypoints = []
             wpose = self.moveit_group.get_current_pose().pose
-            for i in range(waypoints.shape[0]):
-                wpose.position.x = waypoints[i, 0]
-                wpose.position.y = waypoints[i, 1]
-                wpose.position.z = waypoints[i, 2]
-                wpose.orientation.x = cur_quat[0]
-                wpose.orientation.y = cur_quat[1]
-                wpose.orientation.z = cur_quat[2]
-                wpose.orientation.w = cur_quat[3]
-                moveit_waypoints.append(copy.deepcopy(wpose))
-            (plan, fraction) = self.moveit_group.compute_cartesian_path(
-                moveit_waypoints,  # waypoints to follow
-                eef_step,  # eef_step
-                0.0)  # jump_threshold
-            success = self.moveit_group.execute(plan, wait=wait)
+            wpose.position.x = cur_pos[0]
+            wpose.position.y = cur_pos[1]
+            wpose.position.z = cur_pos[2]
+            wpose.orientation.x = cur_quat[0]
+            wpose.orientation.y = cur_quat[1]
+            wpose.orientation.z = cur_quat[2]
+            wpose.orientation.w = cur_quat[3]
+            moveit_waypoints.append(copy.deepcopy(wpose))
+
+            wpose.position.x = end_pos[0]
+            wpose.position.y = end_pos[1]
+            wpose.position.z = end_pos[2]
+            wpose.orientation.x = cur_quat[0]
+            wpose.orientation.y = cur_quat[1]
+            wpose.orientation.z = cur_quat[2]
+            wpose.orientation.w = cur_quat[3]
+            moveit_waypoints.append(copy.deepcopy(wpose))
+
             # delta_xyz = np.array(delta_xyz)
             # path_len = np.linalg.norm(delta_xyz)
             # num_pts = int(np.ceil(path_len / float(eef_step)))
@@ -354,37 +353,22 @@ class UR5eRobotReal(Robot):
             #     num_pts = 2
             # waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
             # waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
-            #
-            # way_jnt_positions = []
-            # qinit = self.get_jpos()
-            # g = FollowJointTrajectoryGoal()
-            # g.trajectory = JointTrajectory()
-            # g.trajectory.joint_names = self.arm_jnt_names
-            # g.trajectory.points = [
-            #     JointTrajectoryPoint(positions=qinit,
-            #                          velocities=[0] * len(self.arm_jnt_names),
-            #                          time_from_start=rospy.Duration(0.0))
-            # ]
+            # moveit_waypoints = []
+            # wpose = self.moveit_group.get_current_pose().pose
             # for i in range(waypoints.shape[0]):
-            #     tgt_jnt_poss = self.compute_ik(waypoints[i, :].flatten(),
-            #                                    ee_quat,
-            #                                    qinit=qinit)
-            #     if tgt_jnt_poss is None:
-            #         rospy.logerr('No IK solution found; '
-            #                      'check if target_pose is valid')
-            #         return False
-            #     way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
-            #     qinit = copy.deepcopy(tgt_jnt_poss)
-            #     g.trajectory.points.append(
-            #         JointTrajectoryPoint(positions=tgt_jnt_poss,
-            #                              velocities=[0] * len(self.arm_jnt_names),
-            #                              time_from_start=rospy.Duration(0.05 * i))
-            #     )
-            # # http://docs.ros.org/diamondback/api/control_msgs/html/msg/FollowJointTrajectoryResult.html
-            # self.traj_follower_client.send_goal(g)
-            # self.traj_follower_client.wait_for_result()
-            # res = self.traj_follower_client.get_result()
-            # success = res.error_code == 0
+            #     wpose.position.x = waypoints[i, 0]
+            #     wpose.position.y = waypoints[i, 1]
+            #     wpose.position.z = waypoints[i, 2]
+            #     wpose.orientation.x = cur_quat[0]
+            #     wpose.orientation.y = cur_quat[1]
+            #     wpose.orientation.z = cur_quat[2]
+            #     wpose.orientation.w = cur_quat[3]
+            #     moveit_waypoints.append(copy.deepcopy(wpose))
+            (plan, fraction) = self.moveit_group.compute_cartesian_path(
+                moveit_waypoints,  # waypoints to follow
+                eef_step,  # eef_step
+                0.0)  # jump_threshold
+            success = self.moveit_group.execute(plan, wait=wait)
         return success
 
     def get_jpos(self, joint_name=None):
@@ -794,16 +778,9 @@ class UR5eRobotReal(Robot):
             print_red('Fail to add the UR base support as a collision object. '
                       'Be careful when you use moveit to plan the path! You can'
                       'try again to add the base manually.')
-        self.moveit_scene.add_static_obj('ur_base',
-                                         [0, 0, -0.5],
-                                         [0, 0, 0, 1],
-                                         size=[0.25, 0.50, 1.0],
-                                         obj_type='box',
-                                         ref_frame='/base_link')
-
         self.traj_follower_client = SimpleActionClient(self.cfgs.TRAJ_FOLLOW_CLIENT_NS,
                                                        FollowJointTrajectoryAction)
-        self.traj_follower_client.wait_for_server()
+        self.traj_follower_client.wait_for_server(timeout=rospy.Duration(self.cfgs.TIMEOUT_LIMIT))
 
         self.jac_solver = kdl.ChainJntToJacSolver(self.urdf_chain)
         self.fk_solver_pos = kdl.ChainFkSolverPos_recursive(self.urdf_chain)
