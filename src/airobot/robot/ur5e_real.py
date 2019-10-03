@@ -752,11 +752,14 @@ class UR5eRobotReal(Robot):
         self.arm_link_names = self._get_kdl_link_names()
         self.arm_dof = len(self.arm_jnt_names)
         self.gripper_tip_pos, self.gripper_tip_ori = self._get_tip_transform()
+        print('tip pos:', self.gripper_tip_pos)
+        print('tip ori:', self.gripper_tip_ori)
 
         moveit_commander.roscpp_initialize(sys.argv)
         self.moveit_group = MoveGroupCommander(self.cfgs.MOVEGROUP_NAME)
         self.moveit_group.set_planner_id(self.moveit_planner)
         self.moveit_scene = MoveitScene()
+        self.scale_moveit_motion(vel_scale=0.2, acc_scale=0.2)
 
         # add a virtual base support frame of the real robot:
         ur_base_name = 'ur_base'
