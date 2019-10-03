@@ -17,6 +17,7 @@ _C.ROBOT_EE_FRAME = 'gripper_tip'
 # namespace of the trajectory follower client
 _C.TRAJ_FOLLOW_CLIENT_NS = 'follow_joint_trajectory'
 _C.JOINT_SPEED_TOPIC = '/joint_speed'
+_C.URSCRIPT_TOPIC = '/ur_driver/URScript'
 # inverse kinematics position tolerance (m)
 _C.IK_POSITION_TOLERANCE = 0.01
 # inverse kinematics orientation tolerance (rad)
@@ -33,9 +34,6 @@ _C.CAM_SIM = get_sim_cam_cfg()
 _C.CAM_REALSENSE = get_realsense_cam_cfg()
 _C.CAM_KINECT = CN()
 _C.GRIPPER = get_robotiq2f140_cfg()
-
-
-
 
 def get_cfg():
     return _C.clone()

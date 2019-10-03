@@ -13,14 +13,14 @@ class Robotiq2F140(EndEffector):
     it is attached to UR5e arm. Communication with the gripper
     is either through ROS over through a TCP/IP socket
     """
-    def __init__(self, cfgs, use_ros=True, tcp_monitor=None):
+    def __init__(self, cfgs, use_tcp=False, tcp_monitor=None):
         """
         Constructor for Robotiq2F140 class
 
         Args:
             cfgs (YACS CfgNode): configurations for the gripper
-            use_ros (bool, optional): Whether to
-                use ROS to communicate or not. Defaults to True.
+            use_tcp (bool, optional): Whether to use TCP/IP 
+                monitor to communicate or not. Defaults to False.
             tcp_monitor (SecondaryMonitor): Interface to TCP
                 socket, if using TCP/IP. Defaults to None
         """
@@ -29,8 +29,8 @@ class Robotiq2F140(EndEffector):
 
         self._tcp_initialized = False
         self._ros_initialized = False
-        self.set_comm_mode(use_ros)
-        if self.use_ros:
+        self.set_comm_mode(use_tcp)
+        if not self.use_tcp:
             self._initialize_ros_comm()
         else:
             self._initialize_tcp_comm()
@@ -68,7 +68,7 @@ class Robotiq2F140(EndEffector):
 
         urscript.sleep(0.1)
 
-        if self.use_ros:
+        if not self.use_tcp:
             self.pub_command.publish(urscript())
         else:
             self.tcp_monitor.send_program(urscript())
@@ -94,7 +94,7 @@ class Robotiq2F140(EndEffector):
         urscript.set_gripper_position(position)
         urscript.sleep(2.0)
 
-        if self.use_ros:
+        if not self.use_tcp:
             self.pub_command.publish(urscript())
         else:
             self.tcp_monitor.send_program(urscript())
@@ -139,12 +139,12 @@ class Robotiq2F140(EndEffector):
             raise ValueError('TCP monitor has not been initialized!')
         self._tcp_initialized = True
 
-    def set_comm_mode(self, use_ros=True):
+    def set_comm_mode(self, use_tcp=False):
         """
         Set what communication mode to use, default is ROS
 
         Args:
-            use_ros (bool, optional): Whether to use ROS or not,
-                Defaults to True.
+            use_tcp (bool, optional): Whether to use TCP/IP
+                monitor or not, Defaults to False
         """
-        self.use_ros = use_ros
+        self.use_tcp = use_tcp

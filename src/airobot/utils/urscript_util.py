@@ -153,7 +153,6 @@ class Robotiq2F140URScript(URScript):
         variables on the UR controller to 1
         """
         self.socket_set_var('ACT', 1, self.socket_name)
-        # self.socket_set_var('GTO', 1, self.socket_name)
 
     def set_gripper_position(self, position):
         """

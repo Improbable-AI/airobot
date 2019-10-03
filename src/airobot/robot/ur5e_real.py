@@ -20,6 +20,7 @@ from control_msgs.msg import FollowJointTrajectoryAction
 from kdl_parser_py.urdf import treeFromParam
 from moveit_commander import MoveGroupCommander
 from sensor_msgs.msg import JointState
+from std_msgs.msg import String
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from tf.transformations import euler_from_matrix
 from tf.transformations import euler_from_quaternion
@@ -59,16 +60,17 @@ class UR5eRobotReal(Robot):
             if not self.gazebo_sim:
                 self.robot_ip = rospy.get_param('robot_ip')
                 self.set_comm_mode()
-
-
                 self._setup_pub_sub()
+                self._set_tool_offset()
+
                 # TODO temperalily disable tcp until we figure out
                 # a better way to kill the program
-                if not self.use_ros:
+
+                if self.use_urscript:
                     self._initialize_tcp_comm()
-                tcp_monitor = None if self.use_ros else self.tcp_monitor
+                tcp_monitor = None if not self.use_urscript else self.tcp_monitor
                 self.gripper = Robotiq2F140(cfgs,
-                                            self.use_ros,
+                                            self.use_urscript,
                                             tcp_monitor=tcp_monitor)
             else:
                 raise NotImplementedError
@@ -86,21 +88,19 @@ class UR5eRobotReal(Robot):
 
         self.tcp_monitor.wait()  # make contact with robot before anything
 
-        self._set_tcp_offset()
-
-    def set_comm_mode(self, use_ros=True):
+    def set_comm_mode(self, use_urscript=False):
         """
         Method to set whether to use ros or urscript to control the real robot
 
         Arguments:
-            use_ros (bool): True if we should use ros and moveit, False if
-                we should use urscript
+            use_urscript (bool): True we should use urscript
+                False if we should use ros and moveit
         """
-        self.use_ros = use_ros
+        self.use_urscript = use_urscript
 
-    def _tcp_send_program(self, prog):
+    def _send_urscript(self, prog):
         """
-        Method to send URScript program to the TCP/IP monitor
+        Method to send URScript program to the URScript ROS topic
 
         Args:
             prog (str): URScript program which will be sent and run on
@@ -110,7 +110,10 @@ class UR5eRobotReal(Robot):
         # TODO return the status info
         # such as if the robot gives any error,
         # the execution is successful or not
-        self.tcp_monitor.send_program(prog)
+        print(prog)
+        self.urscript_pub.publish(prog)
+        # TODO go back to TCP at some point, after debugging threading
+        # self.tcp_monitor.send_program(prog)
 
     def output_pendant_msg(self, msg):
         """
@@ -123,10 +126,13 @@ class UR5eRobotReal(Robot):
             None
         """
         prog = 'textmsg(%s)' % msg
-        self._tcp_send_program(prog)
+        self._send_urscript(prog)
 
     def _is_running(self):
-        return self.tcp_monitor.running
+        if hasattr(self, 'tcp_monitor'):
+            return self.tcp_monitor.running
+        else:
+            raise ValueError('No TCP connection established')
 
     def go_home(self):
         """
@@ -166,14 +172,14 @@ class UR5eRobotReal(Robot):
                 tgt_pos = self.get_jpos()
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_pos[arm_jnt_idx] = position
-        if not self.use_ros:
+        if self.use_urscript:
             prog = 'movej([%f, %f, %f, %f, %f, %f])' % (tgt_pos[0],
                                                         tgt_pos[1],
                                                         tgt_pos[2],
                                                         tgt_pos[3],
                                                         tgt_pos[4],
                                                         tgt_pos[5])
-            self._tcp_send_program(prog)
+            self._send_urscript(prog)
 
             if wait:
                 success = self._wait_to_reach_jnt_goal(
@@ -214,7 +220,7 @@ class UR5eRobotReal(Robot):
                 tgt_vel = [0.0] * len(self.arm_jnt_names)
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_vel[arm_jnt_idx] = velocity
-        if not self.use_ros:
+        if self.use_urscript:
             prog = 'speedj([%f, %f, %f, %f, %f, %f], a=%f)' % (tgt_vel[0],
                                                                tgt_vel[1],
                                                                tgt_vel[2],
@@ -222,7 +228,7 @@ class UR5eRobotReal(Robot):
                                                                tgt_vel[4],
                                                                tgt_vel[5],
                                                                acc)
-            self._tcp_send_program(prog)
+            self._send_urscript(prog)
         else:
             self._pub_joint_vel(tgt_vel)
 
@@ -267,7 +273,7 @@ class UR5eRobotReal(Robot):
             raise ValueError('Orientaion should be quaternion or'
                              'euler angles')
 
-        if not self.use_ros:
+        if self.use_urscript:
             if ik_first:
                 jnt_pos = self.compute_ik(pos, quat)  # ik can handle quaternion
                 # use movej instead of movel
@@ -284,7 +290,7 @@ class UR5eRobotReal(Robot):
                     acc,
                     vel,
                     0.0)
-                self._tcp_send_program(prog)
+                self._send_urscript(prog)
                 if wait:
                     success = self._wait_to_reach_ee_goal(pos, quat)
         else:
@@ -309,7 +315,7 @@ class UR5eRobotReal(Robot):
         """
         ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
 
-        if not self.use_ros:
+        if self.use_urscript:
             ee_pos[0] += delta_xyz[0]
             ee_pos[1] += delta_xyz[1]
             ee_pos[2] += delta_xyz[2]
@@ -886,8 +892,8 @@ class UR5eRobotReal(Robot):
         gripper_tip_euler = euler_from_matrix(gripper_tip_rot_mat)
         return list(gripper_tip_pos), list(gripper_tip_euler)
 
-    def _set_tcp_offset(self):
-        tcp_offset_prog = 'set_tcp(p[%f, %f, %f, %f, %f, %f])' % (
+    def _set_tool_offset(self):
+        tool_offset_prog = 'set_tcp(p[%f, %f, %f, %f, %f, %f])' % (
             self.gripper_tip_pos[0],
             self.gripper_tip_pos[1],
             self.gripper_tip_pos[2],
@@ -896,24 +902,7 @@ class UR5eRobotReal(Robot):
             self.gripper_tip_ori[2]
         )
 
-        self._tcp_send_program(tcp_offset_prog)
-
-    def _joint_state_callback(self, msg):
-        """
-        ROS subscriber callback function, to receive published
-        joint state information
-
-        Args:
-            msg (JointState): ROS msg with state information
-        """
-        for ind, name in enumerate(msg.name):
-            if name in self.arm_jnt_names:
-                if ind < len(msg.position):
-                    self._joint_angles[name] = msg.position[ind]
-                if ind < len(msg.velocity):
-                    self._joint_velocities[name] = msg.velocity[ind]
-                if ind < len(msg.effort):
-                    self._joint_efforts[name] = msg.effort[ind]
+        self._send_urscript(tool_offset_prog)
 
     def _pub_joint_vel(self, velocity):
         """
@@ -926,7 +915,7 @@ class UR5eRobotReal(Robot):
                 (length and order have already been checked)
         """
         goal_speed_msg = JointTrajectory()
-        goal_speed_msg.points.apppend(
+        goal_speed_msg.points.append(
             JointTrajectoryPoint(
                 velocities=velocity))
         self.joint_vel_pub.publish(goal_speed_msg)
@@ -939,5 +928,11 @@ class UR5eRobotReal(Robot):
         self.joint_vel_pub = rospy.Publisher(
             self.cfgs.JOINT_SPEED_TOPIC,
             JointTrajectory,
+            queue_size=10
+        )
+
+        self.urscript_pub = rospy.Publisher(
+            self.cfgs.URSCRIPT_TOPIC,
+            String,
             queue_size=10
         )
