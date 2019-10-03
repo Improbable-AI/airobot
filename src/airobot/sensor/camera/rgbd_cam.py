@@ -59,7 +59,7 @@ class RGBDCamera(Camera):
                                                                 queue_size=10,
                                                                 slop=0.2)
         self.sync.registerCallback(self._sync_callback)
-        time.sleep(1)
+        time.sleep(2)
         self.depth_min = self.cfgs.CAM_REALSENSE.DEPTH_MIN
         self.depth_max = self.cfgs.CAM_REALSENSE.DEPTH_MAX
 
