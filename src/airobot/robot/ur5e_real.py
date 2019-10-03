@@ -110,7 +110,6 @@ class UR5eRobotReal(Robot):
         # TODO return the status info
         # such as if the robot gives any error,
         # the execution is successful or not
-        print(prog)
         self.urscript_pub.publish(prog)
         # TODO go back to TCP at some point, after debugging threading
         # self.tcp_monitor.send_program(prog)
