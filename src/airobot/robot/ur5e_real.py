@@ -26,6 +26,8 @@ from tf.transformations import euler_from_matrix
 from tf.transformations import euler_from_quaternion
 from tf.transformations import quaternion_from_euler
 from tf.transformations import quaternion_matrix
+from tf.transformations import quaternion_from_matrix
+from tf.transformations import quaternion_multiply
 from trac_ik_python import trac_ik
 
 from airobot.robot.robot import Robot
@@ -772,7 +774,7 @@ class UR5eRobotReal(Robot):
                                              [0, 0, 0, 1],
                                              size=[0.25, 0.50, 1.0],
                                              obj_type='box',
-                                             ref_frame='/base_link')
+                                             ref_frame=self.cfgs.ROBOT_BASE_FRAME)
             time.sleep(1)
             obj_dict, obj_adict = self.moveit_scene.get_objects()
             if ur_base_name in obj_dict.keys():
