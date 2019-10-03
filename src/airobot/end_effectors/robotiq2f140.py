@@ -94,7 +94,7 @@ class Robotiq2F140(EndEffector):
         position = int(position * self.cfgs.GRIPPER.POSITION_SCALING)
 
         urscript.set_gripper_position(position)
-        urscript.sleep(2.0)
+        urscript.sleep(0.1)
 
         if not self.use_tcp:
             self.pub_command.publish(urscript())

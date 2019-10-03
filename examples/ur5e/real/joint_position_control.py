@@ -22,10 +22,10 @@ def main():
     goal_pos[-1] += 0.2
 
     print("setting goal pos...")
-    robot.set_jpos(goal_pos, wait=True)
+    robot.set_jpos(goal_pos, wait=False)
 
-    print("done")
-    robot.stop()
+    # print("done")
+    # robot.stop()
 
 if __name__ == '__main__':
     main()
