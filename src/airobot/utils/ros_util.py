@@ -20,7 +20,7 @@ def get_tf_transform(tf_listener, tgt_frame, src_frame):
 
     try:
         tf_listener.waitForTransform(tgt_frame, src_frame,
-                                     rospy.Time(0),
+                                     rospy.Time.now(),
                                      rospy.Duration(3))
         (trans, quat) = tf_listener.lookupTransform(tgt_frame,
                                                     src_frame,
