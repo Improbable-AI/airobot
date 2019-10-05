@@ -47,6 +47,7 @@ from airobot.utils.ur_tcp_util import SecondaryMonitor
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, use_cam=False, use_arm=True,
                  moveit_planner='RRTConnectkConfigDefault'):
+        super(UR5eRobotReal, self).__init__(cfgs=cfgs)
         try:
             rospy.init_node('ur5e', anonymous=True)
         except rospy.exceptions.ROSException:
@@ -54,10 +55,8 @@ class UR5eRobotReal(Robot):
         if use_cam:
             self.camera = RGBDCamera(cfgs=cfgs)
         if use_arm:
-            super(UR5eRobotReal, self).__init__(cfgs=cfgs)
             self.moveit_planner = moveit_planner
             self.gazebo_sim = rospy.get_param('sim')
-            self._tcp_initialized = False
             self._init_consts()
 
             if not self.gazebo_sim:

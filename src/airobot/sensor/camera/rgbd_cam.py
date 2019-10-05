@@ -10,6 +10,8 @@ from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image
 from tf import TransformListener
 
+from tf.transformations import euler_matrix
+from tf.transformations import quaternion_matrix
 from airobot.sensor.camera.camera import Camera
 
 
@@ -113,8 +115,25 @@ class RGBDCamera(Camera):
         topic.insert(0, cam_name)
         return '/'.join(topic)
 
-    def set_cam_ext(self, cam_ext):
-        self.cam_ext_mat = cam_ext
+    def set_cam_ext(self, pos=None, ori=None, cam_ext=None):
+        if cam_ext is not None:
+            self.cam_ext_mat = cam_ext
+        else:
+            if pos is None or ori is None:
+                raise ValueError('If cam_ext is not provided, both pos and ori need'
+                                 'to be provided.')
+            if ori.size == 3:
+                # [roll, pitch, yaw]
+                ori = euler_matrix(*(ori.tolist()))[:3, :3]
+            if ori.size == 4:
+                ori = quaternion_matrix(ori.tolist())[:3, :3]
+            elif ori.shape != (3, 3):
+                raise ValueError('Orientation should be rotation matrix, '
+                                 'euler angles or quaternion')
+            cam_mat = np.eye(4)
+            cam_mat[:3, :3] = ori
+            cam_mat[:3, 3] = pos.flatten()
+            self.cam_ext_mat = cam_mat
 
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
@@ -137,11 +156,10 @@ class RGBDCamera(Camera):
         self.cam_img_lock.release()
         return rgb_img, depth_img
 
-    def get_pix_3dpt(self, depth_im, rs, cs, filter_depth=False):
+    def get_pix_3dpt(self, rs, cs, filter_depth=False):
         """
 
         Args:
-            depth_im (np.ndarray): depth image (shape: [H, W])
             rs (int or list or np.ndarray): rows of interest.
                 It can be a list or 1D numpy array
                 which contains the row indices. The default value is None,
@@ -174,6 +192,7 @@ class RGBDCamera(Camera):
             rs = rs.flatten()
         if isinstance(cs, np.ndarray):
             cs = cs.flatten()
+        _, depth_im = self.get_images(get_rgb=False, get_depth=True)
         depth_im = depth_im[rs, cs]
         depth = depth_im.reshape(-1) * self.depth_scale
         img_pixs = np.stack((rs, cs)).reshape(2, -1)
@@ -193,16 +212,12 @@ class RGBDCamera(Camera):
                                     axis=0)
         return pts_in_cam
 
-    def get_pcd(self, depth_im, rgb_im=None, in_world=True, filter_depth=True):
+    def get_pcd(self, in_world=True, filter_depth=True):
         """
         Get the point cloud from the entire depth image
         +in the camera frame or in the world frame
 
         Args:
-            depth_im (np.ndarray): depth image (shape: [H, W])
-            rgb_im (np.ndarray): rgb image (shape: [H, W, 3]),
-                if it's not None, both point cloud and corresponding
-                color will be returned
             in_world (bool): return point cloud in the world frame, otherwise,
                 return point cloud in the camera frame
             filter_depth (bool): only return the point cloud with depth values
@@ -211,6 +226,7 @@ class RGBDCamera(Camera):
         Returns:
             point coordinates (shape: [N, 3]) and rgb values (shape: [N, 3])
         """
+        rgb_im, depth_im = self.get_images(get_rgb=True, get_depth=True)
         # pcd in camera from depth
         depth = depth_im.reshape(-1) * self.depth_scale
         rgb = None
@@ -221,7 +237,8 @@ class RGBDCamera(Camera):
             valid = np.logical_and(valid,
                                    depth < self.depth_max)
             depth = depth[valid]
-            rgb = rgb[valid]
+            if rgb is not None:
+                rgb = rgb[valid]
             uv_one_in_cam = self.uv_one_in_cam[:, valid]
         else:
             uv_one_in_cam = self.uv_one_in_cam
