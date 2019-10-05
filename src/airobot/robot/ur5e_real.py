@@ -270,19 +270,25 @@ class UR5eRobotReal(Robot):
         Set cartesian space pose of end effector
 
         Args:
-            pos (list): Desired x, y, z positions in the robot's base frame to
-                move to
-            ori (list or numpy array, optional): Desired euler angle orientation
-                (roll, pitch, yaw), quaternion ([x, y, z, w]), or rotation matrix ([3, 3])
-                of the end effector. It Defaults to None.
+            pos (list or np.ndarray): Desired x, y, z positions in the robot's base frame to
+                move to (shape: [3,])
+            ori (list or np.ndarray, optional): It can be euler angles
+                ([roll, pitch, yaw], shape: [4,]),
+                or quaternion ([qx, qy, qz, qw], shape: [4,]),
+                or rotation matrix (shape: [3, 3]). If it's None,
+                the solver will use the current end effector
+                orientation as the target orientation
             acc (float, optional): Acceleration of end effector during
-                beginning of movement. Defaults to 0.1.
+                beginning of movement. This parameter takes effect only
+                when self.use_urscript is True and ik_first is False. Defaults to 0.1.
             vel (float, optional): Velocity of end effector during movement.
-                Defaults to 0.05.
+                This parameter takes effect only when self.use_urscript is
+                 True and ik_first is False. Defaults to 0.05.
             ik_first (bool, optional): Whether to use the solution computed
                 by IK, or to use UR built in movel function which moves
                 linearly in tool space (movel may sometimes fail due to
-                sinularities). Defaults to False.
+                sinularities). This parameter takes effect only when self.use_urscript is True.
+                Defaults to False.
 
         Returns:
             bool: success or failure to move the robot to the goal pose
@@ -345,7 +351,8 @@ class UR5eRobotReal(Robot):
 
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True,
                     *args, **kwargs):
-        """Move end effector in straight line while maintaining orientation
+        """
+        Move end effector in straight line while maintaining orientation
 
         Args:
             delta_xyz (list): Goal change in x, y, z position of end effector
@@ -604,33 +611,37 @@ class UR5eRobotReal(Robot):
         (self.cfgs.ROBOT_EE_FRAME)
 
         Args:
-            pos (list): position
-            ori (list): orientation. It can be euler angles
-                (roll, pitch, yaw) or quaternion. If it's None,
+            pos (list or np.ndarray): position (shape: [3,])
+            ori (list or np.ndarray): orientation. It can be euler angles
+                ([roll, pitch, yaw], shape: [4,]),
+                or quaternion ([qx, qy, qz, qw], shape: [4,]),
+                or rotation matrix (shape: [3, 3]). If it's None,
                 the solver will use the current end effector
                 orientation as the target orientation
-            qinit (list): initial joint positions for numerical IK
+            qinit (list or np.ndarray): initial joint positions for numerical IK (shape: [6,])
 
         Returns:
             inverse kinematics solution (joint angles, list)
         """
         if ori is not None:
-            if len(ori) == 3:
+            if ori.size == 3:
                 # [roll, pitch, yaw]
-                ori = quaternion_from_euler(*ori)
-            if len(ori) != 4:
-                raise ValueError('Orientation should be either '
+                ee_quat = quaternion_from_euler(*ori)
+            elif ori.shape == (3, 3):
+                rot = np.eye(4)
+                rot[:3, :3] = ori
+                ee_quat = quaternion_from_matrix(rot)
+            elif ori.size == 4:
+                ee_quat = ori
+            else:
+                raise ValueError('Orientation should be rotation matrix, '
                                  'euler angles or quaternion')
-            ori_x = ori[0]
-            ori_y = ori[1]
-            ori_z = ori[2]
-            ori_w = ori[3]
         else:
             ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
-            ori_x = ee_quat[0]
-            ori_y = ee_quat[1]
-            ori_z = ee_quat[2]
-            ori_w = ee_quat[3]
+        ori_x = ee_quat[0]
+        ori_y = ee_quat[1]
+        ori_z = ee_quat[2]
+        ori_w = ee_quat[3]
         if qinit is None:
             qinit = self.get_jpos().tolist()
         elif isinstance(qinit, np.ndarray):

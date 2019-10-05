@@ -10,6 +10,8 @@ def main():
     """
     robot = ar.create_robot('ur5e', robot_cfg={'render': False})
     robot.go_home()
+    from IPython import embed
+    embed()
     print('\nJoint positions for all actuated joints:')
     jpos = robot.get_jpos()
     print(np.around(jpos, decimals=3))

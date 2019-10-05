@@ -301,9 +301,10 @@ class UR5eRobotPybullet(Robot):
         """
         Move the end effector to the specifed pose
         Args:
-            pos (list): position
-            ori (list): orientation. It can be either quaternion (length is 4)
-                or euler angles ([roll, pitch, yaw])
+            pos (list or np.ndarray): position (shape: [3,])
+            ori (list or np.ndarray): orientation. It can be rotation matrix (shape: [3,3]),
+                quaternion ([qx, qy, qz, qw], shape: [4,]),
+                or euler angles ([roll, pitch, yaw], shape: [3,])
 
         Returns:
             A boolean variable representing if the action is successful at
@@ -319,7 +320,7 @@ class UR5eRobotPybullet(Robot):
         orientation
 
         Args:
-            delta_xyz (list): movement in x, y, z directions
+            delta_xyz (list or np.ndarray): movement in x, y, z directions (shape: [3,])
             eef_step (float): interpolation interval along delta_xyz. Interpolate
                 a point every eef_step distance between the two end points
 
@@ -468,16 +469,17 @@ class UR5eRobotPybullet(Robot):
         Return the end effector pose
 
         Returns:
-            list: x, y, z position of the EE (shape: [3])
-            list: quaternion representation of the EE orientation (shape: [4])
-            list: rotation matrix representation of the EE orientation (shape: [9])
+            list: x, y, z position of the EE (shape: [3,])
+            list: quaternion representation of the EE orientation (shape: [4,])
+            list: rotation matrix representation of the EE orientation (shape: [3, 3])
             list: euler angle representation of the EE orientation (roll, pitch, yaw with
-                static reference frame) (shape: [3])
+                static reference frame) (shape: [3,])
         """
         info = p.getLinkState(self.robot_id, self.ee_link_id)
         pos = info[4]
         quat = info[5]
         rot_mat = p.getMatrixFromQuaternion(quat)
+        rot_mat = np.array(rot_mat).reshape(3, 3).tolist()
         euler = p.getEulerFromQuaternion(quat)  # [roll, pitch, yaw]
         return list(pos), list(quat), list(rot_mat), list(euler)
 
@@ -523,19 +525,25 @@ class UR5eRobotPybullet(Robot):
         position and orientation of the end effector
 
         Args:
-            pos (list): position
-            ori (list): orientation. It can be euler angles
-                (roll, pitch, yaw) or quaternion.
+            pos (list or np.ndarray): position (shape: [3,])
+            ori (list or np.ndarray): orientation. It can be euler angles
+                ([roll, pitch, yaw], shape: [3,]), or
+                quaternion ([qx, qy, qz, qw], shape: [4,]),
+                or rotation matrix (shape: [3, 3]).
 
         Returns:
             inverse kinematics solution (joint angles, list)
         """
         if ori is not None:
-            if len(ori) == 3:
+            ori = np.array(ori)
+            if ori.size == 3:
                 # [roll, pitch, yaw]
                 ori = p.getQuaternionFromEuler(ori)
-            if len(ori) != 4:
-                raise ValueError('Orientation should be either '
+            elif ori.shape == (3, 3):
+                # haven't find a function in Pybullet to do the conversion
+                raise NotImplementedError
+            elif ori.size != 4:
+                raise ValueError('Orientation should be rotation matrix, '
                                  'euler angles or quaternion')
             jnt_poss = p.calculateInverseKinematics(self.robot_id,
                                                     self.ee_link_id,
