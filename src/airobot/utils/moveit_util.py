@@ -86,13 +86,13 @@ class MoveitScene(object):
         Only box is supported for now.
 
         Args:
-            ref_frame (str):
-            obj_name (str):
-            pos (list):
-            ori (list):
-            size (float or list or tuple):
-
-        Returns:
+            ref_frame (str): which link are you adding object to
+            obj_name (str): object name
+            pos (list): position of the object with respect to the ref_frame
+            ori (list): orientation of the object with respect to the ref_frame
+            size (float or list or tuple): size can be a float, which means the edge
+                length of a cube. size can also be a list or tuple of length 3,
+                the it specifies the 3 edge lengths of the cuboid
 
         """
         if not isinstance(pos, list):
@@ -117,9 +117,19 @@ class MoveitScene(object):
         self.scene.attach_box(ref_frame, obj_name, pose_stamped, size)
 
     def remove_obj(self, obj_name):
+        """
+        Remove the object from the planning scene
+
+        Args:
+            obj_name (str): object name
+
+        """
         self.scene.remove_world_object(obj_name)
 
     def remove_all_objs(self):
+        """
+        Remove all the added objects in the planning scene
+        """
         objs = self.scene.get_objects()
         objs_attached = self.scene.get_attached_objects()
         # remove add objects
@@ -130,6 +140,11 @@ class MoveitScene(object):
             self.unlink_obj(objs_attached[key].link_name, key)
 
     def get_objects(self):
+        """
+        Get all the static and dynamic objects in the planning scene
+        Returns:
+
+        """
         objs = self.scene.get_objects()
         objs_attached = self.scene.get_attached_objects()
         return objs, objs_attached

@@ -28,6 +28,7 @@ from tf.transformations import quaternion_from_euler
 from tf.transformations import quaternion_matrix
 from tf.transformations import quaternion_from_matrix
 from tf.transformations import quaternion_multiply
+from tf.transformations import quaternion_inverse
 from trac_ik_python import trac_ik
 
 from airobot.robot.robot import Robot
@@ -763,7 +764,7 @@ class UR5eRobotReal(Robot):
         self.moveit_group = MoveGroupCommander(self.cfgs.MOVEGROUP_NAME)
         self.moveit_group.set_planner_id(self.moveit_planner)
         self.moveit_scene = MoveitScene()
-        self.scale_moveit_motion(vel_scale=0.2, acc_scale=0.2)
+        self.scale_moveit_motion(vel_scale=0.1, acc_scale=0.1)
 
         # add a virtual base support frame of the real robot:
         ur_base_name = 'ur_base'
