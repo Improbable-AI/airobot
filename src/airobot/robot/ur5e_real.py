@@ -272,8 +272,8 @@ class UR5eRobotReal(Robot):
         Args:
             pos (list): Desired x, y, z positions in the robot's base frame to
                 move to
-            ori (list, optional): Desired euler angle orientation 
-                (roll, pitch, yaw) or quaternion ([x, y, z, w]) 
+            ori (list or numpy array, optional): Desired euler angle orientation
+                (roll, pitch, yaw), quaternion ([x, y, z, w]), or rotation matrix ([3, 3])
                 of the end effector. It Defaults to None.
             acc (float, optional): Acceleration of end effector during
                 beginning of movement. Defaults to 0.1.
@@ -292,16 +292,23 @@ class UR5eRobotReal(Robot):
             pose = self.get_ee_pose()[-1]  # last index is euler angles
             quat = pose[1]
             euler = pose[-1]
-        elif len(ori) == 4:
-            quat = ori
-            # assume incoming orientation is quaternion
-            euler = euler_from_quaternion(quat)
-        elif len(ori) == 3:
-            euler = ori
-            quat = quaternion_from_euler(*euler)
         else:
-            raise ValueError('Orientaion should be quaternion or'
-                             'euler angles')
+            ori = np.array(ori)
+            if ori.size == 4:
+                quat = ori
+                # assume incoming orientation is quaternion
+                euler = euler_from_quaternion(quat)
+            elif ori.size == 3:
+                euler = ori
+                quat = quaternion_from_euler(*euler)
+            elif ori.shape == (3, 3):
+                rot = np.eye(4)
+                rot[:3, :3] = ori
+                euler = euler_from_matrix(rot)
+                quat = quaternion_from_matrix(rot)
+            else:
+                raise ValueError('Orientaion should be quaternion or'
+                                 'euler angles')
 
         if self.use_urscript:
             if ik_first:
