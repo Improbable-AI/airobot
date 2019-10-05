@@ -316,14 +316,14 @@
   </gazebo>
   <!-- ROS base_link to UR 'Base' Coordinates transform -->
   <link name="base"/>
-  <joint name="base_link-base_fixed_joint" type="fixed">
+  <joint name="base-base_link_fixed_joint" type="fixed">
     <!-- NOTE: this rotation is only needed as long as base_link itself is
                  not corrected wrt the real robot (ie: rotated over 180
                  degrees)
       -->
     <origin rpy="0 0 -3.14159265359" xyz="0 0 0"/>
-    <parent link="base_link"/>
-    <child link="base"/>
+    <parent link="base"/>
+    <child link="base_link"/>
   </joint>
   <!-- Frame coincident with all-zeros TCP on UR controller -->
   <link name="tool0"/>
@@ -335,7 +335,7 @@
   <link name="world"/>
   <joint name="world_joint" type="fixed">
     <parent link="world"/>
-    <child link="base_link"/>
+    <child link="base"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
   </joint>
   <link name="robotiq_arg2f_base_link">
@@ -357,6 +357,28 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
         <mesh filename="meshes/robotiq_2f140/collision/robotiq_arg2f_base_link.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="robotiq_arg2f_coupling">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.05"/>
+      <inertia ixx="2E-06" ixy="-4E-10" ixz="-2E-10" iyy="2E-06" iyz="-3E-08" izz="2E-06"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/robotiq_2f140/visual/robotiq_arg2f_coupling.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.1 0.1 0.1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/robotiq_2f140/collision/robotiq_arg2f_coupling.stl" scale="0.001 0.001 0.001"/>
       </geometry>
     </collision>
   </link>
@@ -685,10 +707,15 @@
       <multiplier>-1.0</multiplier>
     </plugin>
   </gazebo>
+  <joint name="base_coupling" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="robotiq_arg2f_coupling"/>
+    <child link="robotiq_arg2f_base_link"/>
+  </joint>
   <!-- adapted below from https://github.com/intuitivecomputing/ur5_with_robotiq_gripper/blob/master/icl_ur5_setup_description/robots/ur5_robotiq_140.xacro-->
   <joint name="ur5_ee_link-gripper_base" type="fixed">
     <parent link="tool0"/>
-    <child link="robotiq_arg2f_base_link"/>
+    <child link="robotiq_arg2f_coupling"/>
     <origin rpy="0.0 0.0 1.57079632679" xyz=" 0.0 0.0 0.0"/>
   </joint>
   <!-- not sure what this does, parent link-->
@@ -699,9 +726,4 @@
     <!--  just an estimation, not an accurate value-->
     <origin rpy="0.0 0.0 0.0" xyz=" 0.00 0.0 0.23"/>
   </joint>
-  <!-- <gazebo>
-      <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-        <robotNamespace>/ur5_robotiq</robotNamespace>
-      </plugin>
-    </gazebo> -->
 </robot>

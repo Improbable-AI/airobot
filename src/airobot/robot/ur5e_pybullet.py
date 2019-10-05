@@ -180,7 +180,7 @@ class UR5eRobotPybullet(Robot):
                                         self.arm_jnt_ids,
                                         p.POSITION_CONTROL,
                                         targetPositions=tgt_pos,
-                                        forces=self._max_torques)
+                                        forces=self._max_torques[:len(self.arm_jnt_names)])
         else:
             if joint_name not in self.arm_jnt_names_set:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -230,7 +230,7 @@ class UR5eRobotPybullet(Robot):
                                         self.arm_jnt_ids,
                                         p.VELOCITY_CONTROL,
                                         targetVelocities=tgt_vel,
-                                        forces=self._max_torques)
+                                        forces=self._max_torques[:len(self.arm_jnt_names)])
         else:
             if joint_name not in self.arm_jnt_names_set:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -674,7 +674,7 @@ class UR5eRobotPybullet(Robot):
         self.gripper_jnt_names_set = set(self.gripper_jnt_names)
         self.rvl_joint_names = self.arm_jnt_names + self.gripper_jnt_names
         self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
-        self.ee_link = self.cfgs.ROBOT_EE_FRAME
+        self.ee_link_jnt = self.cfgs.ROBOT_EE_FRAME_JOINT
 
         # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
         self._max_torques = [150, 150, 150, 28, 28, 28]
@@ -729,7 +729,7 @@ class UR5eRobotPybullet(Robot):
         #     self.jnt_to_id[jnt] for jnt in self.rvl_joint_names
         # ]
 
-        self.ee_link_id = self.jnt_to_id[self.ee_link]
+        self.ee_link_id = self.jnt_to_id[self.ee_link_jnt]
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
         self.gripper_jnt_ids = [
             self.jnt_to_id[jnt] for jnt in self.gripper_jnt_names
