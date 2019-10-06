@@ -18,7 +18,6 @@ from gym.utils import seeding
 import airobot.utils.common as arutil
 from airobot.robot.robot import Robot
 from airobot.sensor.camera.pybullet_cam import PyBulletCamera
-from airobot.utils.common import clamp
 
 
 # import pkgutil
@@ -80,11 +79,11 @@ class UR5eRobotPybullet(Robot):
         p.resetSimulation()
 
         plane_pos = [0, 0, 0]
-        plane_ori = p.getQuaternionFromEuler([0, 0, 0])
+        plane_ori = arutil.quat2euler([0, 0, 0])
         self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
         ur_pos = [0, 0, 1]
-        ur_ori = p.getQuaternionFromEuler([0, 0, 0])
+        ur_ori = arutil.quat2euler([0, 0, 0])
         if self.self_collision:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
                                        ur_pos,
@@ -469,19 +468,19 @@ class UR5eRobotPybullet(Robot):
         Return the end effector pose
 
         Returns:
-            list: x, y, z position of the EE (shape: [3,])
-            list: quaternion representation of the EE orientation (shape: [4,])
-            list: rotation matrix representation of the EE orientation (shape: [3, 3])
-            list: euler angle representation of the EE orientation (roll, pitch, yaw with
+            np.ndarray: x, y, z position of the EE (shape: [3,])
+            np.ndarray: quaternion representation of the EE orientation (shape: [4,])
+            np.ndarray: rotation matrix representation of the EE orientation (shape: [3, 3])
+            np.ndarray: euler angle representation of the EE orientation (roll, pitch, yaw with
                 static reference frame) (shape: [3,])
         """
         info = p.getLinkState(self.robot_id, self.ee_link_id)
         pos = info[4]
         quat = info[5]
-        rot_mat = p.getMatrixFromQuaternion(quat)
-        rot_mat = np.array(rot_mat).reshape(3, 3).tolist()
-        euler = p.getEulerFromQuaternion(quat)  # [roll, pitch, yaw]
-        return list(pos), list(quat), list(rot_mat), list(euler)
+
+        rot_mat = arutil.quat2rot(quat)
+        euler = arutil.quat2euler(quat, axes='xyz')  # [roll, pitch, yaw]
+        return np.array(pos), np.array(quat), rot_mat, euler
 
     def get_ee_force(self):
         """
@@ -538,10 +537,9 @@ class UR5eRobotPybullet(Robot):
             ori = np.array(ori)
             if ori.size == 3:
                 # [roll, pitch, yaw]
-                ori = p.getQuaternionFromEuler(ori)
+                ori = arutil.euler2quat(ori, axes='xyz')
             elif ori.shape == (3, 3):
-                # haven't find a function in Pybullet to do the conversion
-                raise NotImplementedError
+                ori = arutil.rot2quat(ori)
             elif ori.size != 4:
                 raise ValueError('Orientation should be rotation matrix, '
                                  'euler angles or quaternion')
@@ -758,7 +756,7 @@ class UR5eRobotPybullet(Robot):
         """
         joint_name = self.gripper_jnt_names[0]
         gripper_pos = position[-1]
-        tgt_pos = clamp(gripper_pos,
+        tgt_pos = arutil.clamp(gripper_pos,
                         self.gripper_open_angle,
                         self.gripper_close_angle)
         max_torque = self._max_torques[-1]

@@ -15,26 +15,18 @@ import moveit_commander
 import numpy as np
 import rospy
 import tf
-from actionlib import SimpleActionClient
-from control_msgs.msg import FollowJointTrajectoryAction
 from kdl_parser_py.urdf import treeFromParam
 from moveit_commander import MoveGroupCommander
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from tf.transformations import euler_from_matrix
-from tf.transformations import euler_from_quaternion
-from tf.transformations import quaternion_from_euler
-from tf.transformations import quaternion_matrix
-from tf.transformations import quaternion_from_matrix
-from tf.transformations import quaternion_multiply
-from tf.transformations import quaternion_inverse
 from trac_ik_python import trac_ik
+from trajectory_msgs.msg import JointTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint
 
-from airobot.robot.robot import Robot
+import airobot.utils.common as arutil
 from airobot.end_effectors.robotiq2f140 import Robotiq2F140
+from airobot.robot.robot import Robot
 from airobot.sensor.camera.rgbd_cam import RGBDCamera
-from airobot.utils.common import clamp
 from airobot.utils.common import joints_to_kdl
 from airobot.utils.common import kdl_array_to_numpy
 from airobot.utils.common import kdl_frame_to_numpy
@@ -303,22 +295,20 @@ class UR5eRobotReal(Robot):
             if ori.size == 4:
                 quat = ori
                 # assume incoming orientation is quaternion
-                euler = euler_from_quaternion(quat)
+                euler = arutil.quat2euler(quat)
             elif ori.size == 3:
                 euler = ori
-                quat = quaternion_from_euler(*euler)
+                quat = arutil.euler2quat(euler)
             elif ori.shape == (3, 3):
-                rot = np.eye(4)
-                rot[:3, :3] = ori
-                euler = euler_from_matrix(rot)
-                quat = quaternion_from_matrix(rot)
+                euler = arutil.rot2euler(rot)
+                quat = arutil.rot2quat(rot)
             else:
                 raise ValueError('Orientaion should be quaternion or'
                                  'euler angles')
 
         if self.use_urscript:
             if ik_first:
-                jnt_pos = self.compute_ik(pos, quat)  # ik can handle quat
+                jnt_pos = self.compute_ik(pos, quat)
                 # use movej instead of movel
                 success = self.set_jpos(jnt_pos, wait=wait)
             else:
@@ -398,24 +388,6 @@ class UR5eRobotReal(Robot):
             wpose.orientation.w = cur_quat[3]
             moveit_waypoints.append(copy.deepcopy(wpose))
 
-            # delta_xyz = np.array(delta_xyz)
-            # path_len = np.linalg.norm(delta_xyz)
-            # num_pts = int(np.ceil(path_len / float(eef_step)))
-            # if num_pts <= 1:
-            #     num_pts = 2
-            # waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
-            # waypoints = cur_pos + waypoints_sp / float(path_len) * delta_xyz
-            # moveit_waypoints = []
-            # wpose = self.moveit_group.get_current_pose().pose
-            # for i in range(waypoints.shape[0]):
-            #     wpose.position.x = waypoints[i, 0]
-            #     wpose.position.y = waypoints[i, 1]
-            #     wpose.position.z = waypoints[i, 2]
-            #     wpose.orientation.x = cur_quat[0]
-            #     wpose.orientation.y = cur_quat[1]
-            #     wpose.orientation.z = cur_quat[2]
-            #     wpose.orientation.w = cur_quat[3]
-            #     moveit_waypoints.append(copy.deepcopy(wpose))
             (plan, fraction) = self.moveit_group.compute_cartesian_path(
                 moveit_waypoints,  # waypoints to follow
                 eef_step,  # eef_step
@@ -487,20 +459,20 @@ class UR5eRobotReal(Robot):
         """Get current cartesian pose of the EE, in the robot's base frame
 
         Returns:
-            list: x, y, z position of the EE (shape: [3])
-            list: quaternion representation ([x, y, z, w]) of the EE 
+            np.ndarray: x, y, z position of the EE (shape: [3])
+            np.ndarray: quaternion representation ([x, y, z, w]) of the EE
                 orientation (shape: [4])
-            list: rotation matrix representation of the EE orientation
+            np.ndarray: rotation matrix representation of the EE orientation
                 (shape: [3, 3])
-            list: euler angle representation of the EE orientation (roll,
+            np.ndarray: euler angle representation of the EE orientation (roll,
                 pitch, yaw with static reference frame) (shape: [3])
         """
         pos, quat = get_tf_transform(self.tf_listener,
                                      self.cfgs.ROBOT_BASE_FRAME,
                                      self.cfgs.ROBOT_EE_FRAME)
-        rot_mat = quaternion_matrix(quat)[:3, :3].tolist()
-        euler_ori = list(euler_from_quaternion(quat))
-        return pos, quat, rot_mat, euler_ori
+        rot_mat = arutil.quat2rot(quat)
+        euler_ori = arutil.quat2euler(quat)
+        return np.array(pos), np.array(quat), rot_mat, euler_ori
 
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
@@ -524,7 +496,7 @@ class UR5eRobotReal(Robot):
             joint_angles (list or flattened np.ndarray): joint angles
 
         Returns:
-            jacobian (list, shape: [6, 6])
+            np.ndarray: jacobian (shape: [6, 6])
         """
         q = kdl.JntArray(self.urdf_chain.getNrOfJoints())
         for i in range(q.rows()):
@@ -533,7 +505,7 @@ class UR5eRobotReal(Robot):
         fg = self.jac_solver.JntToJac(q, jac)
         assert fg == 0, 'KDL JntToJac error!'
         jac_np = kdl_array_to_numpy(jac)
-        return jac_np.tolist()
+        return jac_np
 
     def compute_fk_position(self, jpos, tgt_frame):
         """
@@ -546,8 +518,8 @@ class UR5eRobotReal(Robot):
             tgt_frame (str): target link frame
 
         Returns:
-            translational vector (list, shape: [3,])
-            and rotational matrix (list, shape: [3, 3])
+            np.ndarray: translational vector (shape: [3,])
+            np.ndarray: rotational matrix (shape: [3, 3])
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -566,8 +538,8 @@ class UR5eRobotReal(Robot):
         if fg == 0:
             raise ValueError('KDL Pos JntToCart error!')
         pose = kdl_frame_to_numpy(kdl_end_frame)
-        pos = pose[:3, 3].flatten().tolist()
-        rot = pose[:3, :3].tolist()
+        pos = pose[:3, 3].flatten()
+        rot = pose[:3, :3]
         return pos, rot
 
     def compute_fk_velocity(self, jpos, jvel, tgt_frame):
@@ -582,9 +554,9 @@ class UR5eRobotReal(Robot):
             tgt_frame (str): target link frame
 
         Returns:
-            translational and rotational
+            list: translational and rotational
                  velocities (vx, vy, vz, wx, wy, wz)
-                 (list, shape: [6,])
+                 (shape: [6,])
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -624,13 +596,12 @@ class UR5eRobotReal(Robot):
             inverse kinematics solution (joint angles, list)
         """
         if ori is not None:
+            ori = np.array(ori)
             if ori.size == 3:
                 # [roll, pitch, yaw]
-                ee_quat = quaternion_from_euler(*ori)
+                ee_quat = arutil.euler2quat(ori)
             elif ori.shape == (3, 3):
-                rot = np.eye(4)
-                rot[:3, :3] = ori
-                ee_quat = quaternion_from_matrix(rot)
+                ee_quat = arutil.rot2quat(rot)
             elif ori.size == 4:
                 ee_quat = ori
             else:
@@ -713,7 +684,7 @@ class UR5eRobotReal(Robot):
             mode (str): 'pose' or 'vel'
 
         Returns:
-            if the goal is reached or not
+            bool: if the goal is reached or not
         """
         goal = np.array(goal)
         if mode == 'pos':
@@ -791,15 +762,9 @@ class UR5eRobotReal(Robot):
             goal_ori = ori
 
         if goal_ori.size == 3:
-            goal_ori = quaternion_from_euler(goal_ori[0],
-                                             goal_ori[1],
-                                             goal_ori[2])
-            goal_ori = np.array(goal_ori)
-        elif goal_ori.size == 9:
-            rot = np.eye(4)
-            rot[:3, :3] = goal_ori
-            goal_ori = quaternion_from_matrix(rot)
-            goal_ori = np.array(goal_ori)
+            goal_ori = arutil.euler2quat(goal_ori)
+        elif goal_ori.shape == (3, 3):
+            goal_ori = arutil.rot2quat(goal_ori)
         elif goal_ori.size != 4:
             raise TypeError('Orientation must be in one '
                             'of the following forms:'
@@ -814,8 +779,8 @@ class UR5eRobotReal(Robot):
         pos_diff = new_ee_pos.flatten() - goal_pos
         pos_error = np.max(np.abs(pos_diff))
 
-        quat_diff = quaternion_multiply(quaternion_inverse(goal_ori),
-                                        new_ee_quat)
+        quat_diff = arutil.quat_multiply(arutil.quat_inverse(goal_ori),
+                                         new_ee_quat)
         rot_similarity = np.abs(quat_diff[3])
 
         if pos_error < self.cfgs.MAX_EE_POSITION_ERROR and \
@@ -906,8 +871,8 @@ class UR5eRobotReal(Robot):
             vel_scale (float): (default: {1.0})
             acc_scale (float): (default: {1.0})
         """
-        vel_scale = clamp(vel_scale, 0.0, 1.0)
-        acc_scale = clamp(acc_scale, 0.0, 1.0)
+        vel_scale = arutil.clamp(vel_scale, 0.0, 1.0)
+        acc_scale = arutil.clamp(acc_scale, 0.0, 1.0)
         self.moveit_group.set_max_velocity_scaling_factor(vel_scale)
         self.moveit_group.set_max_acceleration_scaling_factor(acc_scale)
 
@@ -960,9 +925,8 @@ class UR5eRobotReal(Robot):
         gripper_tip_link = self.urdf_chain.getSegment(gripper_tip_id)
         gripper_tip_tf = kdl_frame_to_numpy(gripper_tip_link.getFrameToTip())
         gripper_tip_pos = gripper_tip_tf[:3, 3].flatten()
-        gripper_tip_rot_mat = np.eye(4)
-        gripper_tip_rot_mat[:3, :3] = gripper_tip_tf[:3, :3]
-        gripper_tip_euler = euler_from_matrix(gripper_tip_rot_mat)
+        gripper_tip_rot_mat = gripper_tip_tf[:3, :3]
+        gripper_tip_euler = arutil.rot2euler(gripper_tip_rot_mat)
         return list(gripper_tip_pos), list(gripper_tip_euler)
 
     def _set_tool_offset(self):
@@ -1001,7 +965,7 @@ class UR5eRobotReal(Robot):
         self.joint_vel_pub = rospy.Publisher(
             self.cfgs.JOINT_SPEED_TOPIC,
             JointTrajectory,
-            queue_size=10
+            queue_size=2
         )
 
         self.urscript_pub = rospy.Publisher(

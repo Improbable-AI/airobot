@@ -3,10 +3,150 @@ from __future__ import division
 from __future__ import print_function
 
 import PyKDL as kdl
-import numpy as np 
+import numpy as np
+from scipy.spatial.transform import Rotation as R
+
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
+
+
+def quat2rot(quat):
+    """
+    Convert quatnion to rotation matrix
+
+    Args:
+        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: [4,])
+
+    Returns:
+        np.ndarray: rotation matrix (shape: [3, 3])
+
+    """
+    r = R.from_quat(quat)
+    return r.as_dcm()
+
+
+def quat2euler(quat, axes='xyz'):
+    """
+    Convert quatnion to euler angles
+
+    Args:
+        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: [4,])
+        axes (str): Specifies sequence of axes for rotations.
+            3 characters belonging to the set {‘X’, ‘Y’, ‘Z’}
+            for intrinsic rotations (rotation about the axes of a
+            coordinate system XYZ attached to a moving body),
+            or {‘x’, ‘y’, ‘z’} for extrinsic rotations (rotation about
+             the axes of the fixed coordinate system).
+
+    Returns:
+        np.ndarray: euler angles (shape: [3,])
+    """
+    r = R.from_quat(quat)
+    return r.as_euler(axes)
+
+def quat_inverse(quat):
+    """
+    Return the quaternion inverse
+
+    Args:
+        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: [4,])
+
+    Returns:
+        np.ndarray: inverse quaternion (shape: [4,])
+    """
+    r = R.from_quat(quat)
+    return r.inv().as_quat()
+
+
+def quat_multiply(quat1, quat2):
+    """
+    Quaternion mulitplication
+
+    Args:
+        quat1 (list or np.ndarray): first quaternion [x,y,z,w] (shape: [4,])
+        quat2 (list or np.ndarray): second quaternion [x,y,z,w] (shape: [4,])
+
+    Returns:
+        np.ndarray: quat1 * quat2 (shape: [4,])
+    """
+    r1 = R.from_quat(quat1)
+    r2 = R.from_quat(quat2)
+    r = r1 * r2
+    return r.as_quat()
+
+def euler2rot(euler, axes='xyz'):
+    """
+    Convert euler angles to rotation matrix
+
+    Args:
+        euler (list or np.ndarray): euler angles (shape: [3,])
+        axes (str): Specifies sequence of axes for rotations.
+            3 characters belonging to the set {‘X’, ‘Y’, ‘Z’}
+            for intrinsic rotations (rotation about the axes of a
+            coordinate system XYZ attached to a moving body),
+            or {‘x’, ‘y’, ‘z’} for extrinsic rotations (rotation about
+             the axes of the fixed coordinate system).
+
+    Returns:
+        np.ndarray: rotation matrix (shape: [3, 3])
+    """
+    r = R.from_euler(axes, euler)
+    return r.as_dcm()
+
+
+def euler2quat(euler, axes='xyz'):
+    """
+    Convert euler angles to quaternion
+
+    Args:
+        euler (list or np.ndarray): euler angles (shape: [3,])
+        axes (str): Specifies sequence of axes for rotations.
+            3 characters belonging to the set {‘X’, ‘Y’, ‘Z’}
+            for intrinsic rotations (rotation about the axes of a
+            coordinate system XYZ attached to a moving body),
+            or {‘x’, ‘y’, ‘z’} for extrinsic rotations (rotation about
+             the axes of the fixed coordinate system).
+
+    Returns:
+        np.ndarray: quaternion [x,y,z,w] (shape: [4,])
+    """
+    r = R.from_euler(axes, euler)
+    return r.as_quat()
+
+
+def rot2quat(rot):
+    """
+    Convert rotation matrix to quaternion
+
+    Args:
+        rot (np.ndarray): rotation matrix (shape: [3, 3])
+
+    Returns:
+        np.ndarray: quaternion [x,y,z,w] (shape: [4,])
+    """
+    r = R.from_dcm(rot)
+    return r.as_quat()
+
+
+def rot2euler(rot, axes='xyz'):
+    """
+    Convert rotation matrix to euler angles
+
+    Args:
+        rot (np.ndarray): rotation matrix (shape: [3, 3])
+        axes (str): Specifies sequence of axes for rotations.
+            3 characters belonging to the set {‘X’, ‘Y’, ‘Z’}
+            for intrinsic rotations (rotation about the axes of a
+            coordinate system XYZ attached to a moving body),
+            or {‘x’, ‘y’, ‘z’} for extrinsic rotations (rotation about
+             the axes of the fixed coordinate system).
+
+    Returns:
+        np.ndarray: euler angles (shape: [3,])
+    """
+    r = R.from_dcm(rot)
+    return r.as_euler(axes)
 
 
 def kdl_array_to_numpy(kdl_data):
