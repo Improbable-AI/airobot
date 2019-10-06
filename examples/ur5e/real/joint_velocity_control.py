@@ -1,6 +1,5 @@
 import math
 import time
-import sys
 
 import airobot as ar
 

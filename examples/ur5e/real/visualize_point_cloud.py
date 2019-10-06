@@ -1,11 +1,12 @@
 import signal
 import sys
+import time
 
+import numpy as np
 import open3d
 
 import airobot as ar
-import numpy as np
-import time
+
 
 def signal_handler(sig, frame):
     """

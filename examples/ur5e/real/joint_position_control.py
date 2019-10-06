@@ -1,5 +1,7 @@
-import airobot as ar
 import time
+
+import airobot as ar
+
 
 def main():
     """
@@ -26,6 +28,7 @@ def main():
 
     print("done")
     robot.stop()
+
 
 if __name__ == '__main__':
     main()

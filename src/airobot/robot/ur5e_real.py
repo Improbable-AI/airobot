@@ -68,7 +68,7 @@ class UR5eRobotReal(Robot):
                                             tcp_monitor=tcp_monitor)
 
             else:
-                raise NotImplementedError
+                self.set_comm_mode(use_urscript=False)
 
         time.sleep(2.0)  # sleep to give subscribers time to connect
 
