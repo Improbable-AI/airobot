@@ -136,7 +136,7 @@ class UR5eRobotReal(Robot):
 
     def _is_running(self):
         """
-        Check whether the robot is current running or is stopped
+        Check whether the robot is currently running or is stopped
         for some reason. Checks the robot mode, if robot is enabled,
         if the E-stop is currently pressed, if some other security
         fault has been activted, if the robot is connected, and if
@@ -159,18 +159,20 @@ class UR5eRobotReal(Robot):
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
-        Method to send a joint position command to the robot
+        Method to send a joint position command to the robot (units in rad)
 
         Args:
             position (float or list): desired joint position(s)
+                (shape: [6,] if list, otherwise a single value)
             joint_name (str): If not provided, position should be a list and
                 all actuated joints will be moved to specified positions. If
-                provided, only specified joint will move
+                provided, only specified joint will move. Defaults to None
             wait (bool): whether position command should be blocking or non
-                blocking
+                blocking. Defaults to True
 
         Return:
-            success (bool): whether command was completed successfully or not
+            success (bool): True if command was completed successfully, returns
+                False if wait flag is set to False.
         """
         position = copy.deepcopy(position)
         success = False
@@ -181,6 +183,9 @@ class UR5eRobotReal(Robot):
                                  'joint_name is not provided')
             tgt_pos = position
         else:
+            if not isinstance(position, float):
+                raise TypeError('position should be individual float value'
+                                'if joint_name is provided')
             if joint_name not in self.arm_jnt_names_set:
                 raise TypeError('Joint name [%s] is not in the arm'
                                 ' joint list!' % joint_name)
@@ -211,16 +216,18 @@ class UR5eRobotReal(Robot):
     def set_jvel(self, velocity, acc=0.1, joint_name=None, wait=False,
                  *args, **kwargs):
         """
-        Set joint velocity in rad/s
+        Set joint velocity command to the robot (units in rad/s)
 
         Args:
-            velocity (list): list of target joint velocity values
+            velocity (float or list): list of target joint velocity value(s)
+                (shape: [6,] if list, otherwise a single value)
             acc (float): Value with which to accelerate when robot starts
-                moving. Defaults to 0.1.
+                moving. Only used if self.use_urscript=True. Defaults to 0.1.
             joint_name (str, optional): If not provided, velocity should be
                 list and all joints will be turned on at specified velocity.
                 Defaults to None.
-            wait (bool, optional): [description]. Defaults to False.
+            wait (bool, optional): If True, block until robot reaches
+                desired joint velocity value(s). Defaults to False.
         """
         velocity = copy.deepcopy(velocity)
         success = False
@@ -231,6 +238,9 @@ class UR5eRobotReal(Robot):
                                  'if the joint name is not provided')
             tgt_vel = velocity
         else:
+            if not isinstance(velocity, float):
+                raise TypeError('velocity should be individual float value'
+                                'if joint_name is provided')
             if joint_name not in self.arm_jnt_names_set:
                 raise TypeError('Joint name [%s] is not in the arm'
                                 ' joint list!' % joint_name)
@@ -263,8 +273,8 @@ class UR5eRobotReal(Robot):
         Set cartesian space pose of end effector
 
         Args:
-            pos (list or np.ndarray): Desired x, y, z positions in the robot's base frame to
-                move to (shape: [3,])
+            pos (list or np.ndarray): Desired x, y, z positions in the robot's
+                base frame to move to (shape: [3,])
             ori (list or np.ndarray, optional): It can be euler angles
                 ([roll, pitch, yaw], shape: [4,]),
                 or quaternion ([qx, qy, qz, qw], shape: [4,]),
@@ -272,19 +282,20 @@ class UR5eRobotReal(Robot):
                 the solver will use the current end effector
                 orientation as the target orientation
             acc (float, optional): Acceleration of end effector during
-                beginning of movement. This parameter takes effect only
-                when self.use_urscript is True and ik_first is False. Defaults to 0.1.
+                beginning of movement. This arg takes effect only when
+                self.use_urscript is True and ik_first is False.
+                Defaults to 0.1.
             vel (float, optional): Velocity of end effector during movement.
                 This parameter takes effect only when self.use_urscript is
                  True and ik_first is False. Defaults to 0.05.
             ik_first (bool, optional): Whether to use the solution computed
                 by IK, or to use UR built in movel function which moves
                 linearly in tool space (movel may sometimes fail due to
-                sinularities). This parameter takes effect only when self.use_urscript is True.
-                Defaults to False.
+                sinularities). This parameter takes effect only when
+                self.use_urscript is True. Defaults to False.
 
         Returns:
-            bool: success or failure to move the robot to the goal pose
+            bool: Returns True is robot successfully moves to goal pose
         """
         success = False
         if ori is None:
@@ -301,11 +312,11 @@ class UR5eRobotReal(Robot):
                 euler = ori
                 quat = arutil.euler2quat(euler)
             elif ori.shape == (3, 3):
-                euler = arutil.rot2euler(rot)
-                quat = arutil.rot2quat(rot)
+                euler = arutil.rot2euler(ori)
+                quat = arutil.rot2quat(ori)
             else:
-                raise ValueError('Orientaion should be quaternion or'
-                                 'euler angles')
+                raise ValueError('Orientaion should be quaternion,'
+                                 ' euler angles, or rotation matrix')
 
         if self.use_urscript:
             if ik_first:
@@ -314,6 +325,7 @@ class UR5eRobotReal(Robot):
                 success = self.set_jpos(jnt_pos, wait=wait)
             else:
                 ee_pos = [pos[0], pos[1], pos[2], euler[0], euler[1], euler[2]]
+                # movel moves linear in tool space, may go through singularity
                 prog = 'movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)' % (
                     ee_pos[0],
                     ee_pos[1],
@@ -351,7 +363,7 @@ class UR5eRobotReal(Robot):
                 for computing waypoints along the path. Defaults to 0.005 (m).
             wait (bool, optional): True if robot should not do anything else
                 until this goal is reached, or the robot times out.
-                Defaults to True. 
+                Defaults to True.
 
         Returns:
             bool: True if robot successfully reached the goal pose
@@ -401,15 +413,15 @@ class UR5eRobotReal(Robot):
         Gets the current joint position of the robot. Gets the value
         from the internally updated dictionary that subscribes to the ROS
         topic /joint_states
-        
+
         Keyword Arguments:
             joint_name (str, optional): The name of the joint to return the
                 current angle of, if only one joint. Defaults to None.
-        
+
         Raises:
             TypeError: Specified joint name does not match any of the robot's
                 joints
-        
+
         Returns:
             list: The current joint positions, listed in order of the joints.
                 Shape [6]
@@ -431,15 +443,15 @@ class UR5eRobotReal(Robot):
         Gets the current joint angular velocities of the robot. Gets the value
         from the internally updated dictionary that subscribes to the ROS
         topic /joint_states
-        
+
         Keyword Arguments:
             joint_name (str, optional): The name of the joint to return the
                 current velocity of, if only one joint. Defaults to None.
-        
+
         Raises:
             TypeError: Specified joint name does not match any of the robot's
                 joints
-        
+
         Returns:
             list: The current joint velocities, listed in order of the joints.
                 Shape [6].
@@ -457,7 +469,9 @@ class UR5eRobotReal(Robot):
         return jvel
 
     def get_ee_pose(self):
-        """Get current cartesian pose of the EE, in the robot's base frame
+        """
+        Get current cartesian pose of the EE, in the robot's base frame,
+        using ROS subscriber to the tf tree topic
 
         Returns:
             np.ndarray: x, y, z position of the EE (shape: [3])
@@ -591,7 +605,8 @@ class UR5eRobotReal(Robot):
                 or rotation matrix (shape: [3, 3]). If it's None,
                 the solver will use the current end effector
                 orientation as the target orientation
-            qinit (list or np.ndarray): initial joint positions for numerical IK (shape: [6,])
+            qinit (list or np.ndarray): initial joint positions for numerical
+                IK (shape: [6,])
 
         Returns:
             inverse kinematics solution (joint angles, list)
@@ -602,7 +617,7 @@ class UR5eRobotReal(Robot):
                 # [roll, pitch, yaw]
                 ee_quat = arutil.euler2quat(ori)
             elif ori.shape == (3, 3):
-                ee_quat = arutil.rot2quat(rot)
+                ee_quat = arutil.rot2quat(ori)
             elif ori.size == 4:
                 ee_quat = ori
             else:
@@ -727,8 +742,8 @@ class UR5eRobotReal(Robot):
 
             if time.time() - start_time > self.cfgs.TIMEOUT_LIMIT:
                 pt_str = 'Unable to move to end effector position:' \
-                         '%s and orientaion: %s within %f s' % (str(pos), str(ori),
-                                                                self.cfgs.TIMEOUT_LIMIT)
+                         '%s and orientaion: %s within %f s' % \
+                          (str(pos), str(ori), self.cfgs.TIMEOUT_LIMIT)
                 print_red(pt_str)
                 return success
             if self._reach_ee_goal(pos, ori):
@@ -866,11 +881,14 @@ class UR5eRobotReal(Robot):
 
     def scale_moveit_motion(self, vel_scale=1.0, acc_scale=1.0):
         """
-        Scales the valid 
-        
+        Sets the maximum velocity and acceleration MoveIt can set
+        in the trajectories it returns. Specified as a fraction
+        from 0.0 - 1.0 of the maximum velocity and acceleration
+        specified in the MoveIt joint limits configuration file.
+
         Keyword Arguments:
-            vel_scale (float): (default: {1.0})
-            acc_scale (float): (default: {1.0})
+            vel_scale (float): Defaults to 1.0
+            acc_scale (float): Defaults to 1.0
         """
         vel_scale = arutil.clamp(vel_scale, 0.0, 1.0)
         acc_scale = arutil.clamp(acc_scale, 0.0, 1.0)
@@ -883,9 +901,6 @@ class UR5eRobotReal(Robot):
 
         Args:
             msg (sensor_msgs/JointState): Contains message published in topic
-
-        Returns:
-
         """
         self._j_state_lock.acquire()
         for idx, name in enumerate(msg.name):
@@ -899,6 +914,12 @@ class UR5eRobotReal(Robot):
         self._j_state_lock.release()
 
     def _get_kdl_link_names(self):
+        """
+        Internal method to get the link names from the KDL URDF chain
+
+        Returns:
+            list: List of link names
+        """
         num_links = self.urdf_chain.getNrOfSegments()
         link_names = []
         for i in range(num_links):
@@ -906,6 +927,12 @@ class UR5eRobotReal(Robot):
         return copy.deepcopy(link_names)
 
     def _get_kdl_joint_names(self):
+        """
+        Internal method to get the joint names from the KDL URDF chain
+
+        Returns:
+            list: List of joint names
+        """
         num_links = self.urdf_chain.getNrOfSegments()
         num_joints = self.urdf_chain.getNrOfJoints()
         joint_names = []
@@ -922,6 +949,16 @@ class UR5eRobotReal(Robot):
         return copy.deepcopy(joint_names)
 
     def _get_tip_transform(self):
+        """
+        Internal method to get the transform between the robot's
+        wrist and the tip of the gripper
+
+        Returns:
+            list: Translation component of the gripper tip transform
+                (shape [3,])
+            list: Euler angle orientation component of the gripper
+                tip transform. (shape [3,])
+        """
         gripper_tip_id = self.arm_link_names.index(self.cfgs.ROBOT_EE_FRAME)
         gripper_tip_link = self.urdf_chain.getSegment(gripper_tip_id)
         gripper_tip_tf = kdl_frame_to_numpy(gripper_tip_link.getFrameToTip())
@@ -931,6 +968,10 @@ class UR5eRobotReal(Robot):
         return list(gripper_tip_pos), list(gripper_tip_euler)
 
     def _set_tool_offset(self):
+        """
+        Internal method to send a URScript command to the robot so that
+        it updates it tool center point variable to match the URDF
+        """
         tool_offset_prog = 'set_tcp(p[%f, %f, %f, %f, %f, %f])' % (
             self.gripper_tip_pos[0],
             self.gripper_tip_pos[1],
