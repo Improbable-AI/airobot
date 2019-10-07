@@ -9,7 +9,7 @@
 ```bash
 git clone https://github.com/Improbable-AI/airobot.git
 cd airobot
-python setup.py install
+pip install .
 ```
 
 ## Getting Started

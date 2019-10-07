@@ -38,14 +38,15 @@ from airobot.utils.ur_tcp_util import SecondaryMonitor
 
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, use_cam=False, use_arm=True,
-                 moveit_planner='RRTConnectkConfigDefault'):
+                 moveit_planner='RRTConnectkConfigDefault',
+                 cam_name=None):
         super(UR5eRobotReal, self).__init__(cfgs=cfgs)
         try:
             rospy.init_node('ur5e', anonymous=True)
         except rospy.exceptions.ROSException:
             rospy.logwarn('ROS node [ur5e] has already been initialized')
         if use_cam:
-            self.camera = RGBDCamera(cfgs=cfgs)
+            self.camera = RGBDCamera(cfgs=cfgs, cam_name=cam_name)
         if use_arm:
             self.moveit_planner = moveit_planner
             self.gazebo_sim = rospy.get_param('sim')

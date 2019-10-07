@@ -6,17 +6,24 @@ import argparse
 import signal
 import sys
 import time
+import os
+import json
+import rospkg
 
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import DBSCAN
 
 import airobot as ar
+from IPython import embed
 
 
 def signal_handler(sig, frame):
     print('Exit')
     sys.exit(0)
+
+Y_range = [-0.7, 0.7]
+X_range = [0, 1.1]
 
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -25,11 +32,13 @@ signal.signal(signal.SIGINT, signal_handler)
 def filter_points(pts, colors, z_lowest=0.01):
     valid = pts[:, 2] > z_lowest
     valid = np.logical_and(valid,
-                           pts[:, 0] < 0.5)
+                           pts[:, 0] > X_range[0])
     valid = np.logical_and(valid,
-                           pts[:, 1] < 0.4)
+                           pts[:, 0] < X_range[1])
     valid = np.logical_and(valid,
-                           pts[:, 1] > -0.4)
+                           pts[:, 1] < Y_range[1])
+    valid = np.logical_and(valid,
+                           pts[:, 1] > Y_range[0])
     pts = pts[valid]
     colors = colors[valid]
     return pts, colors
@@ -47,8 +56,8 @@ def draw_segments(pts, labels, core_samples_mask):
     num_threshold = 400
     plt.clf()
     plt.scatter(pts[:, 0], pts[:, 1])
-    plt.xlim(-0.4, 0.4)
-    plt.ylim(0, 0.5)
+    plt.xlim(Y_range[0], Y_range[1])
+    plt.ylim(X_range[0], X_range[1])
     plt.xlabel('Y axis of the base link')
     plt.ylabel('X axis of the base link')
     plt.savefig('raw_pts.png')
@@ -70,10 +79,10 @@ def draw_segments(pts, labels, core_samples_mask):
         print('Label:[%d]   # of pts:%d' % (k, xy.shape[0]))
         if xy.shape[0] > num_threshold:
             useful_labels.append(k)
-        plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col),
+        plt.plot(xy[:, 1], xy[:, 0], 'o', markerfacecolor=tuple(col),
                  markersize=1)
-        plt.xlim(-0.4, 0.4)
-        plt.ylim(0, 0.5)
+        plt.xlim(Y_range[0], Y_range[1])
+        plt.ylim(X_range[0], X_range[1])
         plt.xlabel('Y axis of the base link')
         plt.ylabel('X axis of the base link')
     plt.savefig('seg_pts.png')
@@ -95,7 +104,7 @@ def sample_pt(pts, labels, useful_labelset, z_lowest):
     else:
         tgt_y = np.random.uniform(bbox_xy[0, 1], bbox_xy[1, 1], 1)[0]
         tgt_x = bbox_xy[int(np.random.choice(2, 1)[0]), 0]
-    tgt_z = max(center[2], z_lowest)
+    tgt_z = max(np.min(tgt_pts[:, 2])+0.01, z_lowest-0.02)
     center[2] = tgt_z
     mid_pt = np.array([tgt_x, tgt_y, tgt_z])
 
@@ -103,47 +112,64 @@ def sample_pt(pts, labels, useful_labelset, z_lowest):
     return start_pt, mid_pt, center
 
 
-def push(bot, z_lowest=-0.15):
-    ee_pose = bot.get_ee_pose()
+def push(bot, reset_pos, z_lowest=-0.17):
+    cur_pos = bot.get_ee_pose()[0]
     # if ee_pose[0][2] < 0.20:
     #     bot.go_home()
-    pre_jnts = [1.57, -1.66, -1.92, -1.12, 1.57, 0]
-    self.robot.set_jpos(pre_jnts)
-    pts, colors = bot.camera.get_pcd(in_cam=False)
+    bot.move_ee_xyz(reset_pos - cur_pos)
+    pts, colors = bot.camera.get_pcd(in_world=True,
+                                     filter_depth=True)
     pts, colors = filter_points(pts, colors, z_lowest=z_lowest)
     X = pts[:, :2]
     labels, core_samples_mask = segment_objects(X)
     useful_labelset = draw_segments(X, labels, core_samples_mask)
     start_pt, mid_pt, center = sample_pt(pts, labels, useful_labelset,
                                          z_lowest=z_lowest)
+    # embed()
     print("Going to: ", start_pt.tolist())
-    result = bot.set_ee_pose(pos=start_pt, ori=[-0.7071, 0.7071, 0, 0])
+    result = bot.move_ee_xyz(start_pt - reset_pos)
+    # result = bot.set_ee_pose(pos=start_pt, ori=[-0.7071, 0.7071, 0, 0])
     if not result:
         return
     down_disp = mid_pt - start_pt
     bot.move_ee_xyz(down_disp)
     hor_disp = 2 * (center - mid_pt)
     bot.move_ee_xyz(hor_disp)
+    bot.move_ee_xyz([0, 0, 0.2])
 
 
 def main():
     parser = argparse.ArgumentParser(description='Argument Parser')
-    parser.add_argument('--floor_height', type=float, default=-0.15,
-                        help='the z coordinate of the floor')
+    parser.add_argument('--z_min', type=float, default=-0.15,
+                        help='minimium acceptable z value')
     args = parser.parse_args()
 
     np.set_printoptions(precision=4, suppress=True)
-    bot = ar.create_robot('ur5e', pb=False)
-    cam_pos = np.array([1.216, -0.118, 0.610])
-    cam_ori = np.array([-0.471, -0.0321, 0.880, 0.0294])
+    bot = ar.create_robot('ur5e', pb=False, robot_cfg={'use_cam': True})
+
+    rospack = rospkg.RosPack()
+    data_path = rospack.get_path('hand_eye_calibration')
+    calib_file_path = os.path.join(data_path, 'calib_base_to_cam.json')
+    with open(calib_file_path, 'r') as f:
+        calib_data = json.load(f)
+    cam_pos = np.array(calib_data['b_c_transform']['position'])
+    cam_ori = np.array(calib_data['b_c_transform']['orientation'])
+
     bot.camera.set_cam_ext(cam_pos, cam_ori)
-    bot.go_home()
+    # bot.set_comm_mode(use_urscript=True)
+    # bot.go_home()
     bot.gripper.activate()
     bot.gripper.close()
 
+    pre_jnts = [1.57, -1.66, -1.92, -1.12, 1.57, 0]
+    bot.set_jpos(pre_jnts)
+    time.sleep(1)
+    ee_pose = bot.get_ee_pose()
+    reset_pos = ee_pose[0]
+
     while True:
         try:
-            push(bot, z_lowest=args.floor_height)
+            push(bot, reset_pos, z_lowest=args.z_min)
         except:
             pass
         time.sleep(1)

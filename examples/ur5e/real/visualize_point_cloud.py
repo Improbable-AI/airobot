@@ -4,6 +4,9 @@ import time
 
 import numpy as np
 import open3d
+import os
+import json
+import rospkg
 
 import airobot as ar
 
@@ -27,13 +30,19 @@ def main():
                             pb=False,
                             robot_cfg={'use_cam': True,
                                        'use_arm': False})
-    cam_pos = np.array([1.216, -0.118, 0.610])
-    cam_ori = np.array([-0.471, -0.0321, 0.880, 0.0294])
+    rospack = rospkg.RosPack()
+    data_path = rospack.get_path('hand_eye_calibration')
+    calib_file_path = os.path.join(data_path, 'calib_base_to_cam.json')
+    with open(calib_file_path, 'r') as f:
+        calib_data = json.load(f)
+    cam_pos = np.array(calib_data['b_c_transform']['position'])
+    cam_ori = np.array(calib_data['b_c_transform']['orientation'])
+
     robot.camera.set_cam_ext(cam_pos, cam_ori)
     vis = open3d.visualization.Visualizer()
     vis.create_window("Point Cloud")
     pcd = open3d.geometry.PointCloud()
-    pts, colors = robot.camera.get_pcd(in_world=False,
+    pts, colors = robot.camera.get_pcd(in_world=True,
                                        filter_depth=False)
     pcd.points = open3d.utility.Vector3dVector(pts)
     pcd.colors = open3d.utility.Vector3dVector(colors / 255.0)
