@@ -313,7 +313,7 @@ class ABBYumiPyBullet(Robot):
         if arm != 'right' and arm != 'left':
             arm = 'right'
         jnt_pos = self.compute_ik(pos, ori, arm=arm)
-        success = self.set_jpos(jnt_pos, wait=wait)
+        success = self.set_jpos(jnt_pos, arm=arm, wait=wait)
         return success
 
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, arm='right', *args, **kwargs):
@@ -336,7 +336,7 @@ class ABBYumiPyBullet(Robot):
             raise AssertionError('move_ee_xyz() can '
                                  'only be called in realtime'
                                  ' simulation mode')
-        pos, quat, rot_mat, euler = self.get_ee_pose()
+        pos, quat, rot_mat, euler = self.get_ee_pose(arm=arm)
         cur_pos = np.array(pos)
         delta_xyz = np.array(delta_xyz)
         path_len = np.linalg.norm(delta_xyz)
@@ -352,7 +352,7 @@ class ABBYumiPyBullet(Robot):
             way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
         success = False
         for jnt_poss in way_jnt_positions:
-            success = self.set_jpos(jnt_poss)
+            success = self.set_jpos(jnt_poss, arm=arm)
         return success
 
     def enable_torque_control(self, joint_name=None):
@@ -575,7 +575,11 @@ class ABBYumiPyBullet(Robot):
                                                     pos,
                                                     jointDamping=self._ik_jds)
         jnt_poss = list(jnt_poss)
-        return jnt_poss[:len(self.arm_jnt_ids)]
+        if arm == 'right':
+            jnt_poss = jnt_poss[:7]
+        elif arm == 'left':
+            jnt_poss = jnt_poss[7:]
+        return jnt_poss
 
     def _wait_to_reach_jnt_goal(self, goal, joint_name=None, mode='pos'):
         """
