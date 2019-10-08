@@ -274,10 +274,10 @@ class ABBYumiPyBullet(Robot):
                     raise ValueError('If specifying only 7 joint angles, arm'
                                      'must be specified')
                 if arm == 'right':
-                    left_j_torque = [0.0] * 7
+                    left_j_torque = self.get_jtorq()[7:]
                     torque = torque + left_j_torque
                 elif arm == 'left':
-                    right_j_torque = [0.0] * 7
+                    right_j_torque = self.get_jtorq()[:7]
                     torque = right_j_torque + torque
             if len(torque) != 14:
                 raise ValueError('Joint torques should contain 6 elements')

@@ -24,8 +24,8 @@ def main():
     """
     Move all the joints of the robot in a sine-wave fashion
     """
-    robot = ar.create_robot('ur5e',
-                            robot_cfg={'render': True})
+    robot = ar.create_robot('yumi',
+                            robot_cfg={'render': True, 'self_collision': True})
     robot.go_home()
 
     A = 0.2
