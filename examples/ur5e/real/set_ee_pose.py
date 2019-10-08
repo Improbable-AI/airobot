@@ -18,9 +18,9 @@ def main():
     goal_ori = current_ori
 
     # deltas specified in cm
-    delta_x = 3
-    delta_y = 3
-    delta_z = 3
+    delta_x = 1
+    delta_y = 1
+    delta_z = 1
 
     # deltas specified in rad
     delta_rx = 0.1

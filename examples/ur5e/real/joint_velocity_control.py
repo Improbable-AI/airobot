@@ -2,6 +2,7 @@ import math
 import time
 
 import airobot as ar
+import rospy
 
 
 def sin_wave(t, f, A):
@@ -24,17 +25,23 @@ def main():
     """
     Move all the joints of the robot in a sine-wave fashion
     """
-    robot = ar.create_robot('ur5e', pb=False)
+    robot = ar.create_robot('ur5e', 
+                            pb=False, 
+                            robot_cfg={'moveit_planner': 'RRTstarkConfigDefault'})
+    
+    robot.moveit_group.set_planning_time(1.0)
+
+    robot.go_home()
     robot.set_comm_mode(use_urscript=True)
 
     A = 0.1
     f = 0.3
     start_time = time.time()
-    while True:
+    while not rospy.is_shutdown():
         elapsed_time = time.time() - start_time
         vels = [sin_wave(elapsed_time, f, A)] * robot.arm_dof
-        robot.set_jvel(vels)
-        time.sleep(0.01)
+        robot.set_jvel(vels, wait=True)
+        time.sleep(0.001)
 
 
 if __name__ == '__main__':

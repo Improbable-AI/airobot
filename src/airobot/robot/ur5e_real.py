@@ -71,7 +71,7 @@ class UR5eRobotReal(Robot):
             else:
                 self.set_comm_mode(use_urscript=False)
 
-        time.sleep(2.0)  # sleep to give subscribers time to connect
+        time.sleep(1.0)  # sleep to give subscribers time to connect
 
     def __del__(self):
         """
@@ -121,7 +121,7 @@ class UR5eRobotReal(Robot):
         # self.tcp_monitor.send_program(prog)
         self.urscript_pub.publish(prog)
 
-    def output_pendant_msg(self, msg):
+    def _output_pendant_msg(self, msg):
         """
         Method to display a text message on the UR5e teach pendant
 
@@ -232,6 +232,9 @@ class UR5eRobotReal(Robot):
         velocity = copy.deepcopy(velocity)
         success = False
 
+        if self.gazebo_sim:
+            raise NotImplementedError('cannot set_jvel in Gazebo')
+
         if joint_name is None:
             if len(velocity) != 6:
                 raise ValueError('Velocity should contain 6 elements'
@@ -258,7 +261,8 @@ class UR5eRobotReal(Robot):
                                                                acc)
             self._send_urscript(prog)
         else:
-            self._pub_joint_vel(tgt_vel)
+            # self._pub_joint_vel(tgt_vel)
+            raise NotImplementedError('set_jvel only works with use_urscript=True')
 
         if wait:
             success = self._wait_to_reach_jnt_goal(tgt_vel,
@@ -267,7 +271,7 @@ class UR5eRobotReal(Robot):
 
         return success
 
-    def set_ee_pose(self, pos, ori=None, acc=0.1, vel=0.05, wait=True,
+    def set_ee_pose(self, pos, ori=None, acc=0.2, vel=0.3, wait=True,
                     ik_first=False, *args, **kwargs):
         """
         Set cartesian space pose of end effector
@@ -284,10 +288,10 @@ class UR5eRobotReal(Robot):
             acc (float, optional): Acceleration of end effector during
                 beginning of movement. This arg takes effect only when
                 self.use_urscript is True and ik_first is False.
-                Defaults to 0.1.
+                Defaults to 0.3.
             vel (float, optional): Velocity of end effector during movement.
                 This parameter takes effect only when self.use_urscript is
-                 True and ik_first is False. Defaults to 0.05.
+                 True and ik_first is False. Defaults to 0.2.
             ik_first (bool, optional): Whether to use the solution computed
                 by IK, or to use UR built in movel function which moves
                 linearly in tool space (movel may sometimes fail due to
@@ -299,7 +303,7 @@ class UR5eRobotReal(Robot):
         """
         success = False
         if ori is None:
-            pose = self.get_ee_pose()[-1]  # last index is euler angles
+            pose = self.get_ee_pose()  # last index is euler angles #TODO NOW
             quat = pose[1]
             euler = pose[-1]
         else:
@@ -981,6 +985,9 @@ class UR5eRobotReal(Robot):
             self.gripper_tip_ori[2]
         )
 
+        print("Set TCP program: ")
+        print(tool_offset_prog)
+        self._output_pendant_msg(tool_offset_prog)
         self._send_urscript(tool_offset_prog)
 
     def _pub_joint_vel(self, velocity):
@@ -1015,3 +1022,5 @@ class UR5eRobotReal(Robot):
             String,
             queue_size=10
         )
+
+        rospy.sleep(2.0)

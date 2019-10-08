@@ -29,7 +29,7 @@ _C.MAX_EE_POSITION_ERROR = 0.01
 # real part of the quaternion difference should be
 # greater than 1-error
 _C.MAX_EE_ORIENTATION_ERROR = 0.02
-_C.TIMEOUT_LIMIT = 5
+_C.TIMEOUT_LIMIT = 10
 _C.CAM_SIM = get_sim_cam_cfg()
 _C.CAM_REALSENSE = get_realsense_cam_cfg()
 _C.CAM_KINECT = CN()
