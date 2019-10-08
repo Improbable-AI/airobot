@@ -79,12 +79,10 @@ class ABBYumiPyBullet(Robot):
         p.resetSimulation()
 
         plane_pos = [0, 0, 0]
-        # plane_ori = arutil.quat2euler([0, 0, 0])
         plane_ori = arutil.euler2quat([0, 0, 0])
         self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
         ur_pos = [0, 0, 1]
-        # ur_ori = arutil.quat2euler([0, 0, 0])
         ur_ori = arutil.euler2quat([0, 0, 0])
         if self.self_collision:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
@@ -96,20 +94,6 @@ class ABBYumiPyBullet(Robot):
         self._build_jnt_id()
         if self.self_collision:
             pass
-            # weird behavior occurs on the gripper
-            # when self-collision is enforced
-            # self._disable_gripper_self_collision()
-
-    # def _disable_gripper_self_collision(self):
-    #     for i in range(len(self.gripper_jnt_names)):
-    #         for j in range(i + 1, len(self.gripper_jnt_names)):
-    #             jnt_idx1 = self.jnt_to_id[self.gripper_jnt_names[i]]
-    #             jnt_idx2 = self.jnt_to_id[self.gripper_jnt_names[j]]
-    #             p.setCollisionFilterPair(self.robot_id,
-    #                                      self.robot_id,
-    #                                      jnt_idx1,
-    #                                      jnt_idx2,
-    #                                      enableCollision=0)
 
     def step_simulation(self):
         """
@@ -134,27 +118,8 @@ class ABBYumiPyBullet(Robot):
             if self._render:
                 p.setRealTimeSimulation(0)
 
-    # def open_gripper(self):
-    #     """
-    #     Open the gripper
-
-    #     Returns:
-    #         return if the action is sucessful or not
-    #     """
-    #     success = self._set_gripper_pos(self.gripper_open_angle)
-    #     return success
-
-    # def close_gripper(self):
-    #     """
-    #     Close the gripper
-
-    #     Returns:
-    #         return if the action is sucessful or not
-    #     """
-    #     success = self._set_gripper_pos(self.gripper_close_angle)
-    #     return success
-
-    def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
+    def set_jpos(self, position, joint_name=None, wait=True, arm=None,
+                 *args, **kwargs):
         """
         Move the arm to the specified joint position(s).
 
@@ -174,6 +139,16 @@ class ABBYumiPyBullet(Robot):
         position = copy.deepcopy(position)
         success = False
         if joint_name is None:
+            if len(position) == 7:
+                if arm is None or (arm != 'right' and arm != 'left'):
+                    raise ValueError('If specifying only 7 joint angles, arm'
+                                     'must be specified')
+                if arm == 'right':
+                    left_j_pos = self.get_jpos()[7:]
+                    position = position + left_j_pos
+                elif arm == 'left':
+                    right_j_pos = self.get_jpos()[:7]
+                    position = right_j_pos + position
             if len(position) != 14:
                 raise ValueError('Position should contain 14'
                                  'elements if the joint_name is not provided')
@@ -203,7 +178,8 @@ class ABBYumiPyBullet(Robot):
                                                    mode='pos')
         return success
 
-    def set_jvel(self, velocity, joint_name=None, wait=False, arm='both', *args, **kwargs):
+    def set_jvel(self, velocity, joint_name=None, wait=False, arm=None,
+                 *args, **kwargs):
         """
         Move the arm with the specified joint velocity(ies).
 
@@ -225,10 +201,18 @@ class ABBYumiPyBullet(Robot):
         if joint_name is None:
             velocity = copy.deepcopy(velocity)
             if len(velocity) == 7:
-                raise NotImplementedError
+                if arm is None or (arm != 'right' and arm != 'left'):
+                    raise ValueError('If specifying only 7 joint angles, arm'
+                                     'must be specified')
+                if arm == 'right':
+                    left_j_vel = [0.0] * 7
+                    velocity = velocity + left_j_vel
+                elif arm == 'left':
+                    right_j_vel = [0.0] * 7
+                    velocity = right_j_vel + velocity
             if len(velocity) != 14:
-                raise ValueError('Velocity should contain 6 elements '
-                                 'if the joint_name is not provided')
+                raise ValueError('Velocity should contain 14'
+                                 'elements if the joint_name is not provided')
             tgt_vel = velocity
             p.setJointMotorControlArray(self.robot_id,
                                         self.arm_jnt_ids,
@@ -255,7 +239,8 @@ class ABBYumiPyBullet(Robot):
                                                    mode='vel')
         return success
 
-    def set_jtorq(self, torque, joint_name=None, wait=False, *args, **kwargs):
+    def set_jtorq(self, torque, joint_name=None, wait=False, arm=None,
+                  *args, **kwargs):
         """
         Apply torque(s) to the joint(s), call enable_torque_control()
         or enable_torque_control(joint_name) before doing torque control.
@@ -284,7 +269,17 @@ class ABBYumiPyBullet(Robot):
         """
         torque = copy.deepcopy(torque)
         if joint_name is None:
-            if len(torque) != 6:
+            if len(torque) == 7:
+                if arm is None or (arm != 'right' and arm != 'left'):
+                    raise ValueError('If specifying only 7 joint angles, arm'
+                                     'must be specified')
+                if arm == 'right':
+                    left_j_torque = [0.0] * 7
+                    torque = torque + left_j_torque
+                elif arm == 'left':
+                    right_j_torque = [0.0] * 7
+                    torque = right_j_torque + torque
+            if len(torque) != 14:
                 raise ValueError('Joint torques should contain 6 elements')
             p.setJointMotorControlArray(self.robot_id,
                                         self.arm_jnt_ids,
@@ -301,7 +296,8 @@ class ABBYumiPyBullet(Robot):
                                     force=torque)
         return True
 
-    def set_ee_pose(self, pos, ori=None, wait=True, arm='right', *args, **kwargs):
+    def set_ee_pose(self, pos, ori=None, wait=True, arm='right',
+                    *args, **kwargs):
         """
         Move the end effector to the specifed pose
         Args:
@@ -581,16 +577,6 @@ class ABBYumiPyBullet(Robot):
         jnt_poss = list(jnt_poss)
         return jnt_poss[:len(self.arm_jnt_ids)]
 
-    # def _mimic_gripper(self, joint_val):
-    #     """
-    #     Given the value for the first joint,
-    #     mimic the joint values for the rest joints
-    #     """
-    #     jnt_vals = [joint_val]
-    #     for i in range(1, len(self.gripper_jnt_names)):
-    #         jnt_vals.append(joint_val * self._gripper_mimic_coeff[i])
-    #     return jnt_vals
-
     def _wait_to_reach_jnt_goal(self, goal, joint_name=None, mode='pos'):
         """
         Block the code to wait for the joint moving to the specified goal.
@@ -672,11 +658,6 @@ class ABBYumiPyBullet(Robot):
         else:
             self.realtime_simulation(True)
 
-        # gripper thread
-        # self._th_gripper = threading.Thread(target=self._th_mimic_gripper)
-        # self._th_gripper.daemon = True
-        # self._th_gripper.start()
-
     def _init_consts(self):
         """
         Initialize constants
@@ -687,20 +668,6 @@ class ABBYumiPyBullet(Robot):
         self._thread_sleep = 0.001
         p.setGravity(0, 0, -9.8)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
-        # if self._arm == 'right':
-        #     self.arm_jnt_names = [
-        #         'yumi_joint_1_r', 'yumi_joint_2_r', 'yumi_joint_3_r',
-        #         'yumi_joint_4_r', 'yumi_joint_5_r', 'yumi_joint_6_r',
-        #         'yumi_joint_7_r'
-        #         ]
-        #     self.ee_link_jnt = self.cfgs.ROBOT_EE_FRAME_JOINT_RIGHT
-        # elif self._arm == 'left':
-        #     self.arm_jnt_names = [
-        #         'yumi_joint_1_l', 'yumi_joint_2_l', 'yumi_joint_3_l',
-        #         'yumi_joint_4_l', 'yumi_joint_5_l', 'yumi_joint_6_l',
-        #         'yumi_joint_7_l'
-        #         ]
-        #     self.ee_link_jnt = self.cfgs.ROBOT_EE_FRAME_JOINT_LEFT
 
         self.arm_jnt_names = [
             'yumi_joint_1_r', 'yumi_joint_2_r', 'yumi_joint_3_r',
@@ -716,15 +683,7 @@ class ABBYumiPyBullet(Robot):
 
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.arm_dof = len(self.arm_jnt_names)
-        # self._gripper_mimic_coeff = [1, -1, 1, -1, -1, 1]
-        # self.gripper_jnt_names = [
-        #     'gripper_r_joint', 'gripper_r_joint_m',
-        #     'gripper_l_joint', 'gripper_l_joint_m'
-        # ]
 
-        # self.gripper_close_angle = 0.7
-        # self.gripper_open_angle = 0
-        # self.gripper_jnt_names_set = set(self.gripper_jnt_names)
         self.rvl_joint_names = self.arm_jnt_names
         self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
 
@@ -742,23 +701,6 @@ class ABBYumiPyBullet(Robot):
             if not self._step_sim_mode:
                 p.stepSimulation()
             time.sleep(self._thread_sleep)
-
-    # def _th_mimic_gripper(self):
-    #     """
-    #     Make all the other joints of the gripper
-    #     follow the motion of the first joint of the gripper
-    #     """
-    #     while True:
-    #         max_torq = self._max_torques[-1]
-    #         max_torques = [max_torq] * (len(self.gripper_jnt_names) - 1)
-    #         gripper_pos = self.get_jpos(self.gripper_jnt_names[0])
-    #         gripper_poss = self._mimic_gripper(gripper_pos)
-    #         p.setJointMotorControlArray(self.robot_id,
-    #                                     self.gripper_jnt_ids[1:],
-    #                                     p.POSITION_CONTROL,
-    #                                     targetPositions=gripper_poss[1:],
-    #                                     forces=max_torques)
-    #         time.sleep(self._thread_sleep)
 
     def _build_jnt_id(self):
         """
@@ -781,44 +723,8 @@ class ABBYumiPyBullet(Robot):
         #     self.jnt_to_id[jnt] for jnt in self.rvl_joint_names
         # ]
 
-        # self.ee_link_id = self.jnt_to_id[self.ee_link_jnt]
-
         self.ee_link_r_id = self.jnt_to_id[self.ee_link_jnt_r]
         self.ee_link_l_id = self.jnt_to_id[self.ee_link_jnt_l]
 
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
-        # self.gripper_jnt_ids = [
-        #     self.jnt_to_id[jnt] for jnt in self.gripper_jnt_names
-        # ]
 
-    # def _set_gripper_pos(self, position):
-    #     """
-    #     Set the gripper position. We make a separate function apart from
-    #     set_jpos to make the api consistent with the real robot. set_jpos
-    #     is only used to control the robot arm
-
-    #     Args:
-    #         position (float): joint position
-
-    #     Returns:
-    #         A boolean variable representing if the action is successful at
-    #         the moment when the function exits
-    #     """
-    #     joint_name = self.gripper_jnt_names[0]
-    #     gripper_pos = position[-1]
-    #     tgt_pos = arutil.clamp(gripper_pos,
-    #                     self.gripper_open_angle,
-    #                     self.gripper_close_angle)
-    #     max_torque = self._max_torques[-1]
-    #     jnt_id = self.jnt_to_id[joint_name]
-    #     p.setJointMotorControl2(self.robot_id,
-    #                             jnt_id,
-    #                             p.POSITION_CONTROL,
-    #                             targetPosition=tgt_pos,
-    #                             force=max_torque)
-    #     success = False
-    #     if not self._step_sim_mode and wait:
-    #         success = self._wait_to_reach_jnt_goal(tgt_pos,
-    #                                                joint_name=joint_name,
-    #                                                mode='pos')
-    #     return success
