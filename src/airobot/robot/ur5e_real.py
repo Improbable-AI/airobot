@@ -86,14 +86,6 @@ class UR5eRobotReal(Robot):
         if hasattr(self, 'tcp_monitor'):
             self.tcp_monitor.close()
 
-    def _initialize_tcp_comm(self):
-        """
-        Set up TCP/IP communication
-        """
-        self.tcp_monitor = SecondaryMonitor(self.robot_ip)
-
-        self.tcp_monitor.wait()  # make contact with robot before anything
-
     def set_comm_mode(self, use_urscript=False):
         """
         Method to set whether to use ros or urscript to control the real robot
@@ -103,53 +95,6 @@ class UR5eRobotReal(Robot):
                 False if we should use ros and moveit
         """
         self.use_urscript = use_urscript
-
-    def _send_urscript(self, prog):
-        """
-        Method to send URScript program to the URScript ROS topic
-
-        Args:
-            prog (str): URScript program which will be sent and run on
-                the UR5e machine
-
-        """
-        # TODO return the status info
-        # such as if the robot gives any error,
-        # the execution is successful or not
-
-        # TODO go back to TCP at some point, after debugging threading
-        # self.tcp_monitor.send_program(prog)
-        self.urscript_pub.publish(prog)
-
-    def _output_pendant_msg(self, msg):
-        """
-        Method to display a text message on the UR5e teach pendant
-
-        Args:
-            msg (str): message to display
-
-        Return:
-            None
-        """
-        prog = 'textmsg(%s)' % msg
-        self._send_urscript(prog)
-
-    def _is_running(self):
-        """
-        Check whether the robot is currently running or is stopped
-        for some reason. Checks the robot mode, if robot is enabled,
-        if the E-stop is currently pressed, if some other security
-        fault has been activted, if the robot is connected, and if
-        power is on.
-
-        Returns:
-            bool: True if robot is currently running
-        """
-        if hasattr(self, 'tcp_monitor'):
-            return self.tcp_monitor.running
-        else:
-            # raise ValueError('No TCP connection established')
-            return True  # TODO add this functionality with urscript/ROS
 
     def go_home(self):
         """
@@ -834,7 +779,7 @@ class UR5eRobotReal(Robot):
         self.moveit_group = MoveGroupCommander(self.cfgs.MOVEGROUP_NAME)
         self.moveit_group.set_planner_id(self.moveit_planner)
         self.moveit_scene = MoveitScene()
-        self.scale_moveit_motion(vel_scale=0.1, acc_scale=0.1)
+        self._scale_moveit_motion(vel_scale=0.1, acc_scale=0.1)
 
         # add a virtual base support frame of the real robot:
         ur_base_name = 'ur_base'
@@ -883,7 +828,62 @@ class UR5eRobotReal(Robot):
         # a random value for robotiq joints
         self._max_torques.append(20)
 
-    def scale_moveit_motion(self, vel_scale=1.0, acc_scale=1.0):
+    def _send_urscript(self, prog):
+        """
+        Method to send URScript program to the URScript ROS topic
+
+        Args:
+            prog (str): URScript program which will be sent and run on
+                the UR5e machine
+
+        """
+        # TODO return the status info
+        # such as if the robot gives any error,
+        # the execution is successful or not
+
+        # TODO go back to TCP at some point, after debugging threading
+        # self.tcp_monitor.send_program(prog)
+        self.urscript_pub.publish(prog)
+
+    def _initialize_tcp_comm(self):
+        """
+        Set up TCP/IP communication
+        """
+        self.tcp_monitor = SecondaryMonitor(self.robot_ip)
+
+        self.tcp_monitor.wait()  # make contact with robot before anything
+
+    def _output_pendant_msg(self, msg):
+        """
+        Method to display a text message on the UR5e teach pendant
+
+        Args:
+            msg (str): message to display
+
+        Return:
+            None
+        """
+        prog = 'textmsg(%s)' % msg
+        self._send_urscript(prog)
+
+    def _is_running(self):
+        """
+        Check whether the robot is currently running or is stopped
+        for some reason. Checks the robot mode, if robot is enabled,
+        if the E-stop is currently pressed, if some other security
+        fault has been activted, if the robot is connected, and if
+        power is on.
+
+        Returns:
+            bool: True if robot is currently running
+        """
+        if hasattr(self, 'tcp_monitor'):
+            return self.tcp_monitor.running
+        else:
+            # raise ValueError('No TCP connection established')
+            return True  # TODO add this functionality with urscript/ROS        
+
+    def _scale_moveit_motion(self, vel_scale=1.0, acc_scale=1.0):
         """
         Sets the maximum velocity and acceleration MoveIt can set
         in the trajectories it returns. Specified as a fraction

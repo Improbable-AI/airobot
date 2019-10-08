@@ -43,20 +43,15 @@ class Robotiq2F140(EndEffector):
         """
         self.close_tcp()
 
-    def _get_new_urscript(self):
+    def set_comm_mode(self, use_tcp=False):
         """
-        Internal method used to create an empty URScript
-        program, which is filled with URScript commands and
-        eventually sent to the robot over one of the communication
-        interfaces
-        """
-        urscript = Robotiq2F140URScript(
-            socket_host=self.cfgs.GRIPPER.SOCKET_HOST,
-            socket_port=self.cfgs.GRIPPER.SOCKET_PORT,
-            socket_name=self.cfgs.GRIPPER.SOCKET_NAME)
+        Set what communication mode to use, default is ROS
 
-        urscript.sleep(0.1)
-        return urscript
+        Args:
+            use_tcp (bool, optional): Whether to use TCP/IP
+                monitor or not, Defaults to False
+        """
+        self.use_tcp = use_tcp        
 
     def activate(self):
         """
@@ -118,6 +113,21 @@ class Robotiq2F140(EndEffector):
             # close the tcp communication
             pass
 
+    def _get_new_urscript(self):
+        """
+        Internal method used to create an empty URScript
+        program, which is filled with URScript commands and
+        eventually sent to the robot over one of the communication
+        interfaces
+        """
+        urscript = Robotiq2F140URScript(
+            socket_host=self.cfgs.GRIPPER.SOCKET_HOST,
+            socket_port=self.cfgs.GRIPPER.SOCKET_PORT,
+            socket_name=self.cfgs.GRIPPER.SOCKET_NAME)
+
+        urscript.sleep(0.1)
+        return urscript        
+
     def _initialize_ros_comm(self):
         """
         Set up the internal publisher to send gripper command
@@ -141,13 +151,3 @@ class Robotiq2F140(EndEffector):
         if self.tcp_monitor is None:
             raise ValueError('TCP monitor has not been initialized!')
         self._tcp_initialized = True
-
-    def set_comm_mode(self, use_tcp=False):
-        """
-        Set what communication mode to use, default is ROS
-
-        Args:
-            use_tcp (bool, optional): Whether to use TCP/IP
-                monitor or not, Defaults to False
-        """
-        self.use_tcp = use_tcp

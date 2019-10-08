@@ -39,6 +39,7 @@ def main():
     print(goal_pos, goal_ori)
     robot.set_ee_pose(goal_pos, goal_ori, wait=True)
 
+    print("Switching to use_urscript=True")
     robot.set_comm_mode(use_urscript=True)
 
     goal_pos[0] = current_pos[0] - delta_x * (0.01)

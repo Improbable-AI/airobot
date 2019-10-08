@@ -9,6 +9,7 @@ def main():
     robot.go_home()
     robot.move_ee_xyz([0.2, 0.0, 0.0], wait=True)
 
+    print('switching mode to use_urscript=True')
     robot.set_comm_mode(use_urscript=True)
     robot.move_ee_xyz([-0.2, 0.0, 0.0], wait=True)
 

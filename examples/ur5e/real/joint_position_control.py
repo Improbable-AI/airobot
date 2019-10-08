@@ -14,7 +14,6 @@ def main():
     print("creating robot and going to home position...")
     robot = ar.create_robot('ur5e', pb=False)
     robot.go_home()
-    # robot.gripper.activate()
     time.sleep(1.0)
 
     print("getting current and nearby goal pos...")
