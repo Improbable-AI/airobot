@@ -274,8 +274,12 @@ class UR5eRobotReal(Robot):
                 # use movej instead of movel
                 success = self.set_jpos(jnt_pos, wait=wait)
             else:
-                ee_pos = [pos[0], pos[1], pos[2], euler[0], euler[1], euler[2]]
+                rotvec = arutil.quat2rotvec(quat)
+                ee_pos = [pos[0], pos[1], pos[2],
+                          rotvec[0], rotvec[1], rotvec[2]]
                 # movel moves linear in tool space, may go through singularity
+                # orientation in movel is specified as a rotation vector!
+                # not euler angles!
                 prog = 'movel(p[%f, %f, %f, %f, %f, %f], a=%f, v=%f, r=%f)' % (
                     ee_pos[0],
                     ee_pos[1],

@@ -13,7 +13,7 @@ def clamp(n, minn, maxn):
 
 def quat2rot(quat):
     """
-    Convert quatnion to rotation matrix
+    Convert quaternion to rotation matrix
 
     Args:
         quat (list or np.ndarray): quaternion [x,y,z,w] (shape: [4,])
@@ -28,7 +28,7 @@ def quat2rot(quat):
 
 def quat2euler(quat, axes='xyz'):
     """
-    Convert quatnion to euler angles
+    Convert quaternion to euler angles
 
     Args:
         quat (list or np.ndarray): quaternion [x,y,z,w] (shape: [4,])
@@ -44,6 +44,20 @@ def quat2euler(quat, axes='xyz'):
     """
     r = R.from_quat(quat)
     return r.as_euler(axes)
+
+
+def quat2rotvec(quat):
+    """
+    Convert quaternion to rotation vector
+    
+    Arguments:
+        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: [4,])
+
+    Returns:
+        np.ndarray: rotation vector (shape: [3,])
+    """
+    r = R.from_quat(quat)
+    return r.as_rotvec()
 
 
 def quat_inverse(quat):
