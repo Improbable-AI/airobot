@@ -27,24 +27,30 @@ def main():
     robot = ar.create_robot('ur5e', pb=False)
     robot.go_home()
 
-    goal_pos = []
-    robot.set_ee_pose(goal_pos, wait=True)
+    goal_pos = [0.45, 0.2, 0.3]
+    success = False
+    while not success:
+        success = robot.set_ee_pose(goal_pos, wait=True)
     pos, quat, rot, euler = robot.get_ee_pose()
     print('End effector pose:')
     print('Position:')
     print(pos)
     print('Euler angles:')
     print(euler)
+    time.sleep(1.0)
 
-    goal_pos = []
-    goal_ori = []
-    robot.set_ee_pose(goal_pos, goal_ori, wait=True)
+    goal_pos = [0.6, -0.15, 0.2]
+    goal_ori = [1.57, 0.0, 0.0]
+    success = False
+    while not success:
+        success = robot.set_ee_pose(goal_pos, goal_ori, wait=True)
     pos, quat, rot, euler = robot.get_ee_pose()
     print('End effector pose:')
     print('Position:')
     print(pos)
     print('Euler angles:')
     print(euler)
+    time.sleep(1.0)
 
     ar.utils.common.print_red(
         """
@@ -60,18 +66,10 @@ def main():
 
     robot.set_comm_mode(use_urscript=True)
 
-    goal_pos = []
-    robot.set_ee_pose(goal_pos, wait=True)
-    pos, quat, rot, euler = robot.get_ee_pose()
-    print('End effector pose:')
-    print('Position:')
-    print(pos)
-    print('Euler angles:')
-    print(euler)
-
-    goal_pos = []
-    goal_ori = []
-    robot.set_ee_pose(goal_pos, goal_ori, wait=True)
+    goal_pos = [0.6, -0.4, 0.2]
+    success = False
+    while not success:
+        success = robot.set_ee_pose(goal_pos, wait=True)
     pos, quat, rot, euler = robot.get_ee_pose()
     print('End effector pose:')
     print('Position:')
