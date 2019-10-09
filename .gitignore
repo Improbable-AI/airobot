@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+examples/**/*.png
 build/
 develop-eggs/
 dist/
@@ -21,6 +22,7 @@ sdist/
 var/
 wheels/
 *.egg-info/
+.idea/
 .installed.cfg
 *.egg
 MANIFEST
@@ -30,6 +32,9 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+
+*.patch
+*.pth
 
 # Installer logs
 pip-log.txt
