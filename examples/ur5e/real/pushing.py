@@ -3,28 +3,27 @@
 from __future__ import print_function
 
 import argparse
+import json
+import os
 import signal
 import sys
 import time
-import os
-import json
-import rospkg
 
 import matplotlib.pyplot as plt
 import numpy as np
+import rospkg
 from sklearn.cluster import DBSCAN
 
 import airobot as ar
-from IPython import embed
 
 
 def signal_handler(sig, frame):
     print('Exit')
     sys.exit(0)
 
+
 Y_range = [-0.7, 0.7]
 X_range = [0, 1.1]
-
 
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -104,7 +103,7 @@ def sample_pt(pts, labels, useful_labelset, z_lowest):
     else:
         tgt_y = np.random.uniform(bbox_xy[0, 1], bbox_xy[1, 1], 1)[0]
         tgt_x = bbox_xy[int(np.random.choice(2, 1)[0]), 0]
-    tgt_z = max(np.min(tgt_pts[:, 2])+0.01, z_lowest-0.02)
+    tgt_z = max(np.min(tgt_pts[:, 2]) + 0.01, z_lowest - 0.02)
     center[2] = tgt_z
     mid_pt = np.array([tgt_x, tgt_y, tgt_z])
 
@@ -156,7 +155,6 @@ def main():
     cam_ori = np.array(calib_data['b_c_transform']['orientation'])
 
     bot.camera.set_cam_ext(cam_pos, cam_ori)
-    # bot.set_comm_mode(use_urscript=True)
     # bot.go_home()
     bot.gripper.activate()
     bot.gripper.close()

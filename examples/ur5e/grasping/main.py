@@ -10,6 +10,9 @@ import copy
 import signal
 import sys
 import time
+import rospkg
+import os
+import json
 
 import numpy as np
 import rospy
@@ -62,8 +65,8 @@ class Grasper(object):
                                       url=url,
                                       nsamples=n_samples,
                                       patchsize=patch_size)
-        self.pregrasp_height = 0.2
-        self.grasp_height = 0.13
+        self.pregrasp_height = 0.1
+        self.grasp_height = -0.17
         self.default_Q = Quaternion(0.0, 0., 0., 1.0)
         self.grasp_Q = Quaternion(0.0, 0.707, 0., 0.707)
         self.retract_position = [1.57, -1.66, -1.92, -1.12, 1.57, 0]
@@ -160,7 +163,8 @@ class Grasper(object):
         base_pt = self._convert_frames(temp_p)
         return base_pt
 
-    def compute_grasp(self, dims=[(240, 480), (100, 540)], display_grasp=False):
+    def compute_grasp(self, dims=[(200, 480), (150, 600)], display_grasp=False):
+    # def compute_grasp(self, dims=[(240, 480), (100, 540)], display_grasp=False):
         """
         Runs the grasp model to generate the best predicted grasp.
 
@@ -172,6 +176,7 @@ class Grasper(object):
         :returns: Grasp configuration
         :rtype: list
         """
+        time.sleep(3)
         img, _ = self.robot.camera.get_images(get_rgb=True, get_depth=False)
         img = img[dims[0][0]:dims[0][1], dims[1][0]:dims[1][1]]
         # selected_grasp = [183, 221, -1.5707963267948966, 1.0422693]
@@ -278,12 +283,12 @@ class Grasper(object):
         :rtype: float
         """
 
-        cur_angle = np.arctan2(grasp_pose[1], grasp_pose[0])
-        delta_angle = grasp_pose[2] + cur_angle
+        # cur_angle = np.arctan2(grasp_pose[1], grasp_pose[0])
+        delta_angle = grasp_pose[2]# + cur_angle
         if delta_angle > np.pi / 2:
             delta_angle = delta_angle - np.pi
         elif delta_angle < -np.pi / 2:
-            delta_angle = 2 * np.pi + delta_angle
+            delta_angle = np.pi + delta_angle
         return delta_angle
 
     def exit(self):
@@ -318,6 +323,7 @@ def main(args):
         grasp_pose = grasper.compute_grasp(display_grasp=args.no_visualize)
         print('\n\n Grasp Pose: \n\n {} \n\n'.format(grasp_pose))
         grasper.grasp(grasp_pose)
+
 
 
 if __name__ == "__main__":

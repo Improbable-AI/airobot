@@ -1,11 +1,11 @@
+import json
+import os
 import signal
 import sys
 import time
 
 import numpy as np
 import open3d
-import os
-import json
 import rospkg
 
 import airobot as ar

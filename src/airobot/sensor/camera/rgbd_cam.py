@@ -58,7 +58,7 @@ class RGBDCamera(Camera):
                                                     Image)
         img_subs = [self.rgb_sub, self.depth_sub]
         self.sync = message_filters.ApproximateTimeSynchronizer(img_subs,
-                                                                queue_size=10,
+                                                                queue_size=2,
                                                                 slop=0.2)
         self.sync.registerCallback(self._sync_callback)
         time.sleep(2)

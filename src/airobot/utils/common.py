@@ -45,6 +45,7 @@ def quat2euler(quat, axes='xyz'):
     r = R.from_quat(quat)
     return r.as_euler(axes)
 
+
 def quat_inverse(quat):
     """
     Return the quaternion inverse
@@ -74,6 +75,7 @@ def quat_multiply(quat1, quat2):
     r2 = R.from_quat(quat2)
     r = r1 * r2
     return r.as_quat()
+
 
 def euler2rot(euler, axes='xyz'):
     """

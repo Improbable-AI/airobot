@@ -38,7 +38,7 @@ from airobot.utils.ur_tcp_util import SecondaryMonitor
 
 class UR5eRobotReal(Robot):
     def __init__(self, cfgs, use_cam=False, use_arm=True,
-                 moveit_planner='RRTConnectkConfigDefault',
+                 moveit_planner='RRTstarkConfigDefault',
                  cam_name=None):
         super(UR5eRobotReal, self).__init__(cfgs=cfgs)
         try:
@@ -248,7 +248,7 @@ class UR5eRobotReal(Robot):
         """
         success = False
         if ori is None:
-            pose = self.get_ee_pose()  # last index is euler angles #TODO NOW
+            pose = self.get_ee_pose()  # last index is euler angles
             quat = pose[1]
             euler = pose[-1]
         else:
@@ -778,6 +778,7 @@ class UR5eRobotReal(Robot):
         moveit_commander.roscpp_initialize(sys.argv)
         self.moveit_group = MoveGroupCommander(self.cfgs.MOVEGROUP_NAME)
         self.moveit_group.set_planner_id(self.moveit_planner)
+        self.moveit_group.set_planning_time(1.0)
         self.moveit_scene = MoveitScene()
         self._scale_moveit_motion(vel_scale=0.1, acc_scale=0.1)
 
