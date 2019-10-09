@@ -32,8 +32,6 @@ def main():
     robot = ar.create_robot('ur5e',
                             pb=False)
 
-    robot.moveit_group.set_planning_time(1.0)
-
     robot.go_home()
     robot.set_comm_mode(use_urscript=True)
 
