@@ -25,7 +25,7 @@ def main():
     robot = ar.create_robot('ur5e', pb=False)
     robot.go_home()
 
-    goal_pos = []
+    goal_pos = [0.5, -2, -1.1, -0.95, 1.7, -0.1]
 
     robot.set_jpos(goal_pos, wait=True)
     print("Joint Angles: ")
@@ -45,12 +45,11 @@ def main():
 
     robot.set_comm_mode(use_urscript=True)
 
-    goal_pos = []
+    goal_pos = [0, -1.66, -1.92, -1.12, 1.57, 0]
 
     robot.set_jpos(goal_pos, wait=True)
     print("Joint Angles: ")
     print(robot.get_jpos())
-
 
 
 if __name__ == '__main__':
