@@ -48,6 +48,8 @@ class RGBDCamera(Camera):
         self.cam_height = None
         self.cam_width = None
         self.cam_ext_mat = None  # extrinsic matrix T
+        self.rgb_img_shape = None
+        self.depth_img_shape = None
         rospy.Subscriber(self.cam_info_topic,
                          CameraInfo,
                          self._cam_info_callback)
@@ -95,6 +97,10 @@ class RGBDCamera(Camera):
             self.rgb_img = bgr_img[:, :, ::-1]
             self.depth_img = self.cv_bridge.imgmsg_to_cv2(depth,
                                                           "passthrough")
+            if self.rgb_img_shape is None:
+                self.rgb_img_shape = self.rgb_img.shape
+            if self.depth_img_shape is None:
+                self.depth_img_shape = self.depth_img.shape
         except CvBridgeError as e:
             rospy.logerr(e)
         self.cam_img_lock.release()
@@ -157,8 +163,9 @@ class RGBDCamera(Camera):
         self.cam_img_lock.release()
         return rgb_img, depth_img
 
-    def get_pix_3dpt(self, rs, cs, filter_depth=False):
+    def get_pix_3dpt(self, rs, cs, in_world=True, filter_depth=False):
         """
+        Calculate the 3D position of pixels in the RGB image
 
         Args:
             rs (int or list or np.ndarray): rows of interest.
@@ -169,13 +176,15 @@ class RGBDCamera(Camera):
                 It can be a list or 1D numpy array
                 which contains the column indices. The default value is None,
                 which means all columns.
+            in_world (bool): if True, return the 3D position in the world frame,
+                Otherwise, return the 3D position in the camera frame
             filter_depth (bool): if True, only pixels with depth values
                 between [self.depth_min, self.depth_max]
                 will remain
 
         Returns:
             3D point coordinates of the pixels in
-                 camera frame (np.ndarray, shape: [4, N])
+                 camera frame (np.ndarray, shape: [N, 3])
         """
         assert isinstance(rs,
                           int) or isinstance(rs,
@@ -206,12 +215,20 @@ class RGBDCamera(Camera):
             img_pixs = img_pixs[:, valid]
         uv_one = np.concatenate((img_pixs,
                                  np.ones((1, img_pixs.shape[1]))))
-        uv_one_in_cam = np.dot(self.intrinsic_mat_inv, uv_one)
+        uv_one_in_cam = np.dot(self.cam_K_inv, uv_one)
         pts_in_cam = np.multiply(uv_one_in_cam, depth)
-        pts_in_cam = np.concatenate((pts_in_cam,
-                                     np.ones((1, pts_in_cam.shape[1]))),
-                                    axis=0)
-        return pts_in_cam
+        if in_world:
+            if self.cam_ext_mat is None:
+                raise ValueError('Please call set_cam_ext() first to set up'
+                                 ' the camera extrinsic matrix')
+            pts_in_cam = np.concatenate((pts_in_cam,
+                                         np.ones((1, pts_in_cam.shape[1]))),
+                                        axis=0)
+            pts_in_world = np.dot(self.cam_ext_mat, pts_in_cam)
+            pts_in_world = pts_in_world[:3, :].T
+            return pts_in_world
+        else:
+            return pts_in_cam.T
 
     def get_pcd(self, in_world=True, filter_depth=True):
         """

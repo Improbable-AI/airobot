@@ -781,7 +781,7 @@ class UR5eRobotReal(Robot):
         self.moveit_group.set_planner_id(self.moveit_planner)
         self.moveit_group.set_planning_time(1.0)
         self.moveit_scene = MoveitScene()
-        self._scale_moveit_motion(vel_scale=0.1, acc_scale=0.1)
+        self._scale_moveit_motion(vel_scale=0.2, acc_scale=0.2)
 
         # add a virtual base support frame of the real robot:
         ur_base_name = 'ur_base'
@@ -987,8 +987,6 @@ class UR5eRobotReal(Robot):
             self.gripper_tip_ori[2]
         )
 
-        print("Set TCP program: ")
-        print(tool_offset_prog)
         self._output_pendant_msg(tool_offset_prog)
         self._send_urscript(tool_offset_prog)
 
