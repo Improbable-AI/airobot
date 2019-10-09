@@ -25,11 +25,12 @@ def sin_wave(t, f, A):
 def main():
     """
     Move all the joints of the robot in a sine-wave fashion
+    
+    The pb=False flag is set because we are using the real robot
+    (pb -- pybullet)    
     """
-    robot_cfg = {'moveit_planner': 'RRTstarkConfigDefault'}
     robot = ar.create_robot('ur5e',
-                            pb=False,
-                            robot_cfg=robot_cfg)
+                            pb=False)
 
     robot.moveit_group.set_planning_time(1.0)
 

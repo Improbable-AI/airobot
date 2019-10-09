@@ -4,6 +4,18 @@ import airobot as ar
 def main():
     """
     Move the robot end effector in a straight line
+
+    The pb=False flag is set because we are using the real robot
+    (pb -- pybullet)    
+
+    First movement is executed using MoveIt (use_urscript=False)
+
+    Second movement back to home is used using direct
+    cartesian end effector commands (use_urscript=True)
+
+    Movements executed without collision checking have been verified
+    to be collision free (modify commands executed with 
+    use_urscript=True at your own risk!)
     """
     robot = ar.create_robot('ur5e', pb=False)
     robot.go_home()
