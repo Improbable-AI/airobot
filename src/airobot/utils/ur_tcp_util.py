@@ -64,14 +64,14 @@ class ParserUtils(object):
         self.logger = logging.getLogger("monitor")
         self.version = (0, 0)
         self.packet_type_map = {
-                         "RobotModeData": 0,
-                         "JointData": 1,
-                         "CartesianInfo:": 4,
-                         "MasterBoardData": 3,
-                         "ToolData": 2,
-                         "AdditionalInfo": 8,
-                         "ForceModeData": 7,
-                         }
+            "RobotModeData": 0,
+            "JointData": 1,
+            "CartesianInfo:": 4,
+            "MasterBoardData": 3,
+            "ToolData": 2,
+            "AdditionalInfo": 8,
+            "ForceModeData": 7,
+        }
 
     def parse(self, data):
         """
@@ -165,7 +165,7 @@ class ParserUtils(object):
                 allData["JointData"] = \
                     self._get_data(
                         pdata, "!iB dddffffB dddffffB dddffffB"
-                        "dddffffB dddffffB dddffffB", tmpstr)
+                               "dddffffB dddffffB dddffffB", tmpstr)
 
             elif ptype == 4:
                 if self.version < (3, 2):
@@ -178,8 +178,8 @@ class ParserUtils(object):
                         self._get_data(
                             pdata, "iBdddddddddddd",
                             ("size", "type", "X", "Y", "Z", "Rx", "Ry", "Rz",
-                            "tcpOffsetX", "tcpOffsetY", "tcpOffsetZ",
-                            "tcpOffsetRx", "tcpOffsetRy", "tcpOffsetRz"))
+                             "tcpOffsetX", "tcpOffsetY", "tcpOffsetZ",
+                             "tcpOffsetRx", "tcpOffsetRy", "tcpOffsetRz"))
 
             elif ptype == 5:
                 allData["LaserPointer(OBSOLETE)"] = \
@@ -233,9 +233,9 @@ class ParserUtils(object):
 
             elif ptype == 20:
                 tmp = self._get_data(
-                        pdata, "!iB Qbb",
-                        ("size", "type", "timestamp",
-                         "source", "robotMessageType"))
+                    pdata, "!iB Qbb",
+                    ("size", "type", "timestamp",
+                     "source", "robotMessageType"))
 
                 if tmp["robotMessageType"] == 3:
                     allData["VersionMessage"] = \
@@ -251,8 +251,8 @@ class ParserUtils(object):
                         self._get_data(
                             pdata, "!iBQbb iiAc",
                             ("size", "type", "timestamp", "source",
-                            "robotMessageType", "code", "argument",
-                            "messageText"))
+                             "robotMessageType", "code", "argument",
+                             "messageText"))
 
                 elif tmp["robotMessageType"] == 1:
                     allData["labelMessage"] = \
@@ -500,7 +500,7 @@ class SecondaryMonitor(Thread):
         self.host = host
         secondary_port = 30002  # Secondary client interface on UR
         self._socket = socket.create_connection((self.host,
-                                                secondary_port),
+                                                 secondary_port),
                                                 timeout=1)
         self._prog_queue = []
         self._prog_queue_lock = Lock()
@@ -658,11 +658,11 @@ class SecondaryMonitor(Thread):
     def get_cartesian_info(self, wait=False):
         """
         Get end effector information from robot
-        
+
         Keyword Arguments:
             wait (bool): Boolean to tell whether to block
                 until data is returned (default: {False})
-        
+
         Returns:
             dict: Value in the state dict with the CartesianInfo data
         """
@@ -677,7 +677,7 @@ class SecondaryMonitor(Thread):
     def get_all_data(self, wait=False):
         """
         Return all most recent data in big dictionary
-        
+
         Keyword Arguments:
             wait (bool): Boolean to tell whether to block
                 until data is returned (default: {False})
@@ -743,7 +743,7 @@ class SecondaryMonitor(Thread):
         if wait:
             self.wait()
         with self._dictLock:
-            return (self._dict["MasterBoardData"]["analogInput0"], 
+            return (self._dict["MasterBoardData"]["analogInput0"],
                     self._dict["MasterBoardData"]["analogInput1"])
 
     def is_program_running(self, wait=False):

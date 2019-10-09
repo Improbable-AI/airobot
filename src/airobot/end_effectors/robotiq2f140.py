@@ -1,10 +1,9 @@
 import rospy
-
 from std_msgs.msg import String
 
 from airobot.end_effectors.ee import EndEffector
-from airobot.utils.urscript_util import Robotiq2F140URScript
 from airobot.utils.common import clamp
+from airobot.utils.urscript_util import Robotiq2F140URScript
 
 
 class Robotiq2F140(EndEffector):
@@ -13,13 +12,14 @@ class Robotiq2F140(EndEffector):
     it is attached to UR5e arm. Communication with the gripper
     is either through ROS over through a TCP/IP socket
     """
+
     def __init__(self, cfgs, tcp_monitor=None):
         """
         Constructor for Robotiq2F140 class
 
         Args:
             cfgs (YACS CfgNode): configurations for the gripper
-            use_tcp (bool, optional): Whether to use TCP/IP 
+            use_tcp (bool, optional): Whether to use TCP/IP
                 monitor to communicate or not. Defaults to False.
             tcp_monitor (SecondaryMonitor): Interface to TCP
                 socket, if using TCP/IP. Defaults to None
@@ -51,7 +51,7 @@ class Robotiq2F140(EndEffector):
             use_tcp (bool, optional): Whether to use TCP/IP
                 monitor or not, Defaults to False
         """
-        self.use_tcp = use_tcp        
+        self.use_tcp = use_tcp
 
     def activate(self):
         """
@@ -126,7 +126,7 @@ class Robotiq2F140(EndEffector):
             socket_name=self.cfgs.GRIPPER.SOCKET_NAME)
 
         urscript.sleep(0.1)
-        return urscript        
+        return urscript
 
     def _initialize_ros_comm(self):
         """

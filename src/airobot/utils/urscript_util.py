@@ -130,6 +130,7 @@ class Robotiq2F140URScript(URScript):
     messages to send to the UR robot, for setting gripper
     related variables
     """
+
     def __init__(self,
                  socket_host,
                  socket_port,

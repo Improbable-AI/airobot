@@ -1,9 +1,10 @@
 import sys
+import time
 
 import moveit_commander
 from geometry_msgs.msg import PoseStamped
 from moveit_commander import conversions
-import time
+
 
 class MoveitScene(object):
     """
@@ -31,13 +32,18 @@ class MoveitScene(object):
                 or euler angles ([roll, pitch, yaw])
             size (float or list or tuple): size of the object.
                 if the object is a plane, size should be None
-                if the object is a box, size can be a float, which means the edge
-                    length of a cube. size can also be a list or tuple of length 3,
+                if the object is a box, size can be a float,
+                    which means the edge
+                    length of a cube. size can also be a list
+                     or tuple of length 3,
                     the it specifies the 3 edge lengths of the cuboid
-                if the object is a sphere, size is a float, which means the radius
+                if the object is a sphere, size is a float,
+                which means the radius
             obj_type (str): one of ['sphere', 'box', 'plane']
-            ref_frame (str): reference frame on which the pos and ori are specified
-            normal (list or tuple): only used if the object is a plane. It means the
+            ref_frame (str): reference frame on which
+                the pos and ori are specified
+            normal (list or tuple): only used if the
+                object is a plane. It means the
                 normal direction of the plane
 
         """
@@ -90,7 +96,8 @@ class MoveitScene(object):
             obj_name (str): object name
             pos (list): position of the object with respect to the ref_frame
             ori (list): orientation of the object with respect to the ref_frame
-            size (float or list or tuple): size can be a float, which means the edge
+            size (float or list or tuple): size can be a
+                float, which means the edge
                 length of a cube. size can also be a list or tuple of length 3,
                 the it specifies the 3 edge lengths of the cuboid
 
@@ -157,7 +164,8 @@ class MoveitScene(object):
             ref_frame: the parent link at which the object is attached to
             obj_name: the object name
             delete: If True, the object will be deleted from the scene.
-                Otherwise, the object will be unlinked from the parent link only,
+                Otherwise, the object will be unlinked
+                from the parent link only,
                 but the object is still there in the scene.
 
         """

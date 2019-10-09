@@ -207,7 +207,8 @@ class UR5eRobotReal(Robot):
             self._send_urscript(prog)
         else:
             # self._pub_joint_vel(tgt_vel)
-            raise NotImplementedError('set_jvel only works with use_urscript=True')
+            raise NotImplementedError('set_jvel only works '
+                                      'with use_urscript=True')
 
         if wait:
             success = self._wait_to_reach_jnt_goal(tgt_vel,
@@ -692,7 +693,7 @@ class UR5eRobotReal(Robot):
             if time.time() - start_time > self.cfgs.TIMEOUT_LIMIT:
                 pt_str = 'Unable to move to end effector position:' \
                          '%s and orientaion: %s within %f s' % \
-                          (str(pos), str(ori), self.cfgs.TIMEOUT_LIMIT)
+                         (str(pos), str(ori), self.cfgs.TIMEOUT_LIMIT)
                 print_red(pt_str)
                 return success
             if self._reach_ee_goal(pos, ori):
@@ -882,7 +883,7 @@ class UR5eRobotReal(Robot):
             return self.tcp_monitor.running
         else:
             # raise ValueError('No TCP connection established')
-            return True  # TODO add this functionality with urscript/ROS        
+            return True  # TODO add this functionality with urscript/ROS
 
     def _scale_moveit_motion(self, vel_scale=1.0, acc_scale=1.0):
         """

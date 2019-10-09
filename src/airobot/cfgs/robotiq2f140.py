@@ -21,7 +21,7 @@ _C.COMMAND_TOPIC = '/ur_driver/URScript'
 # default maximum values for gripper state varibles
 # minimum values are all 0
 _C.POSITION_RANGE = 255
-_C.POSITION_SCALING = (255/0.7)
+_C.POSITION_SCALING = (255 / 0.7)
 
 
 def get_robotiq2f140_cfg():

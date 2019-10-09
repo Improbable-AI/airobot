@@ -179,7 +179,7 @@ class UR5eRobotPybullet(Robot):
                                         self.arm_jnt_ids,
                                         p.POSITION_CONTROL,
                                         targetPositions=tgt_pos,
-                                        forces=self._max_torques[:len(self.arm_jnt_names)])
+                                        forces=self._max_torques[:6])
         else:
             if joint_name not in self.arm_jnt_names_set:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -229,7 +229,7 @@ class UR5eRobotPybullet(Robot):
                                         self.arm_jnt_ids,
                                         p.VELOCITY_CONTROL,
                                         targetVelocities=tgt_vel,
-                                        forces=self._max_torques[:len(self.arm_jnt_names)])
+                                        forces=self._max_torques[:6])
         else:
             if joint_name not in self.arm_jnt_names_set:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -301,7 +301,8 @@ class UR5eRobotPybullet(Robot):
         Move the end effector to the specifed pose
         Args:
             pos (list or np.ndarray): position (shape: [3,])
-            ori (list or np.ndarray): orientation. It can be rotation matrix (shape: [3,3]),
+            ori (list or np.ndarray): orientation.
+                It can be rotation matrix (shape: [3,3]),
                 quaternion ([qx, qy, qz, qw], shape: [4,]),
                 or euler angles ([roll, pitch, yaw], shape: [3,])
 
@@ -319,9 +320,11 @@ class UR5eRobotPybullet(Robot):
         orientation
 
         Args:
-            delta_xyz (list or np.ndarray): movement in x, y, z directions (shape: [3,])
-            eef_step (float): interpolation interval along delta_xyz. Interpolate
-                a point every eef_step distance between the two end points
+            delta_xyz (list or np.ndarray): movement in x, y, z
+                directions (shape: [3,])
+            eef_step (float): interpolation interval along delta_xyz.
+                Interpolate a point every eef_step distance
+                between the two end points
 
         Returns:
             A boolean variable representing if the action is successful at
@@ -469,9 +472,12 @@ class UR5eRobotPybullet(Robot):
 
         Returns:
             np.ndarray: x, y, z position of the EE (shape: [3,])
-            np.ndarray: quaternion representation of the EE orientation (shape: [4,])
-            np.ndarray: rotation matrix representation of the EE orientation (shape: [3, 3])
-            np.ndarray: euler angle representation of the EE orientation (roll, pitch, yaw with
+            np.ndarray: quaternion representation of the
+                EE orientation (shape: [4,])
+            np.ndarray: rotation matrix representation of the
+                EE orientation (shape: [3, 3])
+            np.ndarray: euler angle representation of the
+                EE orientation (roll, pitch, yaw with
                 static reference frame) (shape: [3,])
         """
         info = p.getLinkState(self.robot_id, self.ee_link_id)
@@ -741,7 +747,7 @@ class UR5eRobotPybullet(Robot):
             self.jnt_to_id[jnt] for jnt in self.gripper_jnt_names
         ]
 
-    def _set_gripper_pos(self, position):
+    def _set_gripper_pos(self, position, wait=True):
         """
         Set the gripper position. We make a separate function apart from
         set_jpos to make the api consistent with the real robot. set_jpos
@@ -757,8 +763,8 @@ class UR5eRobotPybullet(Robot):
         joint_name = self.gripper_jnt_names[0]
         gripper_pos = position[-1]
         tgt_pos = arutil.clamp(gripper_pos,
-                        self.gripper_open_angle,
-                        self.gripper_close_angle)
+                               self.gripper_open_angle,
+                               self.gripper_close_angle)
         max_torque = self._max_torques[-1]
         jnt_id = self.jnt_to_id[joint_name]
         p.setJointMotorControl2(self.robot_id,

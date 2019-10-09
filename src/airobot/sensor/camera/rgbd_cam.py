@@ -9,9 +9,9 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image
 from tf import TransformListener
-
 from tf.transformations import euler_matrix
 from tf.transformations import quaternion_matrix
+
 from airobot.sensor.camera.camera import Camera
 
 
@@ -68,7 +68,7 @@ class RGBDCamera(Camera):
         self.cam_K_inv = np.linalg.inv(self.cam_K)
 
         img_pixs = np.mgrid[0: self.cam_height,
-                   0: self.cam_width].reshape(2, -1)
+                            0: self.cam_width].reshape(2, -1)
         img_pixs[[0, 1], :] = img_pixs[[1, 0], :]
         self.uv_one = np.concatenate((img_pixs,
                                       np.ones((1, img_pixs.shape[1]))))
@@ -120,7 +120,8 @@ class RGBDCamera(Camera):
             self.cam_ext_mat = cam_ext
         else:
             if pos is None or ori is None:
-                raise ValueError('If cam_ext is not provided, both pos and ori need'
+                raise ValueError('If cam_ext is not provided, '
+                                 'both pos and ori need'
                                  'to be provided.')
             if ori.size == 3:
                 # [roll, pitch, yaw]
