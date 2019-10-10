@@ -251,18 +251,13 @@ class UR5eRobotReal(Robot):
         if ori is None:
             pose = self.get_ee_pose()  # last index is euler angles
             quat = pose[1]
-            euler = pose[-1]
         else:
             ori = np.array(ori)
             if ori.size == 4:
                 quat = ori
-                # assume incoming orientation is quaternion
-                euler = arutil.quat2euler(quat)
             elif ori.size == 3:
-                euler = ori
-                quat = arutil.euler2quat(euler)
+                quat = arutil.euler2quat(ori)
             elif ori.shape == (3, 3):
-                euler = arutil.rot2euler(ori)
                 quat = arutil.rot2quat(ori)
             else:
                 raise ValueError('Orientaion should be quaternion,'
