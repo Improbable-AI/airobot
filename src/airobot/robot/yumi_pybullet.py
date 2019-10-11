@@ -692,9 +692,9 @@ class ABBYumiPyBullet(Robot):
         self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
 
         # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
-        self._max_torques = [150, 150, 150, 28, 28, 28, 20, 150, 150, 150, 28, 28, 28, 20]
+        self._max_torques = [10]*14
         # a random value for robotiq joints
-        self._max_torques.append(20)
+        # self._max_torques.append(20)
         self.camera = PyBulletCamera(p, self.cfgs)
 
     def _rt_simulation(self):
