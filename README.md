@@ -3,6 +3,7 @@
 - [Installation](#installation)
 - [Getting Started](#getting-started)
 - [Credits](#credits)
+- [Citation](#citation)
 - [License](#license)
 
 ## Installation
@@ -28,6 +29,18 @@ robot.move_ee_xyz([0.1, 0.1, 0.1])
 * [Pulkit Agrawal](https://www.linkedin.com/in/pulkit-agrawal-967a4218/)
 
 **AIRobot** is currently under development and used internally by Prof. Pulkit Agrawal's lab only. Please do not distribute the code publicly without permission from Prof. Pulkit Agrawal.
+
+## Citation
+
+If you use AIRobot in your research, please use the following BibTeX entry.
+```
+@misc{chen2019airobot,
+  author =       {Tao Chen and Anthony Simeonov and Pulkit Agrawal},
+  title =        {{AIRobot}},
+  howpublished = {\url{https://github.com/Improbable-AI/airobot}},
+  year =         {2019}
+}
+```
 
 ## License
 MIT license
