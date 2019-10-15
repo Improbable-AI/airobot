@@ -82,15 +82,17 @@ class ABBYumiPyBullet(Robot):
         plane_ori = arutil.euler2quat([0, 0, 0])
         self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
-        ur_pos = [0, 0, 1]
-        ur_ori = arutil.euler2quat([0, 0, 0])
+        # align world frame with yumi body
+        yumi_pos = self.cfgs.BASE_FRAME_OFFSET
+        yumi_ori = arutil.euler2quat([0, 0, 0])
         if self.self_collision:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       ur_pos,
-                                       ur_ori,
+                                       yumi_pos,
+                                       yumi_ori,
                                        flags=p.URDF_USE_SELF_COLLISION)
         else:
-            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF, ur_pos, ur_ori)
+            self.robot_id = p.loadURDF(
+                self.cfgs.PYBULLET_URDF, yumi_pos, yumi_ori)
         self._build_jnt_id()
         if self.self_collision:
             pass
@@ -531,7 +533,8 @@ class ABBYumiPyBullet(Robot):
         """
         return self.camera.get_images(get_rgb, get_depth)
 
-    def compute_ik(self, pos, ori=None, arm='right', *args, **kwargs):
+    def compute_ik(self, pos, ori=None, arm='right', nullspace=True,
+                   *args, **kwargs):
         """
         Compute the inverse kinematics solution given the
         position and orientation of the end effector
@@ -544,7 +547,7 @@ class ABBYumiPyBullet(Robot):
                 or rotation matrix (shape: [3, 3]).
 
         Returns:
-            inverse kinematics solution (joint angles, list)
+            list: inverse kinematics solution (shape: [14,])
         """
         if (arm != 'right' and arm != 'left'):
             print('arm must be either "right" or "left"')
@@ -564,22 +567,74 @@ class ABBYumiPyBullet(Robot):
             elif ori.size != 4:
                 raise ValueError('Orientation should be rotation matrix, '
                                  'euler angles or quaternion')
-            jnt_poss = p.calculateInverseKinematics(self.robot_id,
-                                                    ee_link_id,
-                                                    pos,
-                                                    ori,
-                                                    jointDamping=self._ik_jds)
+            if nullspace:
+                ll, ul, jr, rp = self._get_joint_ranges()
+                jnt_poss = p.calculateInverseKinematics(
+                    self.robot_id,
+                    ee_link_id,
+                    pos,
+                    ori,
+                    jointDamping=self._ik_jds,
+                    lowerLimits=ll,
+                    upperLimits=ul,
+                    jointRanges=jr,
+                    restPoses=rp)
+            else:
+                jnt_poss = p.calculateInverseKinematics(
+                    self.robot_id,
+                    ee_link_id,
+                    pos,
+                    ori,
+                    jointDamping=self._ik_jds)
         else:
-            jnt_poss = p.calculateInverseKinematics(self.robot_id,
-                                                    ee_link_id,
-                                                    pos,
-                                                    jointDamping=self._ik_jds)
+            if nullspace:
+                ll, ul, jr, rp = self._get_joint_ranges()
+                jnt_poss = p.calculateInverseKinematics(
+                    self.robot_id,
+                    ee_link_id,
+                    pos,
+                    jointDamping=self._ik_jds,
+                    lowerLimits=ll,
+                    upperLimits=ul,
+                    jointRanges=jr,
+                    restPoses=rp
+                    )
+            else:
+                jnt_poss = p.calculateInverseKinematics(
+                    self.robot_id,
+                    ee_link_id,
+                    pos,
+                    jointDamping=self._ik_jds)
         jnt_poss = list(jnt_poss)
-        if arm == 'right':
-            jnt_poss = jnt_poss[:7]
-        elif arm == 'left':
-            jnt_poss = jnt_poss[7:]
+
         return jnt_poss
+
+    def _get_joint_ranges(self):
+        """
+        Computes the optional parameters needed to compute null-space
+        inverse kinematics
+
+        Returns:
+            lower_limits (list): Lower joint limits, per joint
+            upper_limits (list): upper joint limits, per joint
+            joint_ranges (list): joint range, per joint
+            rest_poses (list): poses to try to stay near for IK solution
+        """
+        lower_limits = []
+        upper_limits = []
+        joint_ranges = []
+        rest_poses = []
+
+        current_positions = p.getJointStates(self.robot_id, self.arm_jnt_ids)
+
+        for i in range(len(self.arm_jnt_ids)):
+            # rest_pose = p.getJointState(self.robot_id, i)[0]
+            lower_limits.append(-2.8)
+            upper_limits.append(2.8)
+            joint_ranges.append(5.4)
+            rest_poses.append(current_positions[i])
+
+        return lower_limits, upper_limits, joint_ranges, rest_poses
 
     def _wait_to_reach_jnt_goal(self, goal, joint_name=None, mode='pos'):
         """
@@ -674,12 +729,12 @@ class ABBYumiPyBullet(Robot):
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
 
         self.arm_jnt_names = [
-            'yumi_joint_1_r', 'yumi_joint_2_r', 'yumi_joint_3_r',
-            'yumi_joint_4_r', 'yumi_joint_5_r', 'yumi_joint_6_r',
-            'yumi_joint_7_r',
-            'yumi_joint_1_l', 'yumi_joint_2_l', 'yumi_joint_3_l',
-            'yumi_joint_4_l', 'yumi_joint_5_l', 'yumi_joint_6_l',
-            'yumi_joint_7_l'
+            'yumi_joint_1_r', 'yumi_joint_2_r', 'yumi_joint_7_r',
+            'yumi_joint_3_r', 'yumi_joint_4_r', 'yumi_joint_5_r',
+            'yumi_joint_6_r',
+            'yumi_joint_1_l', 'yumi_joint_2_l', 'yumi_joint_7_l',
+            'yumi_joint_3_l', 'yumi_joint_4_l', 'yumi_joint_5_l',
+            'yumi_joint_6_l'
         ]
 
         self.ee_link_jnt_r = self.cfgs.ROBOT_EE_FRAME_JOINT_RIGHT
@@ -691,10 +746,7 @@ class ABBYumiPyBullet(Robot):
         self.rvl_joint_names = self.arm_jnt_names
         self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
 
-        # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
-        self._max_torques = [10]*14
-        # a random value for robotiq joints
-        # self._max_torques.append(20)
+        self._max_torques = [150]*3 + [28]*4 + [150]*3 + [28]*4
         self.camera = PyBulletCamera(p, self.cfgs)
 
     def _rt_simulation(self):
