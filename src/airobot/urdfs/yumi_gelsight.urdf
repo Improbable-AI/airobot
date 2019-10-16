@@ -567,6 +567,13 @@
       </geometry>
       <material name="Red"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_top.stl"/>
+      </geometry>
+      <material name="Red"/>
+    </collision>    
   </link>
   <joint name="yumi_rail_r" type="fixed">
     <parent link="yumi_palm_r"/>
@@ -581,6 +588,13 @@
       </geometry>
       <material name="Grey"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_rail.stl"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>    
   </link>
   <joint name="yumi_palm_body_r" type="fixed">
     <parent link="yumi_palm_r"/>
@@ -597,6 +611,13 @@
       </geometry>
       <material name="Red"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_body.stl"/>
+      </geometry>
+      <material name="Red"/>
+    </collision>    
   </link>
   <!-- Yumi metal -->
   <joint name="yumi_metal_bottom_r" type="fixed">
@@ -617,6 +638,13 @@
       </geometry>
       <material name="Grey"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_shield.stl"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>    
   </link>
   <!-- Yumi gel -->
   <joint name="yumi_gel_r" type="fixed">
@@ -637,6 +665,13 @@
       </geometry>
       <material name="White"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_gel.stl"/>
+      </geometry>
+      <material name="White"/>
+    </collision>    
   </link>
   <!-- Left tip -->
   <joint name="yumi_tip_r" type="fixed">
@@ -665,6 +700,13 @@
       </geometry>
       <material name="Red"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_top.stl"/>
+      </geometry>
+      <material name="Red"/>
+    </collision>    
   </link>
   <joint name="yumi_rail_l" type="fixed">
     <parent link="yumi_palm_l"/>
@@ -679,6 +721,13 @@
       </geometry>
       <material name="Grey"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_rail.stl"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>    
   </link>
   <joint name="yumi_palm_body_l" type="fixed">
     <parent link="yumi_palm_l"/>
@@ -695,6 +744,13 @@
       </geometry>
       <material name="Red"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_body.stl"/>
+      </geometry>
+      <material name="Red"/>
+    </collision>    
   </link>
   <!-- Yumi metal -->
   <joint name="yumi_metal_bottom_l" type="fixed">
@@ -715,6 +771,13 @@
       </geometry>
       <material name="Grey"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_shield.stl"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>    
   </link>
   <!-- Yumi gel -->
   <joint name="yumi_gel_l" type="fixed">
@@ -735,6 +798,13 @@
       </geometry>
       <material name="White"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_gel.stl"/>
+      </geometry>
+      <material name="White"/>
+    </collision>    
   </link>
   <!-- Left tip -->
   <joint name="yumi_tip_l" type="fixed">
@@ -758,6 +828,13 @@
       </geometry>
       <material name="Grey"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/table/table_top.stl"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>    
   </link>
   <!-- Table base -->
   <!-- <joint name="yumi_body_to_table_base" type="fixed">

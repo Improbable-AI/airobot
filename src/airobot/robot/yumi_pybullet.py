@@ -46,9 +46,9 @@ class ABBYumiPyBullet(Robot):
         self.self_collision = self_collision
         self.p = p
         if self._render:
-            p.connect(p.GUI)
+            self.client_id = p.connect(p.GUI)
         else:
-            p.connect(p.DIRECT)
+            self.client_id = p.connect(p.DIRECT)
             # TODO Check if EGL is working properly
             #  EGL rendering seems to give different images
             # # using the eglRendererPlugin (hardware OpenGL acceleration)
@@ -119,6 +119,14 @@ class ABBYumiPyBullet(Robot):
             self._step_sim_mode = True
             if self._render:
                 p.setRealTimeSimulation(0)
+
+    def load_object(self, urdf, pos, ori):
+        p.loadURDF(
+            urdf,
+            pos,
+            ori,
+            flags=p.URDF_USE_SELF_COLLISION
+        )
 
     def set_jpos(self, position, joint_name=None, wait=True, arm=None,
                  *args, **kwargs):
@@ -746,7 +754,8 @@ class ABBYumiPyBullet(Robot):
         self.rvl_joint_names = self.arm_jnt_names
         self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
 
-        self._max_torques = [150]*3 + [28]*4 + [150]*3 + [28]*4
+        max_torques = [140]*3 + [20]*4
+        self._max_torques =  max_torques + max_torques
         self.camera = PyBulletCamera(p, self.cfgs)
 
     def _rt_simulation(self):
