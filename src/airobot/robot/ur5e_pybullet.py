@@ -79,11 +79,11 @@ class UR5eRobotPybullet(Robot):
         p.resetSimulation()
 
         plane_pos = [0, 0, 0]
-        plane_ori = arutil.quat2euler([0, 0, 0])
+        plane_ori = arutil.euler2quat([0, 0, 0])
         self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
         ur_pos = [0, 0, 1]
-        ur_ori = arutil.quat2euler([0, 0, 0])
+        ur_ori = arutil.euler2quat([0, 0, 0])
         if self.self_collision:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
                                        ur_pos,
