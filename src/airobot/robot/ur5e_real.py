@@ -149,7 +149,7 @@ class UR5eRobotReal(Robot):
 
             if wait:
                 success = self._wait_to_reach_jnt_goal(
-                    tgt_pos,
+                    position,
                     joint_name=joint_name,
                     mode='pos')
         else:
@@ -620,6 +620,9 @@ class UR5eRobotReal(Robot):
         """
         success = False
         start_time = time.time()
+        vel_stop_time = None
+        if joint_name is not None and not isinstance(goal, float):
+            raise ValueError('Only one goal should be specified for a single joint!')
         while True:
             if not self._is_running():
                 raise RuntimeError("Robot stopped")
@@ -630,9 +633,20 @@ class UR5eRobotReal(Robot):
                                            self.cfgs.TIMEOUT_LIMIT)
                 print_red(pt_str)
                 return success
-            if self._reach_jnt_goal(goal, joint_name, mode=mode):
+            reach_goal = self._reach_jnt_goal(goal, joint_name, mode=mode)
+            if reach_goal:
                 success = True
                 break
+            if mode == 'pos':
+                jnt_vel = self.get_jvel(joint_name)
+                if np.max(np.abs(jnt_vel)) < 0.001 and vel_stop_time is None:
+                    vel_stop_time = time.time()
+                elif np.max(np.abs(jnt_vel)) > 0.001:
+                    vel_stop_time = None
+                if vel_stop_time is not None and time.time() - vel_stop_time > 1.5:
+                    pt_str = 'Unable to move to joint goals [mode: %s] (%s)' % (mode, str(goal))
+                    print_red(pt_str)
+                    return success
             time.sleep(0.001)
         return success
 
