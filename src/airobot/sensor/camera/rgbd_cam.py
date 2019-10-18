@@ -63,9 +63,15 @@ class RGBDCamera(Camera):
                                                                 queue_size=2,
                                                                 slop=0.2)
         self.sync.registerCallback(self._sync_callback)
-        time.sleep(2)
         self.depth_min = self.cfgs.CAM_REALSENSE.DEPTH_MIN
         self.depth_max = self.cfgs.CAM_REALSENSE.DEPTH_MAX
+        start_time = time.time()
+        while True:
+            if self.cam_K is not None and self.rgb_img is not None:
+                break
+            time.sleep(0.02)
+            if time.time() - start_time > 4:
+                raise RuntimeError('Cannot fetch the camera info and images!')
 
         self.cam_K_inv = np.linalg.inv(self.cam_K)
 
