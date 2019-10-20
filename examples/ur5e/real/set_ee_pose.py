@@ -1,5 +1,6 @@
-import airobot as ar
 import time
+
+import airobot as ar
 
 
 def main():

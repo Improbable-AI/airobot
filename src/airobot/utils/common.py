@@ -4,6 +4,8 @@ from __future__ import print_function
 
 import PyKDL as kdl
 import numpy as np
+import shutil
+import os
 from scipy.spatial.transform import Rotation as R
 
 
@@ -275,3 +277,17 @@ def print_cyan(skk):
         skk (str): text to be printed
     """
     print("\033[96m {}\033[00m".format(skk))
+
+
+def create_folder(path, delete=True):
+    """
+    Create a new folder
+
+    Args:
+        path (str): path of the folder
+        delete (bool): if delete=True, then if the path already
+            exists, the folder will be deleted and recreated.
+    """
+    if delete and os.path.exists(path):
+        shutil.rmtree(path)
+    os.makedirs(path, exist_ok=True)

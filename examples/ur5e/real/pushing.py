@@ -18,10 +18,14 @@ import airobot as ar
 
 
 def signal_handler(sig, frame):
+    """
+    Capture keyboard interruption signal
+    """
     print('Exit')
     sys.exit(0)
 
 
+# range for x and y coordinates
 Y_range = [-0.7, 0.7]
 X_range = [0, 1.1]
 
@@ -29,6 +33,20 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def filter_points(pts, colors, z_lowest=0.01):
+    """
+    Filter the point cloud based on the x, y, z range.
+    X and Y range are defined as the global variables.
+    Z range only has a lower bound which is z_lowest.
+
+    Args:
+        pts (np.ndarray): point cloud (shape: [N, 3])
+        colors (np.ndarray): color of the point cloud (shape: [N, 3])
+        z_lowest (float): the smallest acceptable z coordinate
+
+    Returns:
+        np.ndarray: point cloud after filter (shape: [N, 3])
+        np.ndarray: color of the points (shape: [N, 3])
+    """
     valid = pts[:, 2] > z_lowest
     valid = np.logical_and(valid,
                            pts[:, 0] > X_range[0])
@@ -44,6 +62,21 @@ def filter_points(pts, colors, z_lowest=0.01):
 
 
 def segment_objects(pts):
+    """
+    Use DBSCAN clustering algorithm to cluster the 2D points
+
+    Args:
+        pts (np.ndarray): 2D points [x, y], (shape: [N, 2])
+
+    Returns:
+        np.ndarray: Cluster labels for each point in the
+            dataset given to fit(). Noisy samples are given
+             the label -1 (shape: [N])
+        np.ndarray: A binary array that's of the same shape
+            as the labels and it indicates whether the sample
+             point is a core sample (shape: [N])
+
+    """
     db = DBSCAN(eps=0.02, min_samples=15).fit(pts)
     core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
     core_samples_mask[db.core_sample_indices_] = True
@@ -52,6 +85,25 @@ def segment_objects(pts):
 
 
 def draw_segments(pts, labels, core_samples_mask):
+    """
+    Draw the 2D clustering result and save it as an image
+
+    Also, it filters the labels so that only the labels with
+    the number of samples greater than a threshold will be remained
+
+    Args:
+        pts (np.ndarray): 2D points [x, y], (shape: [N, 2])
+        labels (np.ndarray): Cluster labels for each point in the
+            dataset given to fit(). Noisy samples are given
+             the label -1 (shape: [N])
+        core_samples_mask (np.ndarray): A binary array that's of the same shape
+            as the labels and it indicates whether the sample
+             point is a core sample (shape: [N])
+
+    Returns:
+        list: unique and useful labels (labels with
+            the number of samples greater than a threshold will be remained)
+    """
     num_threshold = 400
     plt.clf()
     plt.scatter(pts[:, 0], pts[:, 1])
@@ -90,6 +142,28 @@ def draw_segments(pts, labels, core_samples_mask):
 
 
 def sample_pt(pts, labels, useful_labelset, z_lowest):
+    """
+    Get the end effector's initial position where the gripper
+    will be above the object and the start position on the
+    table to push the object, and the center point
+    of the obejct's point cloud
+
+
+    Args:
+        pts (np.ndarray): 3D point cloud (shape: [N, 3])
+        labels (np.ndarray): Cluster labels for each point in the
+            dataset. Noisy samples are given the label -1 (shape: [N])
+        useful_labelset (list): useful and unique label set
+        z_lowest (float): minimum acceptable z coordinate for the 3D points
+
+    Returns:
+        np.ndarray: initial positin for the gripper so that the gripper
+            will be directly above the object (shape: [3,])
+        np.ndarray: start position that's close to the object
+            for pushing (shape: [3,])
+        np.ndarray: center point of the object's point cloud (shape: [3,])
+
+    """
     tgt_label = np.random.choice(useful_labelset, 1)[0]
     tgt_pts = pts[labels == tgt_label]
     center = np.mean(tgt_pts, axis=0)
@@ -112,9 +186,18 @@ def sample_pt(pts, labels, useful_labelset, z_lowest):
 
 
 def push(bot, reset_pos, z_lowest=-0.17):
+    """
+    Start push objects
+
+    Args:
+        bot (airobot.robot.Robot): robot instance
+        reset_pos (np.ndarray): reset position of the gripper (shape: [3,])
+        z_lowest (float): minimum acceptable z coordinate for the 3D points of objects
+            This is a simple way to filter out the table. Basically, all points with
+            z coordinate (e.g., the table) less than this value will be removed.
+
+    """
     cur_pos = bot.get_ee_pose()[0]
-    # if ee_pose[0][2] < 0.20:
-    #     bot.go_home()
     bot.move_ee_xyz(reset_pos - cur_pos)
     pts, colors = bot.camera.get_pcd(in_world=True,
                                      filter_depth=True)
@@ -124,10 +207,9 @@ def push(bot, reset_pos, z_lowest=-0.17):
     useful_labelset = draw_segments(X, labels, core_samples_mask)
     start_pt, mid_pt, center = sample_pt(pts, labels, useful_labelset,
                                          z_lowest=z_lowest)
-    # embed()
+
     print("Going to: ", start_pt.tolist())
     result = bot.move_ee_xyz(start_pt - reset_pos)
-    # result = bot.set_ee_pose(pos=start_pt, ori=[-0.7071, 0.7071, 0, 0])
     if not result:
         return
     down_disp = mid_pt - start_pt
@@ -138,6 +220,15 @@ def push(bot, reset_pos, z_lowest=-0.17):
 
 
 def main():
+    """
+    Push the objects on the table randomly
+
+    The robot will first go to a reset position so that the robot
+    arm does not block the camera's view. And a clustering alogrithm
+    is used to cluster the 3D point cloud of the objects on the table.
+    Then the gripper pushs a randomly selected object on the table.
+    And the gripper goes back to a reset position. 
+    """
     parser = argparse.ArgumentParser(description='Argument Parser')
     parser.add_argument('--z_min', type=float, default=-0.15,
                         help='minimium acceptable z value')
@@ -148,14 +239,15 @@ def main():
 
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')
-    calib_file_path = os.path.join(data_path, 'calib_base_to_cam.json')
+    calib_file_path = os.path.join(data_path, 'result', 'ur5e',
+                                   'calib_base_to_cam.json')
     with open(calib_file_path, 'r') as f:
         calib_data = json.load(f)
     cam_pos = np.array(calib_data['b_c_transform']['position'])
     cam_ori = np.array(calib_data['b_c_transform']['orientation'])
 
     bot.camera.set_cam_ext(cam_pos, cam_ori)
-    # bot.go_home()
+    bot.go_home()
     bot.gripper.activate()
     bot.gripper.close()
 

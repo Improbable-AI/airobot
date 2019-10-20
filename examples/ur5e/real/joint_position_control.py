@@ -8,8 +8,8 @@ def main():
     This function demonstrates how to move the robot arm
     to the desired joint positions
 
-    The pb=False flag is set because we are using the real robot
-    (pb -- pybullet)
+    The pb=False flag (in ar.create_robot())is set because
+    we are using the real robot (pb -- pybullet)
 
     The robot starts at home, and moves to a new set of joint
     angles with comm_mode use_urscript=False
