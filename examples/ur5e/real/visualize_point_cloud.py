@@ -32,7 +32,8 @@ def main():
                                        'use_arm': False})
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')
-    calib_file_path = os.path.join(data_path, 'calib_base_to_cam.json')
+    calib_file_path = os.path.join(data_path, 'result', 'ur5e',
+                                   'calib_base_to_cam.json')
     with open(calib_file_path, 'r') as f:
         calib_data = json.load(f)
     cam_pos = np.array(calib_data['b_c_transform']['position'])
