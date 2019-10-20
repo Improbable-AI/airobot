@@ -6,8 +6,9 @@ import airobot as ar
 
 def main():
     """
-    This function demonstrates how the pitch angle changes
-    the camera view
+    This function demonstrates how the pitch angle (
+     the pitch angle that is defined in robot.setup_camera) changes
+    the camera view.
     """
     robot = ar.create_robot('ur5e',
                             robot_cfg={'render': True})

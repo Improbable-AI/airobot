@@ -6,7 +6,8 @@ import airobot as ar
 
 def main():
     """
-    This function demonstrates how the yaw angle changes
+    This function demonstrates how the yaw angle (
+     the yaw angle that is defined in robot.setup_camera) changes
     the camera view
     """
     robot = ar.create_robot('ur5e',

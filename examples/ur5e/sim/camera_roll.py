@@ -6,7 +6,8 @@ import airobot as ar
 
 def main():
     """
-    This function demonstrates how the roll angle changes
+    This function demonstrates how the roll angle (
+     the roll angle that is defined in robot.setup_camera) changes
     the camera view (seems like no effect)
     """
     robot = ar.create_robot('ur5e',
