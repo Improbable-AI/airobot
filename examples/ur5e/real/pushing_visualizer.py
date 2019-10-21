@@ -12,8 +12,9 @@ import numpy as np
 import open3d
 
 from airobot import Robot
-from .pushing import filter_points
+from pushing import filter_points
 
+sys.path.append(os.path.dirname(__file__))
 
 def signal_handler(sig, frame):
     print('Exit')
@@ -53,8 +54,8 @@ def main():
     vis = open3d.visualization.Visualizer()
     vis.create_window("Point Cloud")
     pcd = open3d.geometry.PointCloud()
-    pts, colors = robot.camera.get_pcd(in_world=True,
-                                       filter_depth=True)
+    pts, colors = robot.cam.get_pcd(in_world=True,
+                                    filter_depth=True)
     pts, colors = filter_points(pts, colors, z_lowest=args.z_min)
     pcd.points = open3d.utility.Vector3dVector(pts)
     pcd.colors = open3d.utility.Vector3dVector(colors / 255.0)

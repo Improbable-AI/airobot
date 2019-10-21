@@ -27,9 +27,9 @@ import airobot.utils.common as arutil
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_ee_goal
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
-from airobot.utils.common import joints_to_kdl
-from airobot.utils.common import kdl_array_to_numpy
-from airobot.utils.common import kdl_frame_to_numpy
+from airobot.utils.ros_util import joints_to_kdl
+from airobot.utils.ros_util import kdl_array_to_numpy
+from airobot.utils.ros_util import kdl_frame_to_numpy
 from airobot.utils.common import print_red
 from airobot.utils.moveit_util import MoveitScene
 from airobot.utils.ros_util import get_tf_transform
@@ -468,7 +468,8 @@ class UR5eReal(ARM):
             q[i] = joint_angles[i]
         jac = kdl.Jacobian(self.urdf_chain.getNrOfJoints())
         fg = self.jac_solver.JntToJac(q, jac)
-        assert fg == 0, 'KDL JntToJac error!'
+        if fg < 0:
+            raise ValueError('KDL JntToJac error!')
         jac_np = kdl_array_to_numpy(jac)
         return jac_np
 
@@ -500,7 +501,7 @@ class UR5eReal(ARM):
         fg = self.fk_solver_pos.JntToCart(kdl_jnt_angles,
                                           kdl_end_frame,
                                           idx)
-        if fg == 0:
+        if fg < 0:
             raise ValueError('KDL Pos JntToCart error!')
         pose = kdl_frame_to_numpy(kdl_end_frame)
         pos = pose[:3, 3].flatten()
@@ -535,7 +536,7 @@ class UR5eReal(ARM):
         fg = self.fk_solver_vel.JntToCart(kdl_jnt_qvels,
                                           kdl_end_frame,
                                           idx)
-        if fg == 0:
+        if fg < 0:
             raise ValueError('KDL Vel JntToCart error!')
         end_twist = kdl_end_frame.GetTwist()
         return np.array([end_twist[0], end_twist[1], end_twist[2],
@@ -831,7 +832,7 @@ class UR5eReal(ARM):
         )
 
         self.urscript_pub = rospy.Publisher(
-            self.cfgs.ARM.ARM.URSCRIPT_TOPIC,
+            self.cfgs.ARM.URSCRIPT_TOPIC,
             String,
             queue_size=10
         )

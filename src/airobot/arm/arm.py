@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import importlib
+from airobot.utils.common import load_class_from_path
 
 
 class ARM(object):
@@ -20,8 +20,10 @@ class ARM(object):
         if cfgs.HAS_EETOOL:
             if eetool_cfg is None:
                 eetool_cfg = {}
-            mod = importlib.import_module('airobot.ee_tool')
-            eetool_calss = getattr(mod, cfgs.EETOOL.CLASS)
+            cls_name = cfgs.EETOOL.CLASS
+            from airobot.ee_tool import cls_name_to_path as ee_cls_name_to_path
+            eetool_calss = load_class_from_path(cls_name,
+                                                ee_cls_name_to_path[cls_name])
             self.eetool = eetool_calss(cfgs, **eetool_cfg)
 
     def go_home(self):

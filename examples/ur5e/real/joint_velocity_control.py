@@ -43,7 +43,7 @@ def main():
         elapsed_time = time.time() - start_time
         vels = [sin_wave(elapsed_time, f, A)] * robot.arm.arm_dof
         robot.arm.set_jvel(vels, wait=True)
-        time.sleep(0.001)
+        time.sleep(0.01)
 
 
 if __name__ == '__main__':

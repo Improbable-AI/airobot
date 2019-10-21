@@ -9,6 +9,7 @@ import rospkg
 import signal
 import sys
 import time
+import rospy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -104,7 +105,7 @@ def draw_segments(pts, labels, core_samples_mask):
         list: unique and useful labels (labels with
             the number of samples greater than a threshold will be remained)
     """
-    num_threshold = 400
+    num_threshold = 800
     plt.clf()
     plt.scatter(pts[:, 0], pts[:, 1])
     plt.xlim(Y_range[0], Y_range[1])
@@ -177,7 +178,7 @@ def sample_pt(pts, labels, useful_labelset, z_lowest):
     else:
         tgt_y = np.random.uniform(bbox_xy[0, 1], bbox_xy[1, 1], 1)[0]
         tgt_x = bbox_xy[int(np.random.choice(2, 1)[0]), 0]
-    tgt_z = max(np.min(tgt_pts[:, 2]) + 0.01, z_lowest - 0.02)
+    tgt_z = max(np.min(tgt_pts[:, 2]), z_lowest - 0.02)
     center[2] = tgt_z
     mid_pt = np.array([tgt_x, tgt_y, tgt_z])
 
@@ -202,8 +203,10 @@ def push(bot, reset_pos, z_lowest=-0.17):
     """
     cur_pos = bot.arm.get_ee_pose()[0]
     bot.arm.move_ee_xyz(reset_pos - cur_pos)
-    pts, colors = bot.camera.get_pcd(in_world=True,
-                                     filter_depth=True)
+    print('Getting point cloud')
+    pts, colors = bot.cam.get_pcd(in_world=True,
+                                  filter_depth=True)
+    print('Selecting points of interest')
     pts, colors = filter_points(pts, colors, z_lowest=z_lowest)
     X = pts[:, :2]
     labels, core_samples_mask = segment_objects(X)
@@ -259,11 +262,13 @@ def main():
     time.sleep(1)
     ee_pose = bot.arm.get_ee_pose()
     reset_pos = ee_pose[0]
+    print('Reset pos:', reset_pos)
 
-    while True:
+    while not rospy.is_shutdown():
         try:
             push(bot, reset_pos, z_lowest=args.z_min)
-        except:
+        except Exception as e:
+            print(e)
             pass
         time.sleep(1)
 

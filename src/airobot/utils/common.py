@@ -4,11 +4,14 @@ from __future__ import print_function
 
 import os
 import shutil
+import glob
+import ast
+import sys
 
-import PyKDL as kdl
+
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-
+from copy import deepcopy
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
@@ -121,10 +124,10 @@ def euler2quat(euler, axes='xyz'):
     Args:
         euler (list or np.ndarray): euler angles (shape: [3,])
         axes (str): Specifies sequence of axes for rotations.
-            3 characters belonging to the set {‘X’, ‘Y’, ‘Z’}
+            3 characters belonging to the set {'X', 'Y', 'Z'}
             for intrinsic rotations (rotation about the axes of a
             coordinate system XYZ attached to a moving body),
-            or {‘x’, ‘y’, ‘z’} for extrinsic rotations (rotation about
+            or {'x', 'y', 'z'} for extrinsic rotations (rotation about
              the axes of the fixed coordinate system).
 
     Returns:
@@ -155,10 +158,10 @@ def rot2euler(rot, axes='xyz'):
     Args:
         rot (np.ndarray): rotation matrix (shape: [3, 3])
         axes (str): Specifies sequence of axes for rotations.
-            3 characters belonging to the set {‘X’, ‘Y’, ‘Z’}
+            3 characters belonging to the set {'X', 'Y', 'Z'}
             for intrinsic rotations (rotation about the axes of a
             coordinate system XYZ attached to a moving body),
-            or {‘x’, ‘y’, ‘z’} for extrinsic rotations (rotation about
+            or {'x', 'y', 'z'} for extrinsic rotations (rotation about
              the axes of the fixed coordinate system).
 
     Returns:
@@ -166,58 +169,6 @@ def rot2euler(rot, axes='xyz'):
     """
     r = R.from_dcm(rot)
     return r.as_euler(axes)
-
-
-def kdl_array_to_numpy(kdl_data):
-    """
-    Convert KDL array data into numpy array
-
-    Args:
-        kdl_data: data in KDL format
-
-    Returns:
-        numpy array
-    """
-    np_array = np.zeros((kdl_data.rows(), kdl_data.columns()))
-    for i in range(kdl_data.rows()):
-        for j in range(kdl_data.columns()):
-            np_array[i, j] = kdl_data[i, j]
-    return np_array
-
-
-def kdl_frame_to_numpy(frame):
-    """
-    Convert KDL Frame data into numpy array
-
-    Args:
-        frame: data of KDL Frame
-
-    Returns:
-        transformation matrix in numpy [4x4]
-    """
-    p = frame.p
-    M = frame.M
-    return np.array([[M[0, 0], M[0, 1], M[0, 2], p.x()],
-                     [M[1, 0], M[1, 1], M[1, 2], p.y()],
-                     [M[2, 0], M[2, 1], M[2, 2], p.z()],
-                     [0, 0, 0, 1]])
-
-
-def joints_to_kdl(joint_values):
-    """
-    Convert the numpy array into KDL data format
-
-    Args:
-        joint_values (np.ndarray): values for the joints
-
-    Returns:
-
-    """
-    num_jts = joint_values.size
-    kdl_array = kdl.JntArray(num_jts)
-    for idx in range(num_jts):
-        kdl_array[idx] = joint_values[idx]
-    return kdl_array
 
 
 def print_red(skk):
@@ -291,4 +242,57 @@ def create_folder(path, delete=True):
     """
     if delete and os.path.exists(path):
         shutil.rmtree(path)
-    os.makedirs(path, exist_ok=True)
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+
+def list_class_names(dir_path):
+    """
+    Return the mapping of class names in all files in dir_path to their file path
+
+    Args:
+        dir_path (str): absolute path of the folder
+
+    Returns:
+        dict: mapping from the class names in all python files in the
+            folder to their file path
+
+    """
+
+    py_files = glob.glob(os.path.join(dir_path, "*.py"))
+    py_files = [f for f in py_files if os.path.isfile(f)
+                and not f.endswith('__init__.py')]
+    cls_name_to_path = dict()
+    for py_file in py_files:
+        with open(py_file) as f:
+            node = ast.parse(f.read())
+        classes_in_file = [n for n in node.body if isinstance(n, ast.ClassDef)]
+        cls_names_in_file = [c.name for c in classes_in_file]
+        for cls_name in cls_names_in_file:
+            cls_name_to_path[cls_name] = py_file
+    return cls_name_to_path
+
+
+def load_class_from_path(cls_name, path):
+    mod_name = 'MOD%s' % cls_name
+    if sys.version_info.major == 2:
+        import imp
+        mod = imp.load_source(mod_name, path)
+        return getattr(mod, cls_name)
+    elif sys.version_info.major == 3:
+        if sys.version_info.minor < 5:
+            from importlib.machinery import SourceFileLoader
+
+            mod = SourceFileLoader(mod_name, path).load_module()
+            return getattr(mod, cls_name)
+        else:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(mod_name, path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return getattr(mod, cls_name)
+    else:
+        raise NotImplementedError
+
+
+

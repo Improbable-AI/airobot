@@ -51,6 +51,14 @@ def main():
     robot.arm.set_jpos(goal_pos, wait=True)
     print("Joint Angles: ")
     print(robot.arm.get_jpos())
+    print('Joint Angle of Joint[shoulder_pan_joint]:')
+    print(robot.arm.get_jpos('shoulder_pan_joint'))
+
+    robot.arm.eetool.activate()
+    print('Opening gripper')
+    robot.arm.eetool.open()
+    print('Closing gripper')
+    robot.arm.eetool.close()
 
 
 if __name__ == '__main__':

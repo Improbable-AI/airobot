@@ -1,4 +1,6 @@
-from airobot.arm.ur5e_pybullet import UR5ePybullet
-from airobot.arm.ur5e_real import UR5eReal
+import os
+from airobot.utils.common import list_class_names
 
-__all__ = ['UR5ePybullet', 'UR5eReal']
+cur_path = os.path.dirname(os.path.abspath(__file__))
+cls_name_to_path = list_class_names(cur_path)
+

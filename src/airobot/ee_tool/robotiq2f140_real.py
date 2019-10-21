@@ -42,6 +42,7 @@ class Robotiq2F140Real(EndEffectorTool):
         urscript.sleep(0.1)
 
         self.pub_command.publish(urscript())
+        rospy.sleep(0.2)
 
     def set_pos(self, pos):
         """

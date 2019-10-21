@@ -1,5 +1,7 @@
-import importlib
 import os
+import importlib
+import airobot as ar
+from airobot.utils.common import load_class_from_path
 
 
 class Robot:
@@ -84,22 +86,25 @@ class Robot:
 
         class_suffix = 'Pybullet' if pb else 'Real'
         if cfgs.HAS_ARM and use_arm:
-            mod_path = root_node + 'arm'
-            mod = importlib.import_module(mod_path)
-            arm_class = getattr(mod, cfgs.ARM.CLASS + class_suffix)
+            cls_name = cfgs.ARM.CLASS + class_suffix
+            from airobot.arm import cls_name_to_path as arm_cls_name_to_path
+            arm_class = load_class_from_path(cls_name,
+                                             arm_cls_name_to_path[cls_name])
             if cfgs.HAS_EETOOL:
                 cfgs.EETOOL.CLASS = cfgs.EETOOL.CLASS + class_suffix
             arm_cfg['eetool_cfg'] = eetool_cfg
             self.arm = arm_class(cfgs, **arm_cfg)
         if cfgs.HAS_BASE and use_base:
-            mod_path = root_node + 'base'
-            mod = importlib.import_module(mod_path)
-            base_class = getattr(mod, cfgs.BASE.CLASS + class_suffix)
+            cls_name = cfgs.BASE.CLASS + class_suffix
+            from airobot.base import cls_name_to_path as base_cls_name_to_path
+            base_class = load_class_from_path(cls_name,
+                                              base_cls_name_to_path[cls_name])
             self.base = base_class(cfgs, **base_cfg)
         if cfgs.HAS_CAMERA and use_cam:
-            mod_path = root_node + 'sensor.camera'
-            mod = importlib.import_module(mod_path)
-            camera_class = getattr(mod, cfgs.CAM.CLASS + class_suffix)
+            cls_name = cfgs.CAM.CLASS + class_suffix
+            from airobot.sensor.camera import cls_name_to_path as cam_cls_name_to_path
+            camera_class = load_class_from_path(cls_name,
+                                                cam_cls_name_to_path[cls_name])
             if pb:
                 cam_cfg['p'] = self.arm.p
             self.cam = camera_class(cfgs, **cam_cfg)
