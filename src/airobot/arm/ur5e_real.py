@@ -27,12 +27,12 @@ import airobot.utils.common as arutil
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_ee_goal
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
-from airobot.utils.ros_util import joints_to_kdl
-from airobot.utils.ros_util import kdl_array_to_numpy
-from airobot.utils.ros_util import kdl_frame_to_numpy
 from airobot.utils.common import print_red
 from airobot.utils.moveit_util import MoveitScene
 from airobot.utils.ros_util import get_tf_transform
+from airobot.utils.ros_util import joints_to_kdl
+from airobot.utils.ros_util import kdl_array_to_numpy
+from airobot.utils.ros_util import kdl_frame_to_numpy
 
 
 class UR5eReal(ARM):
@@ -637,18 +637,16 @@ class UR5eReal(ARM):
         ur_base_name = 'ur_base'
         ur_base_attached = False
         for _ in range(2):
-            self.moveit_scene.add_static_obj(
-                ur_base_name,
-                [0, 0, -0.5],
-                [0, 0, 0, 1],
-                size=[0.25, 0.50, 1.0],
-                obj_type='box',
-                ref_frame=self.cfgs.ARM.ROBOT_BASE_FRAME)
-            time.sleep(1)
-            obj_dict, obj_adict = self.moveit_scene.get_objects()
-            if ur_base_name in obj_dict.keys():
+            if self.moveit_scene.add_static_obj(
+                    ur_base_name,
+                    [0, 0, -0.5],
+                    [0, 0, 0, 1],
+                    size=[0.25, 0.50, 1.0],
+                    obj_type='box',
+                    ref_frame=self.cfgs.ARM.ROBOT_BASE_FRAME):
                 ur_base_attached = True
                 break
+            time.sleep(1)
         if not ur_base_attached:
             print_red('Fail to add the UR base support as a collision object. '
                       'Be careful when you use moveit to plan the path! You'
@@ -664,18 +662,16 @@ class UR5eReal(ARM):
             'robotiq_arg2f_base_link'
         ]
         for _ in range(2):
-            self.moveit_scene.add_dynamic_obj(
-                'robotiq_arg2f_base_link',
-                wrist_cam_name,
-                [0.06, 0, 0.05],
-                [0, 0, 0, 1],
-                [0.03, 0.1, 0.03],
-                touch_links=safe_camera_links)
-            time.sleep(1)
-            obj_dict, obj_adict = self.moveit_scene.get_objects()
-            if wrist_cam_name in obj_adict.keys():
+            if self.moveit_scene.add_dynamic_obj(
+                    'robotiq_arg2f_base_link',
+                    wrist_cam_name,
+                    [0.06, 0, 0.05],
+                    [0, 0, 0, 1],
+                    [0.03, 0.1, 0.03],
+                    touch_links=safe_camera_links):
                 wrist_cam_attached = True
                 break
+            time.sleep(1)
         if not wrist_cam_attached:
             print_red('Fail to add the wrist camera bounding box as collision'
                       'object. Be careful when you use moveit to plan paths!'

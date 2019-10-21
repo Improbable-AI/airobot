@@ -46,6 +46,9 @@ class MoveitScene(object):
                 object is a plane. It means the
                 normal direction of the plane
 
+        Returns:
+            bool: if the object is successfully added
+
         """
         if not isinstance(pos, list):
             raise TypeError('pos should be a list')
@@ -86,6 +89,12 @@ class MoveitScene(object):
                 raise ValueError('Size should a float number for sphere')
             self.scene.add_sphere(obj_name, pose_stamped, radius=size)
 
+        obj_dict, obj_adict = self.get_objects()
+        success = False
+        if obj_name in obj_dict.keys():
+            success = True
+        return success
+
     def add_dynamic_obj(self, ref_frame, obj_name, pos, ori, size,
                         touch_links=None):
         """
@@ -101,6 +110,9 @@ class MoveitScene(object):
                 float, which means the edge
                 length of a cube. size can also be a list or tuple of length 3,
                 the it specifies the 3 edge lengths of the cuboid
+
+        Returns:
+            bool: if the object is successfully added
 
         """
         if not isinstance(pos, list):
@@ -129,6 +141,11 @@ class MoveitScene(object):
             self.scene.attach_box(ref_frame, obj_name,
                                   pose_stamped, size,
                                   touch_links=touch_links)
+        obj_dict, obj_adict = self.get_objects()
+        success = False
+        if obj_name in obj_adict.keys():
+            success = True
+        return success
 
     def remove_obj(self, obj_name):
         """
