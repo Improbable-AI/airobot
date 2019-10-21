@@ -13,6 +13,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 from copy import deepcopy
 
+
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
 
@@ -294,5 +295,83 @@ def load_class_from_path(cls_name, path):
     else:
         raise NotImplementedError
 
+
+def to_rot_mat(ori):
+    """
+    Convert orientation in any form (rotation matrix,
+    quaternion, or euler angles) to rotation matrix
+
+    Args:
+        ori (list or np.ndarray): orientation in any following form:
+            rotation matrix (shape: [3, 3])
+            quaternion (shape: [4])
+            euler angles (shape: [3])
+
+    Returns:
+        np.ndarray: orientation matrix (shape: [3, 3])
+    """
+
+    ori = np.array(ori)
+    if ori.size == 3:
+        # [roll, pitch, yaw]
+        ori = euler2rot(ori)
+    elif ori.size == 4:
+        ori = quat2rot(ori)
+    elif ori.shape != (3, 3):
+        raise ValueError('Orientation should be rotation matrix, '
+                         'euler angles or quaternion')
+    return ori
+
+
+def to_euler_angles(ori):
+    """
+    Convert orientation in any form (rotation matrix,
+    quaternion, or euler angles) to euler angles (roll, pitch, yaw)
+
+    Args:
+        ori (list or np.ndarray): orientation in any following form:
+            rotation matrix (shape: [3, 3])
+            quaternion (shape: [4])
+            euler angles (shape: [3])
+
+    Returns:
+        np.ndarray: euler angles [roll, pitch, yaw] (shape: [3,])
+
+    """
+    ori = np.array(ori)
+    if ori.size == 4:
+        ori = quat2euler(ori)
+    elif ori.shape == (3, 3):
+        ori = rot2euler(ori)
+    elif ori.size != 3:
+        raise ValueError('Orientation should be rotation matrix, '
+                         'euler angles or quaternion')
+    return ori
+
+
+def to_quat(ori):
+    """
+    Convert orientation in any form (rotation matrix,
+    quaternion, or euler angles) to quaternion
+
+    Args:
+        ori (list or np.ndarray): orientation in any following form:
+            rotation matrix (shape: [3, 3])
+            quaternion (shape: [4])
+            euler angles (shape: [3])
+
+    Returns:
+        np.ndarray: quaternion [x, y, z, w](shape: [4, ])
+    """
+    ori = np.array(ori)
+    if ori.size == 3:
+        # [roll, pitch, yaw]
+        ori = euler2quat(ori)
+    elif ori.shape == (3, 3):
+        ori = rot2quat(ori)
+    elif ori.size != 4:
+        raise ValueError('Orientation should be rotation matrix, '
+                         'euler angles or quaternion')
+    return ori
 
 

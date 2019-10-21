@@ -2,6 +2,10 @@ import rospy
 import tf
 import PyKDL as kdl
 import numpy as np
+import rospkg
+import os
+import json
+
 
 def kdl_array_to_numpy(kdl_data):
     """
@@ -84,3 +88,25 @@ def get_tf_transform(tf_listener, tgt_frame, src_frame):
         raise RuntimeError('Cannot fetch the transform from'
                            ' {0:s} to {1:s}'.format(tgt_frame, src_frame))
     return list(trans), list(quat)
+
+
+def read_cam_ext(robot_name):
+    """
+    Read the camera extrinsic information from calibration result
+
+    Args:
+        robot_name (str): robot name
+
+    Returns:
+        np.ndarray: position of the camera (shape: [3])
+        np.ndarray: orientation (quaternion) of the camera (shape: [4])
+    """
+    rospack = rospkg.RosPack()
+    data_path = rospack.get_path('hand_eye_calibration')
+    calib_file_path = os.path.join(data_path, 'result', robot_name,
+                                   'calib_base_to_cam.json')
+    with open(calib_file_path, 'r') as f:
+        calib_data = json.load(f)
+    cam_pos = np.array(calib_data['b_c_transform']['position'])
+    cam_ori = np.array(calib_data['b_c_transform']['orientation'])
+    return cam_pos, cam_ori

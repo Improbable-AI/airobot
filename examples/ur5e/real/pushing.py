@@ -16,6 +16,7 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 
 from airobot import Robot
+from airobot.utils.ros_util import read_cam_ext
 
 
 def signal_handler(sig, frame):
@@ -243,15 +244,7 @@ def main():
     np.set_printoptions(precision=4, suppress=True)
     bot = Robot('ur5e', pb=False, use_cam=True)
 
-    rospack = rospkg.RosPack()
-    data_path = rospack.get_path('hand_eye_calibration')
-    calib_file_path = os.path.join(data_path, 'result', 'ur5e',
-                                   'calib_base_to_cam.json')
-    with open(calib_file_path, 'r') as f:
-        calib_data = json.load(f)
-    cam_pos = np.array(calib_data['b_c_transform']['position'])
-    cam_ori = np.array(calib_data['b_c_transform']['orientation'])
-
+    cam_pos, cam_ori = read_cam_ext('ur5e')
     bot.cam.set_cam_ext(cam_pos, cam_ori)
     bot.arm.go_home()
     bot.arm.eetool.activate()

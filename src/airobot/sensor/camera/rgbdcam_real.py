@@ -9,8 +9,9 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image
 from tf import TransformListener
-from tf.transformations import euler_matrix
-from tf.transformations import quaternion_matrix
+from airobot.utils.common import euler2rot
+from airobot.utils.common import quat2rot
+from airobot.utils.common import to_rot_mat
 
 from airobot.sensor.camera.camera import Camera
 
@@ -128,6 +129,20 @@ class RGBDCameraReal(Camera):
         return '/'.join(topic)
 
     def set_cam_ext(self, pos=None, ori=None, cam_ext=None):
+        """
+        Set camera extrinsic matrix
+
+        Args:
+            pos (np.ndarray): position of the camera (shape: [3,])
+            ori (np.ndarray): orientation. It can be rotation matrix (shape:[3, 3])
+                quaternion ([x, y, z, w], shape: [4]), or euler angles ([roll, pitch, yaw],
+                shape: [3])
+            cam_ext (np.ndarray): extrinsic matrix (shape: [4, 4]). If this is provided,
+                pos and ori will be ignored
+
+        Returns:
+
+        """
         if cam_ext is not None:
             self.cam_ext_mat = cam_ext
         else:
@@ -135,14 +150,7 @@ class RGBDCameraReal(Camera):
                 raise ValueError('If cam_ext is not provided, '
                                  'both pos and ori need'
                                  'to be provided.')
-            if ori.size == 3:
-                # [roll, pitch, yaw]
-                ori = euler_matrix(*(ori.tolist()))[:3, :3]
-            if ori.size == 4:
-                ori = quaternion_matrix(ori.tolist())[:3, :3]
-            elif ori.shape != (3, 3):
-                raise ValueError('Orientation should be rotation matrix, '
-                                 'euler angles or quaternion')
+            ori = to_rot_mat(ori)
             cam_mat = np.eye(4)
             cam_mat[:3, :3] = ori
             cam_mat[:3, 3] = pos.flatten()

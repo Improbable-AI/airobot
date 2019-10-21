@@ -106,7 +106,7 @@ class UR5eReal(ARM):
 
         if joint_name is None:
             if len(position) != 6:
-                raise ValueError('position should contain 6 elements if'
+                raise ValueError('position should contain 6 elements if '
                                  'joint_name is not provided')
             tgt_pos = position
         else:
@@ -245,16 +245,7 @@ class UR5eReal(ARM):
             pose = self.get_ee_pose()  # last index is euler angles
             quat = pose[1]
         else:
-            ori = np.array(ori)
-            if ori.size == 4:
-                quat = ori
-            elif ori.size == 3:
-                quat = arutil.euler2quat(ori)
-            elif ori.shape == (3, 3):
-                quat = arutil.rot2quat(ori)
-            else:
-                raise ValueError('Orientaion should be quaternion,'
-                                 ' euler angles, or rotation matrix')
+            quat = arutil.to_quat(ori)
         if pos is None:
             pose = self.get_ee_pose()
             pos = pose[0]
@@ -567,17 +558,7 @@ class UR5eReal(ARM):
             list: inverse kinematics solution (joint angles)
         """
         if ori is not None:
-            ori = np.array(ori)
-            if ori.size == 3:
-                # [roll, pitch, yaw]
-                ee_quat = arutil.euler2quat(ori)
-            elif ori.shape == (3, 3):
-                ee_quat = arutil.rot2quat(ori)
-            elif ori.size == 4:
-                ee_quat = ori
-            else:
-                raise ValueError('Orientation should be rotation matrix, '
-                                 'euler angles or quaternion')
+            ee_quat = arutil.to_quat(ori)
         else:
             ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
         ori_x = ee_quat[0]

@@ -580,8 +580,7 @@ class UR5ePybullet(ARM):
         self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
         self.ee_link_jnt = self.cfgs.ARM.ROBOT_EE_FRAME_JOINT
 
-        # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
-        self._max_torques = [150, 150, 150, 28, 28, 28]
+        self._max_torques = self.cfgs.ARM.MAX_TORQUES
 
     def _rt_simulation(self):
         """

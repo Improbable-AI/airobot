@@ -13,6 +13,7 @@ import open3d
 
 from airobot import Robot
 from pushing import filter_points
+from airobot.utils.ros_util import read_cam_ext
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -41,14 +42,7 @@ def main():
     pre_jnts = [1.57, -1.66, -1.92, -1.12, 1.57, 0]
     robot.arm.set_jpos(pre_jnts)
 
-    rospack = rospkg.RosPack()
-    data_path = rospack.get_path('hand_eye_calibration')
-    calib_file_path = os.path.join(data_path, 'result', 'ur5e',
-                                   'calib_base_to_cam.json')
-    with open(calib_file_path, 'r') as f:
-        calib_data = json.load(f)
-    cam_pos = np.array(calib_data['b_c_transform']['position'])
-    cam_ori = np.array(calib_data['b_c_transform']['orientation'])
+    cam_pos, cam_ori = read_cam_ext('ur5e')
     robot.cam.set_cam_ext(cam_pos, cam_ori)
 
     vis = open3d.visualization.Visualizer()

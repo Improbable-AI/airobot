@@ -22,6 +22,9 @@ _C.PYBULLET_URDF = 'ur5e_2f140_pybullet.urdf'
 _C.ARM.CLASS = 'UR5e'
 _C.ARM.MOVEGROUP_NAME = 'manipulator'
 _C.ARM.ROSTOPIC_JOINT_STATES = '/joint_states'
+
+# https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
+_C.ARM.MAX_TORQUES = [150, 150, 150, 28, 28, 28]
 # base frame for the arm
 _C.ARM.ROBOT_BASE_FRAME = 'base'
 # end-effector frame of the arm
