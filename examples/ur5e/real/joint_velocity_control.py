@@ -25,9 +25,9 @@ def sin_wave(t, f, A):
 def main():
     """
     Move all the joints of the robot in a sine-wave fashion
-    
+
     The pb=False flag is set because we are using the real robot
-    (pb -- pybullet)    
+    (pb -- pybullet)
     """
     robot = Robot('ur5e',
                   pb=False,

@@ -192,9 +192,12 @@ def push(bot, reset_pos, z_lowest=-0.17):
     Args:
         bot (airobot.robot.Robot): robot instance
         reset_pos (np.ndarray): reset position of the gripper (shape: [3,])
-        z_lowest (float): minimum acceptable z coordinate for the 3D points of objects
-            This is a simple way to filter out the table. Basically, all points with
-            z coordinate (e.g., the table) less than this value will be removed.
+        z_lowest (float): minimum acceptable z coordinate
+            for the 3D points of objects
+            This is a simple way to filter out the table.
+            Basically, all points with
+            z coordinate (e.g., the table) less than
+            this value will be removed.
 
     """
     cur_pos = bot.arm.get_ee_pose()[0]
@@ -227,7 +230,7 @@ def main():
     arm does not block the camera's view. And a clustering alogrithm
     is used to cluster the 3D point cloud of the objects on the table.
     Then the gripper pushs a randomly selected object on the table.
-    And the gripper goes back to a reset position. 
+    And the gripper goes back to a reset position.
     """
     parser = argparse.ArgumentParser(description='Argument Parser')
     parser.add_argument('--z_min', type=float, default=-0.15,

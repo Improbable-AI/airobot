@@ -35,7 +35,8 @@ class ARM(object):
         Move the arm to the specified joint position(s).
 
         Args:
-            position (float or list or flattened np.ndarray): desired joint position(s)
+            position (float or list or flattened np.ndarray):
+                desired joint position(s)
             joint_name (str): If not provided, position should be a list
                 and all the actuated joints will be moved to the specified
                 positions. If provided, only the specified joint will
@@ -44,8 +45,9 @@ class ARM(object):
                 for the action to complete
 
         Returns:
-            bool: A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing
+                if the action is successful at
+                the moment when the function exits
         """
         raise NotImplementedError
 
@@ -54,7 +56,8 @@ class ARM(object):
         Move the arm with the specified joint velocity(ies).
 
         Args:
-            velocity (float or list or flattened np.ndarray): desired joint velocity(ies)
+            velocity (float or list or flattened np.ndarray):
+                desired joint velocity(ies)
             joint_name (str): If not provided, velocity should be a list
                 and all the actuated joints will be moved in the specified
                 velocities. If provided, only the specified joint will
@@ -63,8 +66,9 @@ class ARM(object):
                 for the action to complete
 
         Returns:
-            bool: A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing
+                if the action is successful at
+                the moment when the function exits
         """
         raise NotImplementedError
 
@@ -73,7 +77,8 @@ class ARM(object):
         Apply torque(s) to the joint(s)
 
         Args:
-            torque (float or list or flattened np.ndarray): torque value(s) for the joint(s)
+            torque (float or list or flattened np.ndarray):
+                torque value(s) for the joint(s)
             joint_name (str): specify the joint on which the torque is applied.
                 If it's not provided(None), it will apply the torques on
                 the actuated joints on the arm. Otherwise,
@@ -83,8 +88,9 @@ class ARM(object):
                 for the action to complete
 
         Returns:
-            bool: A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing
+                if the action is successful at
+                the moment when the function exits
 
         """
         raise NotImplementedError
@@ -94,12 +100,14 @@ class ARM(object):
         Move the end effector to the specifed pose
         Args:
             pos (list or np.ndarray): position
-            ori (list or np.ndarray): orientation. It can be either quaternion (length is 4)
+            ori (list or np.ndarray): orientation.
+                It can be either quaternion (length is 4)
                 or euler angles ([roll, pitch, yaw])
 
         Returns:
-            bool: A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing
+                if the action is successful at
+                the moment when the function exits
         """
         raise NotImplementedError
 
@@ -110,12 +118,14 @@ class ARM(object):
 
         Args:
             delta_xyz (list or np.ndarray): movement in x, y, z directions
-            eef_step (float): interpolation interval along delta_xyz. Interpolate
-                a point every eef_step distance between the two end points
+            eef_step (float): interpolation interval along delta_xyz.
+                Interpolate a point every eef_step distance
+                between the two end points
 
         Returns:
-            bool: A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing
+                if the action is successful at
+                the moment when the function exits
         """
         raise NotImplementedError
 

@@ -390,7 +390,8 @@ class UR5ePybullet(ARM):
         Return the joint position(s) of the arm
 
         Args:
-            joint_name (str, optional): If it's None, it will return joint positions
+            joint_name (str, optional): If it's None,
+                it will return joint positions
                 of all the actuated joints. Otherwise, it will
                 return the joint position of the specified joint
 
@@ -487,7 +488,9 @@ class UR5ePybullet(ARM):
             np.ndarray: translational velocity (shape: [3,])
             np.ndarray: rotational velocity (shape: [3,])
         """
-        info = p.getLinkState(self.robot_id, self.ee_link_id, computeLinkVelocity=1)
+        info = p.getLinkState(self.robot_id,
+                              self.ee_link_id,
+                              computeLinkVelocity=1)
         trans_vel = info[6]
         rot_vel = info[7]
         return np.array(trans_vel), np.array(rot_vel)

@@ -15,8 +15,10 @@ _C.ROBOT_DESCRIPTION = '/robot_description'
 _C.PYBULLET_URDF = 'ur5e_2f140_pybullet.urdf'
 
 # prefix of the class name of the ARM
-# if it's for pybullet simulation, the name will be augemented to be '<Prefix>Pybullet'
-# if it's for the real robot, the name will be augmented to be '<Prefix>Real'
+# if it's for pybullet simulation, the name will
+# be augemented to be '<Prefix>Pybullet'
+# if it's for the real robot, the name will be
+# augmented to be '<Prefix>Real'
 _C.ARM.CLASS = 'UR5e'
 _C.ARM.MOVEGROUP_NAME = 'manipulator'
 _C.ARM.ROSTOPIC_JOINT_STATES = '/joint_states'

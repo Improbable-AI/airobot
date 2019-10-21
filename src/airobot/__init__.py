@@ -79,7 +79,8 @@ class Robot:
             try:
                 rospy.init_node('airobot', anonymous=True)
             except rospy.exceptions.ROSException:
-                rospy.logwarn('ROS node [airobot] has already been initialized')
+                rospy.logwarn('ROS node [airobot] has already'
+                              ' been initialized')
 
         class_suffix = 'Pybullet' if pb else 'Real'
         if cfgs.HAS_ARM and use_arm:

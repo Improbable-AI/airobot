@@ -76,7 +76,7 @@ class RGBDCameraReal(Camera):
         self.cam_K_inv = np.linalg.inv(self.cam_K)
 
         img_pixs = np.mgrid[0: self.cam_height,
-                   0: self.cam_width].reshape(2, -1)
+                            0: self.cam_width].reshape(2, -1)
         img_pixs[[0, 1], :] = img_pixs[[1, 0], :]
         self.uv_one = np.concatenate((img_pixs,
                                       np.ones((1, img_pixs.shape[1]))))
@@ -182,7 +182,8 @@ class RGBDCameraReal(Camera):
                 It can be a list or 1D numpy array
                 which contains the column indices. The default value is None,
                 which means all columns.
-            in_world (bool): if True, return the 3D position in the world frame,
+            in_world (bool): if True, return the 3D position in
+                the world frame,
                 Otherwise, return the 3D position in the camera frame
             filter_depth (bool): if True, only pixels with depth values
                 between [self.depth_min, self.depth_max]

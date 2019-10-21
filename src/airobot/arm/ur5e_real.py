@@ -84,7 +84,8 @@ class UR5eReal(ARM):
         Method to send a joint position command to the robot (units in rad)
 
         Args:
-            position (float or list or flattened np.ndarray): desired joint position(s)
+            position (float or list or flattened np.ndarray):
+                desired joint position(s)
                 (shape: [6,] if list, otherwise a single value)
             joint_name (str): If not provided, position should be a list and
                 all actuated joints will be moved to specified positions. If
@@ -278,12 +279,15 @@ class UR5eReal(ARM):
                     0.0)
                 self._send_urscript(prog)
                 if wait:
+                    args_dict = {
+                        'get_func': self.get_ee_pose,
+                        'get_func_derv': self.get_ee_vel,
+                        'timeout': self.cfgs.ARM.TIMEOUT_LIMIT,
+                        'pos_tol': self.cfgs.ARM.MAX_EE_POS_ERROR,
+                        'ori_tol': self.cfgs.ARM.MAX_EE_ORI_ERROR
+                    }
                     success = wait_to_reach_ee_goal(pos, quat,
-                                                    get_func=self.get_ee_pose,
-                                                    get_func_derv=self.get_ee_vel,
-                                                    timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
-                                                    pos_tol=self.cfgs.ARM.MAX_EE_POS_ERROR,
-                                                    ori_tol=self.cfgs.ARM.MAX_EE_ORI_ERROR)
+                                                    **args_dict)
         else:
             pose = self.moveit_group.get_current_pose()
             pose.pose.position.x = pos[0]
@@ -361,7 +365,8 @@ class UR5eReal(ARM):
         topic /joint_states
 
         Args:
-            joint_name (str, optional): If it's None, it will return joint positions
+            joint_name (str, optional): If it's None,
+                it will return joint positions
                 of all the actuated joints. Otherwise, it will
                 return the joint position of the specified joint
 
@@ -390,7 +395,8 @@ class UR5eReal(ARM):
         topic /joint_states
 
         Args:
-            joint_name (str, optional): If it's None, it will return joint velocities
+            joint_name (str, optional): If it's None,
+                it will return joint velocities
                 of all the actuated joints. Otherwise, it will
                 return the joint position of the specified joint
 
@@ -442,7 +448,8 @@ class UR5eReal(ARM):
         """
         jpos = self.get_jpos()
         jvel = self.get_jvel()
-        ee_vel = compute_fk_velocity(self, jpos, jvel, tgt_frame)
+        ee_vel = self.compute_fk_velocity(jpos, jvel,
+                                          self.cfgs.ARM.ROBOT_EE_FRAME)
         return ee_vel[:3], ee_vel[3:]
 
     def get_jacobian(self, joint_angles):
@@ -608,9 +615,10 @@ class UR5eReal(ARM):
                                         self.cfgs.ARM.ROBOT_EE_FRAME,
                                         urdf_string=urdf_string)
         _, self.urdf_tree = treeFromParam(robot_description)
-
-        self.urdf_chain = self.urdf_tree.getChain(self.cfgs.ARM.ROBOT_BASE_FRAME,
-                                                  self.cfgs.ARM.ROBOT_EE_FRAME)
+        base_frame = self.cfgs.ARM.ROBOT_BASE_FRAME
+        ee_frame = self.cfgs.ARM.ROBOT_EE_FRAME
+        self.urdf_chain = self.urdf_tree.getChain(base_frame,
+                                                  ee_frame)
         self.arm_jnt_names = self._get_kdl_joint_names()
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.arm_link_names = self._get_kdl_link_names()
@@ -769,7 +777,8 @@ class UR5eReal(ARM):
             list: Euler angle orientation component of the gripper
                 tip transform. (shape [3,])
         """
-        gripper_tip_id = self.arm_link_names.index(self.cfgs.ARM.ROBOT_EE_FRAME)
+        ee_frame = self.cfgs.ARM.ROBOT_EE_FRAME
+        gripper_tip_id = self.arm_link_names.index(ee_frame)
         gripper_tip_link = self.urdf_chain.getSegment(gripper_tip_id)
         gripper_tip_tf = kdl_frame_to_numpy(gripper_tip_link.getFrameToTip())
         gripper_tip_pos = gripper_tip_tf[:3, 3].flatten()

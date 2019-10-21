@@ -1,5 +1,6 @@
 import time
 
+import airobot as ar
 from airobot import Robot
 
 

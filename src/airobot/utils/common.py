@@ -36,10 +36,10 @@ def quat2euler(quat, axes='xyz'):
     Args:
         quat (list or np.ndarray): quaternion [x,y,z,w] (shape: [4,])
         axes (str): Specifies sequence of axes for rotations.
-            3 characters belonging to the set {‘X’, ‘Y’, ‘Z’}
+            3 characters belonging to the set {'X', 'Y', 'Z'}
             for intrinsic rotations (rotation about the axes of a
             coordinate system XYZ attached to a moving body),
-            or {‘x’, ‘y’, ‘z’} for extrinsic rotations (rotation about
+            or {'x', 'y', 'z'} for extrinsic rotations (rotation about
              the axes of the fixed coordinate system).
 
     Returns:
@@ -52,7 +52,7 @@ def quat2euler(quat, axes='xyz'):
 def quat2rotvec(quat):
     """
     Convert quaternion to rotation vector
-    
+
     Arguments:
         quat (list or np.ndarray): quaternion [x,y,z,w] (shape: [4,])
 
@@ -101,10 +101,10 @@ def euler2rot(euler, axes='xyz'):
     Args:
         euler (list or np.ndarray): euler angles (shape: [3,])
         axes (str): Specifies sequence of axes for rotations.
-            3 characters belonging to the set {‘X’, ‘Y’, ‘Z’}
+            3 characters belonging to the set {'X', 'Y', 'Z'}
             for intrinsic rotations (rotation about the axes of a
             coordinate system XYZ attached to a moving body),
-            or {‘x’, ‘y’, ‘z’} for extrinsic rotations (rotation about
+            or {'x', 'y', 'z'} for extrinsic rotations (rotation about
              the axes of the fixed coordinate system).
 
     Returns:

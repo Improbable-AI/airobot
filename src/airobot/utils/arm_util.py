@@ -11,9 +11,12 @@ def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
     """
     Block the code to wait for the joint moving to the specified goal.
     The goal can be a desired velocity(s) or a desired position(s).
-    if get_func returns the poisitions (velocities), then the get_func_derv should
-    return the velocities (accelerations) (if provided). If the robot cannot reach the goal,
-    providing get_func_derv can prevent the program from waiting until timeout.
+    if get_func returns the poisitions (velocities),
+    then the get_func_derv should
+    return the velocities (accelerations) (if provided).
+    If the robot cannot reach the goal,
+    providing get_func_derv can prevent the
+    program from waiting until timeout.
     It uses the derivative information to make a faster judgement.
 
     Args:
@@ -36,7 +39,8 @@ def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
     vel_stop_time = None
     if joint_name is not None:
         if not isinstance(goal, numbers.Number):
-            raise ValueError('Only one goal should be specified for a single joint!')
+            raise ValueError('Only one goal should be '
+                             'specified for a single joint!')
     while True:
         if time.time() - start_time > timeout:
             pt_str = 'Unable to move to joint goals (%s)' \
@@ -129,11 +133,11 @@ def wait_to_reach_ee_goal(pos, ori, get_func, get_func_derv=None,
             success = True
             break
         if get_func_derv is not None:
-            ee_pos_vel, ee_rot_vel = get_func_derv(joint_name)
+            ee_pos_vel, ee_rot_vel = get_func_derv()
             ee_vel = np.concatenate((ee_pos_vel, ee_rot_vel))
             if np.max(np.abs(ee_vel)) < 0.001 and vel_stop_time is None:
                 vel_stop_time = time.time()
-            elif np.max(np.abs(jnt_vel)) > 0.001:
+            elif np.max(np.abs(ee_vel)) > 0.001:
                 vel_stop_time = None
             if vel_stop_time is not None and time.time() - vel_stop_time > 1.5:
                 pt_str = 'Unable to move to end effector pose\n' \

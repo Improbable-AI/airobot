@@ -78,7 +78,8 @@ class RGBDCameraPybullet(Camera):
         rgb = None
         depth = None
         if get_rgb:
-            rgb = np.reshape(images[2], (height, width, 4))[:, :, :3]  # 0 to 255
+            rgb = np.reshape(images[2],
+                             (height, width, 4))[:, :, :3]  # 0 to 255
         if get_depth:
             depth_buffer = np.reshape(images[3], [height, width])
             znear = self.cfgs.CAM.SIM.ZNEAR
