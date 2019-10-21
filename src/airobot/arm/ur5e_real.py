@@ -666,7 +666,7 @@ class UR5eReal(ARM):
             self.moveit_scene.add_dynamic_obj(
                 'robotiq_arg2f_base_link',
                 wrist_cam_name,
-                [0.0375, 0, 0],
+                [0.06, 0, 0.05],
                 [0, 0, 0, 1],
                 [0.03, 0.1, 0.03],
                 touch_links=safe_camera_links)
@@ -858,7 +858,7 @@ class UR5eReal(ARM):
         )
 
         self.urscript_pub = rospy.Publisher(
-            self.cfgs.ARM.ARM.URSCRIPT_TOPIC,
+            self.cfgs.ARM.URSCRIPT_TOPIC,
             String,
             queue_size=10
         )
