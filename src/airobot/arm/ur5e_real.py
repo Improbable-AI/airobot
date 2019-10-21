@@ -9,6 +9,7 @@ import copy
 import sys
 import threading
 import time
+import numbers
 
 import PyKDL as kdl
 import moveit_commander
@@ -71,7 +72,10 @@ class UR5eReal(ARM):
             use_urscript (bool): True we should use urscript
                 False if we should use ros and moveit
         """
-        self.use_urscript = use_urscript
+        if not self.gazebo_sim:
+            self.use_urscript = use_urscript
+        else:
+            arutil.print_yellow('Use urscript is not supported in Gazebo!')
 
     def go_home(self):
         """
@@ -106,9 +110,9 @@ class UR5eReal(ARM):
                                  'joint_name is not provided')
             tgt_pos = position
         else:
-            if not isinstance(position, float):
+            if not isinstance(position, numbers.Number):
                 raise TypeError('position should be individual float value'
-                                'if joint_name is provided')
+                                ' if joint_name is provided')
             if joint_name not in self.arm_jnt_names_set:
                 raise TypeError('Joint name [%s] is not in the arm'
                                 ' joint list!' % joint_name)
