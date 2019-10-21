@@ -38,6 +38,7 @@ class Robotiq2F140Real(EndEffectorTool):
         urscript = self._get_new_urscript()
 
         urscript.set_activate()
+        urscript.set_gripper_speed(255)  # move at max speed
 
         urscript.sleep(0.1)
 

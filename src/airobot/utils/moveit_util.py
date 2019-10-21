@@ -86,7 +86,8 @@ class MoveitScene(object):
                 raise ValueError('Size should a float number for sphere')
             self.scene.add_sphere(obj_name, pose_stamped, radius=size)
 
-    def add_dynamic_obj(self, ref_frame, obj_name, pos, ori, size):
+    def add_dynamic_obj(self, ref_frame, obj_name, pos, ori, size,
+                        touch_links=None):
         """
         Add object to the ref_frame, the object will move with the ref_frame.
         Only box is supported for now.
@@ -121,7 +122,13 @@ class MoveitScene(object):
                                  ' should be 3 for box')
         if isinstance(size, list):
             size = tuple(size)
-        self.scene.attach_box(ref_frame, obj_name, pose_stamped, size)
+        if touch_links is None:
+            self.scene.attach_box(ref_frame, obj_name, pose_stamped, size)
+        else:
+            # moveit ignores collisions between box and links in touch_links
+            self.scene.attach_box(ref_frame, obj_name,
+                                  pose_stamped, size,
+                                  touch_links=touch_links)
 
     def remove_obj(self, obj_name):
         """

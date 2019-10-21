@@ -654,6 +654,33 @@ class UR5eReal(ARM):
                       'Be careful when you use moveit to plan the path! You'
                       'can try again to add the base manually.')
 
+        # add a virtual bounding box for the wrist mounted camera
+        wrist_cam_name = 'wrist_cam'
+        wrist_cam_attached = False
+        safe_camera_links = [
+            'wrist_3_link',
+            'ee_link',
+            'robotiq_arg2f_coupling',
+            'robotiq_arg2f_base_link'
+        ]
+        for _ in range(2):
+            self.moveit_scene.add_dynamic_obj(
+                'robotiq_arg2f_base_link',
+                wrist_cam_name,
+                [0.06, 0, 0.05],
+                [0, 0, 0, 1],
+                [0.03, 0.1, 0.03],
+                touch_links=safe_camera_links)
+            time.sleep(1)
+            obj_dict, obj_adict = self.moveit_scene.get_objects()
+            if wrist_cam_name in obj_adict.keys():
+                wrist_cam_attached = True
+                break
+        if not wrist_cam_attached:
+            print_red('Fail to add the wrist camera bounding box as collision'
+                      'object. Be careful when you use moveit to plan paths!'
+                      'You can try again to add the camera box manually.')
+
         self.jac_solver = kdl.ChainJntToJacSolver(self.urdf_chain)
         self.fk_solver_pos = kdl.ChainFkSolverPos_recursive(self.urdf_chain)
         self.fk_solver_vel = kdl.ChainFkSolverVel_recursive(self.urdf_chain)
