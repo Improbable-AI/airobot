@@ -1,15 +1,15 @@
 import time
 
-import airobot as ar
+from airobot import Robot
 
 
 def main():
     """
     Move the robot end effector in a straight line
     """
-    robot = ar.create_robot('ur5e', robot_cfg={'render': True})
-    robot.go_home()
-    robot.move_ee_xyz([0.1, 0.1, 0.1])
+    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot.arm.go_home()
+    robot.arm.move_ee_xyz([0.1, 0.1, 0.1])
     time.sleep(3)
 
 

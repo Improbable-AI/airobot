@@ -2,7 +2,7 @@ from yacs.config import CfgNode as CN
 
 _C = CN()
 # joint angle when the gripper is fully open
-_C.OPEN_ANGLE = 0
+_C.OPEN_ANGLE = 0.0
 # joint angle when the gripper is fully closed
 _C.CLOSE_ANGLE = 0.7
 

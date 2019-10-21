@@ -2,10 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+import shutil
+
 import PyKDL as kdl
 import numpy as np
-import shutil
-import os
 from scipy.spatial.transform import Rotation as R
 
 

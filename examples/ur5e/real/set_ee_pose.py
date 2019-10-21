@@ -1,6 +1,6 @@
 import time
 
-import airobot as ar
+from airobot import Robot
 
 
 def main():
@@ -25,14 +25,14 @@ def main():
     to be collision free (change the goal poses when use_urscript=True
     at your own risk)
     """
-    robot = ar.create_robot('ur5e', pb=False)
-    robot.go_home()
+    robot = Robot('ur5e', pb=False, use_cam=False)
+    robot.arm.go_home()
 
     goal_pos = [0.45, 0.2, 0.3]
     success = False
     while not success:
-        success = robot.set_ee_pose(goal_pos, wait=True)
-    pos, quat, rot, euler = robot.get_ee_pose()
+        success = robot.arm.set_ee_pose(goal_pos, wait=True)
+    pos, quat, rot, euler = robot.arm.get_ee_pose()
     print('End effector pose:')
     print('Position:')
     print(pos)
@@ -44,8 +44,8 @@ def main():
     goal_ori = [1.57, 0.0, 0.0]
     success = False
     while not success:
-        success = robot.set_ee_pose(goal_pos, goal_ori, wait=True)
-    pos, quat, rot, euler = robot.get_ee_pose()
+        success = robot.arm.set_ee_pose(goal_pos, goal_ori, wait=True)
+    pos, quat, rot, euler = robot.arm.get_ee_pose()
     print('End effector pose:')
     print('Position:')
     print(pos)
@@ -65,13 +65,13 @@ def main():
     )
     time.sleep(3.0)
 
-    robot.set_comm_mode(use_urscript=True)
+    robot.arm.set_comm_mode(use_urscript=True)
 
     goal_pos = [0.6, -0.4, 0.2]
     success = False
     while not success:
-        success = robot.set_ee_pose(goal_pos, wait=True)
-    pos, quat, rot, euler = robot.get_ee_pose()
+        success = robot.arm.set_ee_pose(goal_pos, wait=True)
+    pos, quat, rot, euler = robot.arm.get_ee_pose()
     print('End effector pose:')
     print('Position:')
     print(pos)

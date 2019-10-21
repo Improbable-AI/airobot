@@ -3,15 +3,15 @@
 import argparse
 import json
 import os
+import rospkg
 import signal
 import sys
 import time
 
 import numpy as np
 import open3d
-import rospkg
 
-import airobot as ar
+from airobot import Robot
 from .pushing import filter_points
 
 
@@ -36,9 +36,9 @@ def main():
     args = parser.parse_args()
     np.set_printoptions(precision=4, suppress=True)
 
-    robot = ar.create_robot('ur5e', pb=False, robot_cfg={'use_cam': True})
+    robot = Robot('ur5e', pb=False, use_cam=True)
     pre_jnts = [1.57, -1.66, -1.92, -1.12, 1.57, 0]
-    robot.set_jpos(pre_jnts)
+    robot.arm.set_jpos(pre_jnts)
 
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')
@@ -48,7 +48,7 @@ def main():
         calib_data = json.load(f)
     cam_pos = np.array(calib_data['b_c_transform']['position'])
     cam_ori = np.array(calib_data['b_c_transform']['orientation'])
-    robot.camera.set_cam_ext(cam_pos, cam_ori)
+    robot.cam.set_cam_ext(cam_pos, cam_ori)
 
     vis = open3d.visualization.Visualizer()
     vis.create_window("Point Cloud")
@@ -62,8 +62,8 @@ def main():
     vis.add_geometry(coord)
     vis.add_geometry(pcd)
     while True:
-        pts, colors = robot.camera.get_pcd(in_world=True,
-                                           filter_depth=True)
+        pts, colors = robot.cam.get_pcd(in_world=True,
+                                        filter_depth=True)
         pts, colors = filter_points(pts, colors, z_lowest=args.z_min)
         pcd.points = open3d.utility.Vector3dVector(pts)
         pcd.colors = open3d.utility.Vector3dVector(colors / 255.0)

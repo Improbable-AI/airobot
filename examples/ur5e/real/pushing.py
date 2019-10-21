@@ -5,16 +5,16 @@ from __future__ import print_function
 import argparse
 import json
 import os
+import rospkg
 import signal
 import sys
 import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-import rospkg
 from sklearn.cluster import DBSCAN
 
-import airobot as ar
+from airobot import Robot
 
 
 def signal_handler(sig, frame):
@@ -197,8 +197,8 @@ def push(bot, reset_pos, z_lowest=-0.17):
             z coordinate (e.g., the table) less than this value will be removed.
 
     """
-    cur_pos = bot.get_ee_pose()[0]
-    bot.move_ee_xyz(reset_pos - cur_pos)
+    cur_pos = bot.arm.get_ee_pose()[0]
+    bot.arm.move_ee_xyz(reset_pos - cur_pos)
     pts, colors = bot.camera.get_pcd(in_world=True,
                                      filter_depth=True)
     pts, colors = filter_points(pts, colors, z_lowest=z_lowest)
@@ -209,14 +209,14 @@ def push(bot, reset_pos, z_lowest=-0.17):
                                          z_lowest=z_lowest)
 
     print("Going to: ", start_pt.tolist())
-    result = bot.move_ee_xyz(start_pt - reset_pos)
+    result = bot.arm.move_ee_xyz(start_pt - reset_pos)
     if not result:
         return
     down_disp = mid_pt - start_pt
-    bot.move_ee_xyz(down_disp)
+    bot.arm.move_ee_xyz(down_disp)
     hor_disp = 2 * (center - mid_pt)
-    bot.move_ee_xyz(hor_disp)
-    bot.move_ee_xyz([0, 0, 0.2])
+    bot.arm.move_ee_xyz(hor_disp)
+    bot.arm.move_ee_xyz([0, 0, 0.2])
 
 
 def main():
@@ -235,7 +235,7 @@ def main():
     args = parser.parse_args()
 
     np.set_printoptions(precision=4, suppress=True)
-    bot = ar.create_robot('ur5e', pb=False, robot_cfg={'use_cam': True})
+    bot = Robot('ur5e', pb=False, use_cam=True)
 
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')
@@ -246,15 +246,15 @@ def main():
     cam_pos = np.array(calib_data['b_c_transform']['position'])
     cam_ori = np.array(calib_data['b_c_transform']['orientation'])
 
-    bot.camera.set_cam_ext(cam_pos, cam_ori)
-    bot.go_home()
-    bot.gripper.activate()
-    bot.gripper.close()
+    bot.cam.set_cam_ext(cam_pos, cam_ori)
+    bot.arm.go_home()
+    bot.arm.eetool.activate()
+    bot.arm.eetool.close()
 
     pre_jnts = [1.57, -1.66, -1.92, -1.12, 1.57, 0]
-    bot.set_jpos(pre_jnts)
+    bot.arm.set_jpos(pre_jnts)
     time.sleep(1)
-    ee_pose = bot.get_ee_pose()
+    ee_pose = bot.arm.get_ee_pose()
     reset_pos = ee_pose[0]
 
     while True:

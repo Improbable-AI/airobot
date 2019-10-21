@@ -15,20 +15,20 @@ from tf.transformations import quaternion_matrix
 from airobot.sensor.camera.camera import Camera
 
 
-class RGBDCamera(Camera):
+class RGBDCameraReal(Camera):
     def __init__(self, cfgs, cam_name=None):
         """
         Initialize the rgbd camera
 
         Args:
-            cfgs: configurations for the camera
-            cam_name: camera name
+            cfgs (YACS CfgNode): configurations for the camera
+            cam_name (str): camera name
         """
-        super(RGBDCamera, self).__init__(cfgs=cfgs)
-        self.depth_topic = self.cfgs.CAM_REALSENSE.ROSTOPIC_CAMERA_DEPTH
-        self.rgb_topic = self.cfgs.CAM_REALSENSE.ROSTOPIC_CAMERA_RGB
-        self.cam_info_topic = self.cfgs.CAM_REALSENSE.ROSTOPIC_CAMERA_INFO
-        self.depth_scale = self.cfgs.CAM_REALSENSE.DEPTH_SCALE
+        super(RGBDCameraReal, self).__init__(cfgs=cfgs)
+        self.depth_topic = self.cfgs.CAM.REAL.ROSTOPIC_CAMERA_DEPTH
+        self.rgb_topic = self.cfgs.CAM.REAL.ROSTOPIC_CAMERA_RGB
+        self.cam_info_topic = self.cfgs.CAM.REAL.ROSTOPIC_CAMERA_INFO
+        self.depth_scale = self.cfgs.CAM.REAL.DEPTH_SCALE
         if cam_name is not None:
             self.depth_topic = self._rp_cam_name(self.depth_topic,
                                                  cam_name)
@@ -63,8 +63,8 @@ class RGBDCamera(Camera):
                                                                 queue_size=2,
                                                                 slop=0.2)
         self.sync.registerCallback(self._sync_callback)
-        self.depth_min = self.cfgs.CAM_REALSENSE.DEPTH_MIN
-        self.depth_max = self.cfgs.CAM_REALSENSE.DEPTH_MAX
+        self.depth_min = self.cfgs.CAM.REAL.DEPTH_MIN
+        self.depth_max = self.cfgs.CAM.REAL.DEPTH_MAX
         start_time = time.time()
         while True:
             if self.cam_K is not None and self.rgb_img is not None:
@@ -76,7 +76,7 @@ class RGBDCamera(Camera):
         self.cam_K_inv = np.linalg.inv(self.cam_K)
 
         img_pixs = np.mgrid[0: self.cam_height,
-                            0: self.cam_width].reshape(2, -1)
+                   0: self.cam_width].reshape(2, -1)
         img_pixs[[0, 1], :] = img_pixs[[1, 0], :]
         self.uv_one = np.concatenate((img_pixs,
                                       np.ones((1, img_pixs.shape[1]))))

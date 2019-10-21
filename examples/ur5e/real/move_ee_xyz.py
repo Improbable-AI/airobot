@@ -1,6 +1,6 @@
 import time
 
-import airobot as ar
+from airobot import Robot
 
 
 def main():
@@ -13,13 +13,15 @@ def main():
     First movement is executed with MoveIt!, and second movement
     is executed using urscript commands
     """
-    robot = ar.create_robot('ur5e', pb=False)
-    robot.go_home()
-    robot.move_ee_xyz([0.2, 0.0, 0.0], wait=True)
+    robot = Robot('ur5e',
+                  pb=False,
+                  use_cam=False)
+    robot.arm.go_home()
+    robot.arm.move_ee_xyz([0.2, 0.0, 0.0], wait=True)
     time.sleep(1.0)
 
-    robot.set_comm_mode(use_urscript=True)
-    robot.move_ee_xyz([-0.2, 0.0, 0.0], wait=True)
+    robot.arm.set_comm_mode(use_urscript=True)
+    robot.arm.move_ee_xyz([-0.2, 0.0, 0.0], wait=True)
 
 
 if __name__ == '__main__':

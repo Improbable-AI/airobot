@@ -1,6 +1,7 @@
 import time
 
 import airobot as ar
+from airobot import Robot
 
 
 def main():
@@ -22,14 +23,14 @@ def main():
     collision free (change the goal positions when use_urscript=True
     at your own risk)
     """
-    robot = ar.create_robot('ur5e', pb=False)
-    robot.go_home()
+    robot = Robot('ur5e', pb=False, use_cam=False)
+    robot.arm.go_home()
 
     goal_pos = [0.5, -2, -1.1, -0.95, 1.7, -0.1]
 
-    robot.set_jpos(goal_pos, wait=True)
+    robot.arm.set_jpos(goal_pos, wait=True)
     print("Joint Angles: ")
-    print(robot.get_jpos())
+    print(robot.arm.get_jpos())
 
     ar.utils.common.print_red(
         """
@@ -43,13 +44,13 @@ def main():
     )
     time.sleep(3.0)
 
-    robot.set_comm_mode(use_urscript=True)
+    robot.arm.set_comm_mode(use_urscript=True)
 
     goal_pos = [0, -1.66, -1.92, -1.12, 1.57, 0]
 
-    robot.set_jpos(goal_pos, wait=True)
+    robot.arm.set_jpos(goal_pos, wait=True)
     print("Joint Angles: ")
-    print(robot.get_jpos())
+    print(robot.arm.get_jpos())
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 import numpy as np
 
-import airobot as ar
+from airobot import Robot
 
 
 def main():
@@ -8,20 +8,24 @@ def main():
     This function demonstrates how to get joint information
     such as joint positions/velocities/torques.
     """
-    robot = ar.create_robot('ur5e', robot_cfg={'render': False})
-    robot.go_home()
+    robot = Robot('ur5e', arm_cfg={'render': False})
+    robot.arm.go_home()
     print('\nJoint positions for all actuated joints:')
-    jpos = robot.get_jpos()
+    jpos = robot.arm.get_jpos()
     print(np.around(jpos, decimals=3))
     joint = 'shoulder_pan_joint'
     print('Joint [%s] position: %.3f' %
-          (joint, robot.get_jpos('shoulder_pan_joint')))
+          (joint, robot.arm.get_jpos('shoulder_pan_joint')))
     print('Joint velocities:')
-    jvel = robot.get_jvel()
+    jvel = robot.arm.get_jvel()
     print(np.around(jvel, decimals=3))
     print('Joint torques:')
-    jtorq = robot.get_jtorq()
+    jtorq = robot.arm.get_jtorq()
     print(np.around(jtorq, decimals=3))
+    robot.arm.eetool.close()
+    print('Gripper position (close): %.3f' % robot.arm.eetool.get_pos())
+    robot.arm.eetool.open()
+    print('Gripper position (open): %.3f' % robot.arm.eetool.get_pos())
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import airobot as ar
+from airobot import Robot
 
 
 def main():
@@ -9,18 +9,20 @@ def main():
     This function demonstrates how to setup camera
     and get rgb/depth images.
     """
-    robot = ar.create_robot('ur5e',
-                            robot_cfg={'render': True})
+    robot = Robot('ur5e', arm_cfg={'render': True})
     focus_pt = [0, 0, 1]  # ([x, y, z])
-    robot.setup_camera(focus_pt=focus_pt,
-                       dist=3,
-                       yaw=0,
-                       pitch=0,
-                       roll=0)
-    robot.go_home()
-    rgba, depth = robot.get_images(get_rgb=True,
-                                   get_depth=True)
-    plt.imshow(rgba)
+    robot.cam.setup_camera(focus_pt=focus_pt,
+                           dist=3,
+                           yaw=0,
+                           pitch=0,
+                           roll=0)
+    robot.arm.go_home()
+    rgb, depth = robot.cam.get_images(get_rgb=True,
+                                      get_depth=True)
+    plt.figure()
+    plt.imshow(rgb)
+    plt.figure()
+    plt.imshow(depth * 25, cmap='gray', vmin=0, vmax=255)
     print('Maximum Depth (m): %f' % np.max(depth))
     print('Minimum Depth (m): %f' % np.min(depth))
     plt.show()

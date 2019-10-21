@@ -1,6 +1,6 @@
 import time
 
-import airobot as ar
+from airobot import Robot
 
 
 def main():
@@ -8,13 +8,12 @@ def main():
     This function demonstrates how to perform torque
     control on the simulated UR robot
     """
-    robot = ar.create_robot('ur5e',
-                            robot_cfg={'render': True,
-                                       'self_collision': True})
-    robot.go_home()
-    robot.enable_torque_control()
+    robot = Robot('ur5e', arm_cfg={'render': True,
+                                   'self_collision': True})
+    robot.arm.go_home()
+    robot.arm.enable_torque_control()
     while True:
-        robot.set_jtorq([100, 100, 100, 20, 20, 20])
+        robot.arm.set_jtorq([100, 100, 100, 20, 20, 20])
         time.sleep(0.0001)
 
 

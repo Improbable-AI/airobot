@@ -1,4 +1,4 @@
-class EndEffector(object):
+class EndEffectorTool(object):
     """
     Base class for end effector
     """

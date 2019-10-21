@@ -3,10 +3,14 @@ import numpy as np
 from airobot.sensor.camera.camera import Camera
 
 
-class PyBulletCamera(Camera):
-    def __init__(self, publlet, cfgs):
-        super(PyBulletCamera, self).__init__(cfgs=cfgs)
-        self.p = publlet
+class RGBDCameraPybullet(Camera):
+    def __init__(self, cfgs, p):
+        """
+        Args:
+            cfgs (YACS CfgNode): configurations for the camera
+        """
+        super(RGBDCameraPybullet, self).__init__(cfgs=cfgs)
+        self.p = p
         self.view_matrix = None
         self.proj_matrix = None
 
@@ -35,12 +39,12 @@ class PyBulletCamera(Camera):
                                                                pitch,
                                                                roll,
                                                                upAxisIndex=2)
-        height = self.cfgs.CAM_SIM.HEIGHT
-        width = self.cfgs.CAM_SIM.WIDTH
+        height = self.cfgs.CAM.SIM.HEIGHT
+        width = self.cfgs.CAM.SIM.WIDTH
         aspect = width / float(height)
-        znear = self.cfgs.CAM_SIM.ZNEAR
-        zfar = self.cfgs.CAM_SIM.ZFAR
-        fov = self.cfgs.CAM_SIM.FOV
+        znear = self.cfgs.CAM.SIM.ZNEAR
+        zfar = self.cfgs.CAM.SIM.ZFAR
+        fov = self.cfgs.CAM.SIM.FOV
         self.proj_matrix = self.p.computeProjectionMatrixFOV(fov,
                                                              aspect,
                                                              znear,
@@ -48,20 +52,21 @@ class PyBulletCamera(Camera):
 
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
-        Return rgba/depth images
+        Return rgb/depth images
 
         Args:
             get_rgb (bool): return rgb image if True, None otherwise
             get_depth (bool): return depth image if True, None otherwise
 
         Returns:
-            rgba and depth images (np.ndarray)
+            np.ndarray: rgb image (shape: [H, W, 3])
+            np.ndarray: depth image (shape: [H, W])
         """
 
         if self.view_matrix is None:
             raise ValueError('Please call setup_camera() first!')
-        height = self.cfgs.CAM_SIM.HEIGHT
-        width = self.cfgs.CAM_SIM.WIDTH
+        height = self.cfgs.CAM.SIM.HEIGHT
+        width = self.cfgs.CAM.SIM.WIDTH
         p = self.p
         images = self.p.getCameraImage(width=width,
                                        height=height,
@@ -70,13 +75,13 @@ class PyBulletCamera(Camera):
                                        shadow=True,
                                        flags=p.ER_NO_SEGMENTATION_MASK,
                                        renderer=p.ER_BULLET_HARDWARE_OPENGL)
-        rgba = None
+        rgb = None
         depth = None
         if get_rgb:
-            rgba = np.reshape(images[2], (height, width, 4))  # 0 to 255
+            rgb = np.reshape(images[2], (height, width, 4))[:, :, :3]  # 0 to 255
         if get_depth:
-            depth_buffer = np.reshape(images[3], [width, height])
-            znear = self.cfgs.CAM_SIM.ZNEAR
-            zfar = self.cfgs.CAM_SIM.ZFAR
+            depth_buffer = np.reshape(images[3], [height, width])
+            znear = self.cfgs.CAM.SIM.ZNEAR
+            zfar = self.cfgs.CAM.SIM.ZFAR
             depth = zfar * znear / (zfar - (zfar - znear) * depth_buffer)
-        return rgba, depth
+        return rgb, depth

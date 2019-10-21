@@ -1,14 +1,14 @@
 import json
 import os
+import rospkg
 import signal
 import sys
 import time
 
 import numpy as np
 import open3d
-import rospkg
 
-import airobot as ar
+from airobot import Robot
 
 
 def signal_handler(sig, frame):
@@ -26,10 +26,7 @@ def main():
     """
     Visualize the point cloud from the RGBD camera
     """
-    robot = ar.create_robot('ur5e',
-                            pb=False,
-                            robot_cfg={'use_cam': True,
-                                       'use_arm': False})
+    robot = Robot('ur5e', pb=False, use_cam=True, use_arm=False)
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')
     calib_file_path = os.path.join(data_path, 'result', 'ur5e',
@@ -39,18 +36,18 @@ def main():
     cam_pos = np.array(calib_data['b_c_transform']['position'])
     cam_ori = np.array(calib_data['b_c_transform']['orientation'])
 
-    robot.camera.set_cam_ext(cam_pos, cam_ori)
+    robot.cam.set_cam_ext(cam_pos, cam_ori)
     vis = open3d.visualization.Visualizer()
     vis.create_window("Point Cloud")
     pcd = open3d.geometry.PointCloud()
-    pts, colors = robot.camera.get_pcd(in_world=True,
-                                       filter_depth=False)
+    pts, colors = robot.cam.get_pcd(in_world=True,
+                                    filter_depth=False)
     pcd.points = open3d.utility.Vector3dVector(pts)
     pcd.colors = open3d.utility.Vector3dVector(colors / 255.0)
     vis.add_geometry(pcd)
     while True:
-        pts, colors = robot.camera.get_pcd(in_world=True,
-                                           filter_depth=False)
+        pts, colors = robot.cam.get_pcd(in_world=True,
+                                        filter_depth=False)
         pcd.points = open3d.utility.Vector3dVector(pts)
         pcd.colors = open3d.utility.Vector3dVector(colors / 255.0)
         vis.update_geometry()

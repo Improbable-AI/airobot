@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-import airobot as ar
+from airobot import Robot
 
 
 def main():
@@ -10,24 +10,23 @@ def main():
      the yaw angle that is defined in robot.setup_camera) changes
     the camera view
     """
-    robot = ar.create_robot('ur5e',
-                            robot_cfg={'render': True})
+    robot = Robot('ur5e', arm_cfg={'render': True})
     focus_pt = [0, 0, 1]  # ([x, y, z])
-    robot.go_home()
+    robot.arm.go_home()
     img = np.random.rand(480, 640)
     image = plt.imshow(img, interpolation='none',
-                       animated=True, label="blah")
+                       animated=True, label="cam")
     ax = plt.gca()
     while True:
         for yaw in range(0, 360, 10):
-            robot.setup_camera(focus_pt=focus_pt,
-                               dist=3,
-                               yaw=yaw,
-                               pitch=0,
-                               roll=0)
+            robot.cam.setup_camera(focus_pt=focus_pt,
+                                   dist=3,
+                                   yaw=yaw,
+                                   pitch=0,
+                                   roll=0)
 
-            rgba, depth = robot.get_images(get_rgb=True,
-                                           get_depth=True)
+            rgba, depth = robot.cam.get_images(get_rgb=True,
+                                               get_depth=True)
             image.set_data(rgba)
             ax.plot([0])
             plt.pause(0.01)

@@ -1,25 +1,24 @@
 import time
 
-import airobot as ar
+from airobot import Robot
 
 
 def main():
     """
     Move the robot end effector to the desired pose
     """
-    robot = ar.create_robot('ur5e',
-                            robot_cfg={'render': True})
-    robot.go_home()
-    tgt_pos = [0.5, 0.3, 1.4]
-    robot.set_ee_pose(tgt_pos)
+    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot.arm.go_home()
+    tgt_pos = [0.45, 0.2, 1.3]
+    robot.arm.set_ee_pose(tgt_pos)
 
     # sleep statement is not necessary
     time.sleep(1)
-    tgt_pos = [0.5, -0.3, 1.4]
-    tgt_euler = [0.4, 0.2, 0.3]
-    robot.set_ee_pose(tgt_pos, tgt_euler)
+    tgt_pos = [0.6, -0.15, 1.2]
+    tgt_euler = [1.57, 0.0, 0.0]
+    robot.arm.set_ee_pose(tgt_pos, tgt_euler)
     time.sleep(1)
-    pos, quat, rot, euler = robot.get_ee_pose()
+    pos, quat, rot, euler = robot.arm.get_ee_pose()
     print('End effector pose:')
     print('Position:')
     print(pos)

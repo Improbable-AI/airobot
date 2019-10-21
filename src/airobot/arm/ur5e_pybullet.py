@@ -16,35 +16,44 @@ import pybullet_data
 from gym.utils import seeding
 
 import airobot.utils.common as arutil
-from airobot.robot.robot import Robot
-from airobot.sensor.camera.pybullet_cam import PyBulletCamera
+from airobot.arm.arm import ARM
+from airobot.utils.arm_util import wait_to_reach_jnt_goal
 
 
 # import pkgutil
 
 
-class UR5eRobotPybullet(Robot):
+class UR5ePybullet(ARM):
     """
     Class for the pybullet simulation environment
         of a UR5e robot with a robotiq 2f140 gripper.
     """
 
-    def __init__(self, cfgs, render=False, seed=None, self_collision=False):
+    def __init__(self, cfgs, render=False, seed=None, self_collision=False,
+                 eetool_cfg=None):
         """
         Constructor for the pybullet simulation environment
         of a UR5e robot with a robotiq 2f140 gripper
 
         Args:
-            cfgs (YACS CfgNode): configurations for the robot
+            cfgs (YACS CfgNode): configurations for the arm
             render (bool): whether to render the environment using GUI
             seed (int): random seed
             self_collision (bool): enable self_collision or
                                    not whiling loading URDF
+            eetool_cfg (dict): arguments to pass in the constructor
+                of the end effector tool class
         """
-        super(UR5eRobotPybullet, self).__init__(cfgs=cfgs)
+
         self._render = render
         self.self_collision = self_collision
         self.p = p
+        if eetool_cfg is None:
+            eetool_cfg = {'p': self.p}
+        else:
+            eetool_cfg['p'] = self.p
+        super(UR5ePybullet, self).__init__(cfgs=cfgs, eetool_cfg=eetool_cfg)
+
         if self._render:
             p.connect(p.GUI)
         else:
@@ -62,9 +71,6 @@ class UR5eRobotPybullet(Robot):
         self.reset()
         self._init_threads()
 
-    def __del__(self):
-        p.disconnect()
-
     def go_home(self):
         """
         Move the robot to a pre-defined home pose
@@ -79,11 +85,11 @@ class UR5eRobotPybullet(Robot):
         p.resetSimulation()
 
         plane_pos = [0, 0, 0]
-        plane_ori = arutil.quat2euler([0, 0, 0])
+        plane_ori = arutil.euler2quat([0, 0, 0])
         self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
         ur_pos = [0, 0, 1]
-        ur_ori = arutil.quat2euler([0, 0, 0])
+        ur_ori = arutil.euler2quat([0, 0, 0])
         if self.self_collision:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
                                        ur_pos,
@@ -92,21 +98,11 @@ class UR5eRobotPybullet(Robot):
         else:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF, ur_pos, ur_ori)
         self._build_jnt_id()
+        self.eetool.activate(self.robot_id, self.jnt_to_id)
         if self.self_collision:
             # weird behavior occurs on the gripper
             # when self-collision is enforced
-            self._disable_gripper_self_collision()
-
-    def _disable_gripper_self_collision(self):
-        for i in range(len(self.gripper_jnt_names)):
-            for j in range(i + 1, len(self.gripper_jnt_names)):
-                jnt_idx1 = self.jnt_to_id[self.gripper_jnt_names[i]]
-                jnt_idx2 = self.jnt_to_id[self.gripper_jnt_names[j]]
-                p.setCollisionFilterPair(self.robot_id,
-                                         self.robot_id,
-                                         jnt_idx1,
-                                         jnt_idx2,
-                                         enableCollision=0)
+            self.eetool.disable_gripper_self_collision()
 
     def step_simulation(self):
         """
@@ -123,33 +119,13 @@ class UR5eRobotPybullet(Robot):
                 stop the realtime simulation if False
         """
         if on:
-            self._step_sim_mode = False
+            self._set_step_sim(step_mode=False)
             if self._render:
                 p.setRealTimeSimulation(1)
         else:
-            self._step_sim_mode = True
+            self._set_step_sim(step_mode=True)
             if self._render:
                 p.setRealTimeSimulation(0)
-
-    def open_gripper(self):
-        """
-        Open the gripper
-
-        Returns:
-            return if the action is sucessful or not
-        """
-        success = self._set_gripper_pos(self.gripper_open_angle)
-        return success
-
-    def close_gripper(self):
-        """
-        Close the gripper
-
-        Returns:
-            return if the action is sucessful or not
-        """
-        success = self._set_gripper_pos(self.gripper_close_angle)
-        return success
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
@@ -195,9 +171,14 @@ class UR5eRobotPybullet(Robot):
                                     targetPosition=tgt_pos,
                                     force=max_torque)
         if not self._step_sim_mode and wait:
-            success = self._wait_to_reach_jnt_goal(tgt_pos,
-                                                   joint_name=joint_name,
-                                                   mode='pos')
+            success = wait_to_reach_jnt_goal(
+                tgt_pos,
+                get_func=self.get_jpos,
+                joint_name=joint_name,
+                get_func_derv=self.get_jvel,
+                timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
+                max_error=self.cfgs.ARM.MAX_JOINT_ERROR
+            )
         return success
 
     def set_jvel(self, velocity, joint_name=None, wait=False, *args, **kwargs):
@@ -245,9 +226,13 @@ class UR5eRobotPybullet(Robot):
                                     targetVelocity=tgt_vel,
                                     force=max_torque)
         if not self._step_sim_mode and wait:
-            success = self._wait_to_reach_jnt_goal(tgt_vel,
-                                                   joint_name=joint_name,
-                                                   mode='vel')
+            success = wait_to_reach_jnt_goal(
+                tgt_vel,
+                get_func=self.get_jvel,
+                joint_name=joint_name,
+                timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
+                max_error=self.cfgs.ARM.MAX_JOINT_VEL_ERROR
+            )
         return success
 
     def set_jtorq(self, torque, joint_name=None, wait=False, *args, **kwargs):
@@ -296,7 +281,7 @@ class UR5eRobotPybullet(Robot):
                                     force=torque)
         return True
 
-    def set_ee_pose(self, pos, ori=None, wait=True, *args, **kwargs):
+    def set_ee_pose(self, pos=None, ori=None, wait=True, *args, **kwargs):
         """
         Move the end effector to the specifed pose
         Args:
@@ -310,6 +295,9 @@ class UR5eRobotPybullet(Robot):
             A boolean variable representing if the action is successful at
             the moment when the function exits
         """
+        if pos is None:
+            pose = self.get_ee_pose()
+            pos = pose[0]
         jnt_pos = self.compute_ik(pos, ori)
         success = self.set_jpos(jnt_pos, wait=wait)
         return success
@@ -402,13 +390,14 @@ class UR5eRobotPybullet(Robot):
         Return the joint position(s) of the arm
 
         Args:
-            joint_name: If it's None, it will return joint positions
+            joint_name (str, optional): If it's None, it will return joint positions
                 of all the actuated joints. Otherwise, it will
                 return the joint position of the specified joint
 
         Returns:
-            joint position (float) or joint positions (list) depends on
-            the joint_name
+            float: joint position given joint_name
+            or
+            list: joint positions if joint_name is None (shape: [6,])
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id, self.arm_jnt_ids)
@@ -428,8 +417,9 @@ class UR5eRobotPybullet(Robot):
                 return the joint velocity of the specified joint
 
         Returns:
-            joint velocity (float) or joint velocities (list) depends on
-            the joint_name
+            float: joint velocity given joint_name
+            or
+            list: joint velocities if joint_name is None (shape: [6,])
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id, self.arm_jnt_ids)
@@ -454,8 +444,9 @@ class UR5eRobotPybullet(Robot):
                 return the joint torque of the specified joint
 
         Returns:
-            joint torque (float) or joint torques (list) depends on
-            the joint_name
+            float: joint torque given joint_name
+            or
+            list: joint torques if joint_name is None
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id, self.arm_jnt_ids)
@@ -488,41 +479,24 @@ class UR5eRobotPybullet(Robot):
         euler = arutil.quat2euler(quat, axes='xyz')  # [roll, pitch, yaw]
         return np.array(pos), np.array(quat), rot_mat, euler
 
+    def get_ee_vel(self):
+        """
+        Return the end effector's velocity
+
+        Returns:
+            np.ndarray: translational velocity (shape: [3,])
+            np.ndarray: rotational velocity (shape: [3,])
+        """
+        info = p.getLinkState(self.robot_id, self.ee_link_id, computeLinkVelocity=1)
+        trans_vel = info[6]
+        rot_vel = info[7]
+        return np.array(trans_vel), np.array(rot_vel)
+
     def get_ee_force(self):
         """
         TODO add force sensor on the end effector
         """
         raise NotImplementedError
-
-    def setup_camera(self, focus_pt=None, dist=3, yaw=0, pitch=0, roll=0):
-        """
-        Setup the camera view matrix and projection matrix. Must be called
-        first before images are renderred
-
-        Args:
-            focus_pt (list): position of the target (focus) point,
-                in Cartesian world coordinates
-            dist (float): distance from eye (camera) to the focus point
-            yaw (float): yaw angle in degrees,
-                left/right around up-axis (z-axis).
-            pitch (float): pitch in degrees, up/down.
-            roll (float): roll in degrees around forward vector
-        """
-        self.camera.setup_camera(focus_pt=focus_pt, dist=dist,
-                                 yaw=yaw, pitch=pitch, roll=roll)
-
-    def get_images(self, get_rgb=True, get_depth=True, **kwargs):
-        """
-        Return rgba/depth images
-
-        Args:
-            get_rgb (bool): return rgb image if True, None otherwise
-            get_depth (bool): return depth image if True, None otherwise
-
-        Returns:
-            rgba and depth images (np.ndarray)
-        """
-        return self.camera.get_images(get_rgb, get_depth)
 
     def compute_ik(self, pos, ori=None, *args, **kwargs):
         """
@@ -562,77 +536,6 @@ class UR5eRobotPybullet(Robot):
         jnt_poss = list(jnt_poss)
         return jnt_poss[:len(self.arm_jnt_ids)]
 
-    def _mimic_gripper(self, joint_val):
-        """
-        Given the value for the first joint,
-        mimic the joint values for the rest joints
-        """
-        jnt_vals = [joint_val]
-        for i in range(1, len(self.gripper_jnt_names)):
-            jnt_vals.append(joint_val * self._gripper_mimic_coeff[i])
-        return jnt_vals
-
-    def _wait_to_reach_jnt_goal(self, goal, joint_name=None, mode='pos'):
-        """
-        Block the code to wait for the joint moving to the specified goal.
-        The goal can be a desired velocity(s) or a desired position(s).
-        Max waiting time is self.cfgs.TIMEOUT_LIMIT
-
-        Args:
-            goal (float or list): goal positions or velocities
-            joint_name (str): if it's none, all the actuated
-                joints are compared.
-                Otherwise, only the specified joint is compared
-            mode (str): 'pos' or 'vel'
-
-        Returns:
-            if the goal is reached or not
-        """
-        success = False
-        start_time = time.time()
-        while True:
-            if time.time() - start_time > self.cfgs.TIMEOUT_LIMIT:
-                pt_str = 'Unable to move to joint goals [mode: %s] (%s)' \
-                         ' within %f s' % (mode, str(goal),
-                                           self.cfgs.TIMEOUT_LIMIT)
-                arutil.print_red(pt_str)
-                return success
-            if self._reach_jnt_goal(goal, joint_name, mode=mode):
-                success = True
-                break
-            time.sleep(0.001)
-        return success
-
-    def _reach_jnt_goal(self, goal, joint_name=None, mode='pos'):
-        """
-        Check if the joint reached the goal or not.
-        The goal can be a desired velocity(s) or a desired position(s).
-
-        Args:
-            goal (float or list): goal positions or velocities
-            joint_name (str): if it's none, all the
-                actuated joints are compared.
-                Otherwise, only the specified joint is compared
-            mode (str): 'pose' or 'vel'
-
-        Returns:
-            if the goal is reached or not
-        """
-        goal = np.array(goal)
-        if mode == 'pos':
-            new_jnt_val = self.get_jpos(joint_name)
-        elif mode == 'vel':
-            new_jnt_val = self.get_jvel(joint_name)
-        else:
-            raise ValueError('Only pos and vel modes are supported!')
-        new_jnt_val = np.array(new_jnt_val)
-        jnt_diff = new_jnt_val - goal
-        error = np.max(np.abs(jnt_diff))
-        if error < self.cfgs.MAX_JOINT_ERROR:
-            return True
-        else:
-            return False
-
     def _seed(self, seed=None):
         np_random, seed = seeding.np_random(seed)
         return np_random, seed
@@ -645,7 +548,7 @@ class UR5eRobotPybullet(Robot):
         that they move simultaneously
         """
         # realtime simulation thread
-        self._step_sim_mode = False
+        self._set_step_sim(step_mode=False)
         if not self._render:
             self._th_sim = threading.Thread(target=self._rt_simulation)
             self._th_sim.daemon = True
@@ -653,16 +556,11 @@ class UR5eRobotPybullet(Robot):
         else:
             self.realtime_simulation(True)
 
-        # gripper thread
-        self._th_gripper = threading.Thread(target=self._th_mimic_gripper)
-        self._th_gripper.daemon = True
-        self._th_gripper.start()
-
     def _init_consts(self):
         """
         Initialize constants
         """
-        self._home_position = self.cfgs.HOME_POSITION
+        self._home_position = self.cfgs.ARM.HOME_POSITION
         # joint damping for inverse kinematics
         self._ik_jd = 0.05
         self._thread_sleep = 0.001
@@ -675,24 +573,12 @@ class UR5eRobotPybullet(Robot):
 
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.arm_dof = len(self.arm_jnt_names)
-        self._gripper_mimic_coeff = [1, -1, 1, -1, -1, 1]
-        self.gripper_jnt_names = [
-            'finger_joint', 'left_inner_knuckle_joint',
-            'left_inner_finger_joint', 'right_outer_knuckle_joint',
-            'right_inner_knuckle_joint', 'right_inner_finger_joint'
-        ]
-        self.gripper_close_angle = 0.7
-        self.gripper_open_angle = 0
-        self.gripper_jnt_names_set = set(self.gripper_jnt_names)
-        self.rvl_joint_names = self.arm_jnt_names + self.gripper_jnt_names
+        self.rvl_joint_names = self.arm_jnt_names + self.eetool.jnt_names
         self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
-        self.ee_link_jnt = self.cfgs.ROBOT_EE_FRAME_JOINT
+        self.ee_link_jnt = self.cfgs.ARM.ROBOT_EE_FRAME_JOINT
 
         # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
         self._max_torques = [150, 150, 150, 28, 28, 28]
-        # a random value for robotiq joints
-        self._max_torques.append(20)
-        self.camera = PyBulletCamera(p, self.cfgs)
 
     def _rt_simulation(self):
         """
@@ -701,23 +587,6 @@ class UR5eRobotPybullet(Robot):
         while True:
             if not self._step_sim_mode:
                 p.stepSimulation()
-            time.sleep(self._thread_sleep)
-
-    def _th_mimic_gripper(self):
-        """
-        Make all the other joints of the gripper
-        follow the motion of the first joint of the gripper
-        """
-        while True:
-            max_torq = self._max_torques[-1]
-            max_torques = [max_torq] * (len(self.gripper_jnt_names) - 1)
-            gripper_pos = self.get_jpos(self.gripper_jnt_names[0])
-            gripper_poss = self._mimic_gripper(gripper_pos)
-            p.setJointMotorControlArray(self.robot_id,
-                                        self.gripper_jnt_ids[1:],
-                                        p.POSITION_CONTROL,
-                                        targetPositions=gripper_poss[1:],
-                                        forces=max_torques)
             time.sleep(self._thread_sleep)
 
     def _build_jnt_id(self):
@@ -730,51 +599,10 @@ class UR5eRobotPybullet(Robot):
             jnt_name = info[1].decode('UTF-8')
             self.jnt_to_id[jnt_name] = info[0]
 
-        # # joint ids for the actuators
-        # # only the first joint in the gripper is the actuator
-        # # in the simulation
-        # act_joint_names = self.arm_jnt_names + [self.gripper_jnt_names[0]]
-        # self.actuator_ids = [self.jnt_to_id[jnt] for jnt in act_joint_names]
-
-        # # joint ids for all joints
-        # self.rvl_jnt_ids = [
-        #     self.jnt_to_id[jnt] for jnt in self.rvl_joint_names
-        # ]
-
         self.ee_link_id = self.jnt_to_id[self.ee_link_jnt]
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
-        self.gripper_jnt_ids = [
-            self.jnt_to_id[jnt] for jnt in self.gripper_jnt_names
-        ]
 
-    def _set_gripper_pos(self, position, wait=True):
-        """
-        Set the gripper position. We make a separate function apart from
-        set_jpos to make the api consistent with the real robot. set_jpos
-        is only used to control the robot arm
-
-        Args:
-            position (float): joint position
-
-        Returns:
-            A boolean variable representing if the action is successful at
-            the moment when the function exits
-        """
-        joint_name = self.gripper_jnt_names[0]
-        gripper_pos = position[-1]
-        tgt_pos = arutil.clamp(gripper_pos,
-                               self.gripper_open_angle,
-                               self.gripper_close_angle)
-        max_torque = self._max_torques[-1]
-        jnt_id = self.jnt_to_id[joint_name]
-        p.setJointMotorControl2(self.robot_id,
-                                jnt_id,
-                                p.POSITION_CONTROL,
-                                targetPosition=tgt_pos,
-                                force=max_torque)
-        success = False
-        if not self._step_sim_mode and wait:
-            success = self._wait_to_reach_jnt_goal(tgt_pos,
-                                                   joint_name=joint_name,
-                                                   mode='pos')
-        return success
+    def _set_step_sim(self, step_mode=True):
+        self._step_sim_mode = step_mode
+        if self.cfgs.HAS_EETOOL:
+            self.eetool._step_sim_mode = step_mode

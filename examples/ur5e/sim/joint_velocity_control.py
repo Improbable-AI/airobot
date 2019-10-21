@@ -1,7 +1,7 @@
 import math
 import time
 
-import airobot as ar
+from airobot import Robot
 
 
 def sin_wave(t, f, A):
@@ -24,17 +24,17 @@ def main():
     """
     Move all the joints of the robot in a sine-wave fashion
     """
-    robot = ar.create_robot('ur5e',
-                            robot_cfg={'render': True})
-    robot.go_home()
+
+    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot.arm.go_home()
 
     A = 0.2
     f = 0.4
     start_time = time.time()
     while True:
         elapsed_time = time.time() - start_time
-        vels = [sin_wave(elapsed_time, f, A)] * robot.arm_dof
-        robot.set_jvel(vels)
+        vels = [sin_wave(elapsed_time, f, A)] * robot.arm.arm_dof
+        robot.arm.set_jvel(vels)
         time.sleep(0.01)
 
 
