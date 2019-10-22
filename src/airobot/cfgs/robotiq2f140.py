@@ -17,6 +17,7 @@ _C.DEFAULT_SPEED = 255
 _C.DEFAULT_FORCE = 50
 
 _C.COMMAND_TOPIC = '/ur_driver/URScript'
+_C.GAZEBO_COMMAND_TOPIC = '/gripper/gripper_cmd/goal'
 
 # default maximum values for gripper state varibles
 # minimum values are all 0

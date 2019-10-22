@@ -1,5 +1,6 @@
 import rospy
 from std_msgs.msg import String
+from control_msgs.msg import GripperCommandActionGoal
 
 from airobot.ee_tool.ee import EndEffectorTool
 from airobot.utils.common import clamp
@@ -26,6 +27,8 @@ class Robotiq2F140Real(EndEffectorTool):
             'left_inner_finger_joint', 'right_outer_knuckle_joint',
             'right_inner_knuckle_joint', 'right_inner_finger_joint'
         ]
+        self.gazebo_sim = rospy.get_param('sim')
+
         self.jnt_names_set = set(self.jnt_names)
 
         self._ros_initialized = False
@@ -35,14 +38,15 @@ class Robotiq2F140Real(EndEffectorTool):
         """
         Method to activate the gripper
         """
-        urscript = self._get_new_urscript()
+        if not self.gazebo_sim:
+            urscript = self._get_new_urscript()
 
-        urscript.set_activate()
-        urscript.set_gripper_speed(255)  # move at max speed
+            urscript.set_activate()
+            urscript.set_gripper_speed(255)  # move at max speed
 
-        urscript.sleep(0.1)
+            urscript.sleep(0.1)
 
-        self.pub_command.publish(urscript())
+            self.pub_command.publish(urscript())
         rospy.sleep(0.2)
 
     def set_pos(self, pos):
@@ -54,19 +58,24 @@ class Robotiq2F140Real(EndEffectorTool):
         Args:
             pos (float): Desired gripper position
         """
-        urscript = self._get_new_urscript()
-
         pos = clamp(
             pos,
             self.cfgs.EETOOL.OPEN_ANGLE,
             self.cfgs.EETOOL.CLOSE_ANGLE
         )
-        pos = int(pos * self.cfgs.EETOOL.POSITION_SCALING)
+        if not self.gazebo_sim:
+            urscript = self._get_new_urscript()
 
-        urscript.set_gripper_position(pos)
-        urscript.sleep(0.1)
+            pos = int(pos * self.cfgs.EETOOL.POSITION_SCALING)
 
-        self.pub_command.publish(urscript())
+            urscript.set_gripper_position(pos)
+            urscript.sleep(0.1)
+            
+            gripper_cmd = urscript()
+        else:
+            gripper_cmd = GripperCommandActionGoal()
+            gripper_cmd.goal.command.position = pos
+        self.pub_command.publish(gripper_cmd)
 
     def open(self):
         """
@@ -100,9 +109,15 @@ class Robotiq2F140Real(EndEffectorTool):
         Set up the internal publisher to send gripper command
         URScript programs to the robot thorugh ROS
         """
-        self.pub_command = rospy.Publisher(
-            self.cfgs.EETOOL.COMMAND_TOPIC,
-            String,
-            queue_size=10)
+        if self.gazebo_sim:
+            self.pub_command = rospy.Publisher(
+                self.cfgs.EETOOL.GAZEBO_COMMAND_TOPIC,
+                GripperCommandActionGoal,
+                queue_size=10)
+        else:
+            self.pub_command = rospy.Publisher(
+                self.cfgs.EETOOL.COMMAND_TOPIC,
+                String,
+                queue_size=10)
         self._ros_initialized = True
         rospy.sleep(2.0)
