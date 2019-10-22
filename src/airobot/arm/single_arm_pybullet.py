@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import copy
+import pkgutil
 import threading
 import time
 
@@ -14,9 +15,6 @@ from gym.utils import seeding
 import airobot.utils.common as arutil
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
-
-
-# import pkgutil
 
 
 class SingleArmPybullet(ARM):
@@ -54,15 +52,12 @@ class SingleArmPybullet(ARM):
             p.connect(p.GUI)
         else:
             p.connect(p.DIRECT)
-            # TODO Check if EGL is working properly
-            #  EGL rendering seems to give different images
-            # # github issue: https://github.com/bulletphysics/bullet3/issues/2410
             # # using the eglRendererPlugin (hardware OpenGL acceleration)
-            # egl = pkgutil.get_loader('eglRenderer')
-            # if egl:
-            #     p.loadPlugin(egl.get_filename(), "_eglRendererPlugin")
-            # else:
-            #     p.loadPlugin("eglRendererPlugin")
+            egl = pkgutil.get_loader('eglRenderer')
+            if egl:
+                p.loadPlugin(egl.get_filename(), "_eglRendererPlugin")
+            else:
+                p.loadPlugin("eglRendererPlugin")
         self.np_random, _ = self._seed(seed)
 
         self._init_consts()
