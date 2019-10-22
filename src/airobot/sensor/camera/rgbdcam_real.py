@@ -137,9 +137,6 @@ class RGBDCameraReal(Camera):
                 shape: [3])
             cam_ext (np.ndarray): extrinsic matrix (shape: [4, 4]). If this is provided,
                 pos and ori will be ignored
-
-        Returns:
-
         """
         if cam_ext is not None:
             self.cam_ext_mat = cam_ext
@@ -196,8 +193,8 @@ class RGBDCameraReal(Camera):
                 will remain
 
         Returns:
-            3D point coordinates of the pixels in
-                 camera frame (np.ndarray, shape: [N, 3])
+            np.ndarray: 3D point coordinates of the pixels in
+                 camera frame (shape: [N, 3])
         """
         if not isinstance(rs, int) and not isinstance(rs, list) and \
                 not isinstance(rs, np.ndarray):
@@ -253,7 +250,8 @@ class RGBDCameraReal(Camera):
                 lying in [self.depth_min, self.depth_max]
 
         Returns:
-            point coordinates (shape: [N, 3]) and rgb values (shape: [N, 3])
+            np.ndarray: point coordinates (shape: [N, 3])
+            np.ndarray: rgb values (shape: [N, 3])
         """
         rgb_im, depth_im = self.get_images(get_rgb=True, get_depth=True)
         # pcd in camera from depth
