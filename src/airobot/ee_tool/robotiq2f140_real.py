@@ -1,3 +1,5 @@
+import time
+
 import rospy
 from std_msgs.msg import String
 from control_msgs.msg import GripperCommandActionGoal
@@ -120,4 +122,3 @@ class Robotiq2F140Real(EndEffectorTool):
                 String,
                 queue_size=10)
         self._ros_initialized = True
-        rospy.sleep(2.0)
