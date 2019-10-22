@@ -10,12 +10,13 @@ So do not rely on it unless you know no other client is running
 http://support.universal-robots.com/Technical/PrimaryAndSecondaryClientInterface
 """
 
-import logging
 import socket
 import struct
 import time
 from copy import copy
 from threading import Thread, Condition, Lock
+
+import airobot as ar
 
 """
 Code built off of ursecmon.py in python-urx library
@@ -61,7 +62,6 @@ class ParserUtils(object):
         """
         Constructor for parsing utilities class
         """
-        self.logger = logging.getLogger("monitor")
         self.version = (0, 0)
         self.packet_type_map = {
             "RobotModeData": 0,
@@ -300,11 +300,11 @@ class ParserUtils(object):
                              "robotMessageType", "code", "argument",
                              "messageText"))
                 else:
-                    self.logger.debug("Message type parser "
-                                      "not implemented %s", tmp)
+                    ar.log_debug("Message type parser "
+                                 "not implemented %s" % tmp)
             else:
-                self.logger.debug("Unknown packet type %s with "
-                                  "size %s", ptype, psize)
+                ar.log_debug("Unknown packet type %s with "
+                             "size %s" % (ptype, psize))
 
         return allData
 
@@ -456,25 +456,24 @@ class ParserUtils(object):
                     data = data[1:]
                     counter += 1
                     if counter > limit:
-                        self.logger.warning(
-                            "tried %s times to find a packet in data,"
-                            "advertised packet size: %s, type: %s", counter,
-                            psize, ptype)
-                        self.logger.warning("Data length: %s", len(data))
+                        ar.log_warn("tried %s times to find a packet in data,"
+                                    "advertised packet size: %s, type: %s" % (counter,
+                                                                              psize, ptype))
+                        ar.log_warn("Data length: %d" % len(data))
                         limit = limit * 10
                 elif len(data) >= psize:
-                    self.logger.debug("Got packet with size %s and type %s",
-                                      psize, ptype)
+                    ar.log_debug("Got packet with size %s and type %s" % (psize, ptype))
+
                     if counter:
-                        self.logger.info("Remove %s bytes of garbage at"
-                                         "begining of packet", counter)
+                        ar.log_info("Remove %s bytes of garbage at"
+                                    "begining of packet" % counter)
                     # We have something which looks like a packet"
-                    return (data[:psize], data[psize:])
+                    return data[:psize], data[psize:]
                 else:
                     # packet is not complete
-                    self.logger.debug("Packet is not complete, advertised size"
-                                      "is %s, received size is %s, type is %s",
-                                      psize, len(data), ptype)
+                    ar.log_debug("Packet is not complete, advertised size"
+                                 "is %s, received size is %s, type is %s" %
+                                 (psize, len(data), ptype))
                     return None
             else:
                 return None
@@ -493,7 +492,6 @@ class SecondaryMonitor(Thread):
             host (str): Robot's IP address
         """
         Thread.__init__(self)
-        self.logger = logging.getLogger("monitor")
         self._parser = ParserUtils()
         self._dict = {}
         self._dictLock = Lock()
@@ -525,7 +523,7 @@ class SecondaryMonitor(Thread):
             prog (str): URScript style program or command to run
         """
         prog.strip()
-        self.logger.debug("Enqueueing program: %s", prog)
+        ar.log_debug("Enqueueing program: %s" % prog)
         if not isinstance(prog, bytes):
             prog = prog.encode()  # make sure we're sending raw data
 
@@ -534,7 +532,7 @@ class SecondaryMonitor(Thread):
             with self._prog_queue_lock:
                 self._prog_queue.append(data)
             data.condition.wait()
-            self.logger.debug("program send: %s", data)
+            ar.log_debug("program send: %s", data)
 
     def run(self):
         """
@@ -566,13 +564,13 @@ class SecondaryMonitor(Thread):
                 with self._dictLock:
                     self._dict = tmpdict
             except ParsingException as ex:
-                self.logger.warning("Error parsing one packet "
-                                    "from urrobot: %s", ex)
+                ar.log_warn("Error parsing one packet "
+                            "from urrobot: %s" % ex)
                 continue
 
             if "RobotModeData" not in self._dict:
-                self.logger.warning("Got a packet from robot without "
-                                    "RobotModeData, strange ...")
+                ar.log_warn("Got a packet from robot without "
+                            "RobotModeData, strange ...")
                 continue
 
             self.lastpacket_timestamp = time.time()
@@ -585,8 +583,8 @@ class SecondaryMonitor(Thread):
                 self.running = True
             else:
                 if self.running:
-                    self.logger.error("Robot not running: " +
-                                      str(self._dict["RobotModeData"]))
+                    ar.log_error("Robot not running: " +
+                                 str(self._dict["RobotModeData"]))
                 self.running = False
             with self._dataEvent:
                 # print("X: new data")

@@ -1,14 +1,12 @@
-import json
-import os
-import rospkg
+import signal
 import signal
 import sys
 import time
 
-import numpy as np
 import open3d
 
 from airobot import Robot
+from airobot.utils.ros_util import read_cam_ext
 
 
 def signal_handler(sig, frame):
@@ -27,15 +25,8 @@ def main():
     Visualize the point cloud from the RGBD camera
     """
     robot = Robot('ur5e', pb=False, use_cam=True, use_arm=False)
-    rospack = rospkg.RosPack()
-    data_path = rospack.get_path('hand_eye_calibration')
-    calib_file_path = os.path.join(data_path, 'result', 'ur5e',
-                                   'calib_base_to_cam.json')
-    with open(calib_file_path, 'r') as f:
-        calib_data = json.load(f)
-    cam_pos = np.array(calib_data['b_c_transform']['position'])
-    cam_ori = np.array(calib_data['b_c_transform']['orientation'])
 
+    cam_pos, cam_ori = read_cam_ext('ur5e')
     robot.cam.set_cam_ext(cam_pos, cam_ori)
     vis = open3d.visualization.Visualizer()
     vis.create_window("Point Cloud")

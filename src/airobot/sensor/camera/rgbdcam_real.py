@@ -9,11 +9,9 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image
 from tf import TransformListener
-from airobot.utils.common import euler2rot
-from airobot.utils.common import quat2rot
-from airobot.utils.common import to_rot_mat
-
+import airobot as ar
 from airobot.sensor.camera.camera import Camera
+from airobot.utils.common import to_rot_mat
 
 
 class RGBDCameraReal(Camera):
@@ -77,7 +75,7 @@ class RGBDCameraReal(Camera):
         self.cam_K_inv = np.linalg.inv(self.cam_K)
 
         img_pixs = np.mgrid[0: self.cam_height,
-                            0: self.cam_width].reshape(2, -1)
+                   0: self.cam_width].reshape(2, -1)
         img_pixs[[0, 1], :] = img_pixs[[1, 0], :]
         self.uv_one = np.concatenate((img_pixs,
                                       np.ones((1, img_pixs.shape[1]))))
@@ -109,7 +107,7 @@ class RGBDCameraReal(Camera):
             if self.depth_img_shape is None:
                 self.depth_img_shape = self.depth_img.shape
         except CvBridgeError as e:
-            rospy.logerr(e)
+            ar.log_error(e)
         self.cam_img_lock.release()
 
     def _rp_cam_name(self, topic, cam_name):

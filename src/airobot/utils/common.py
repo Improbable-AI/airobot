@@ -2,16 +2,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
+import glob
 import os
 import shutil
-import glob
-import ast
 import sys
-
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-from copy import deepcopy
 
 
 def clamp(n, minn, maxn):
@@ -296,6 +294,33 @@ def load_class_from_path(cls_name, path):
         raise NotImplementedError
 
 
+def linear_interpolate_path(start_pos, delta_xyz, interval):
+    """
+    Linear interpolation in a path
+
+    Args:
+        start_pos (list or np.ndarray): start position ([x, y, z], shape: [3])
+        delta_xyz (list or np.ndarray): movement in x, y, z
+            directions (shape: [3,])
+        interval (float): interpolation interval along delta_xyz.
+            Interpolate a point every `interval` distance
+            between the two end points
+
+    Returns:
+        np.ndarray: waypoints along the path (shape: [N, 3])
+
+    """
+    start_pos = np.array(start_pos).flatten()
+    delta_xyz = np.array(delta_xyz).flatten()
+    path_len = np.linalg.norm(delta_xyz)
+    num_pts = int(np.ceil(path_len / float(interval)))
+    if num_pts <= 1:
+        num_pts = 2
+    waypoints_sp = np.linspace(0, path_len, num_pts).reshape(-1, 1)
+    waypoints = start_pos + waypoints_sp / float(path_len) * delta_xyz
+    return waypoints
+
+
 def to_rot_mat(ori):
     """
     Convert orientation in any form (rotation matrix,
@@ -373,5 +398,3 @@ def to_quat(ori):
         raise ValueError('Orientation should be rotation matrix, '
                          'euler angles or quaternion')
     return ori
-
-

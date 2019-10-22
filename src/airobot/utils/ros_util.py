@@ -1,10 +1,11 @@
-import rospy
-import tf
+import json
+import os
+import rospkg
+
 import PyKDL as kdl
 import numpy as np
-import rospkg
-import os
-import json
+import rospy
+import tf
 
 
 def kdl_array_to_numpy(kdl_data):
@@ -78,7 +79,7 @@ def get_tf_transform(tf_listener, tgt_frame, src_frame):
     try:
         tf_listener.waitForTransform(tgt_frame, src_frame,
                                      rospy.Time.now(),
-                                     rospy.Duration(3))
+                                     rospy.Duration(4))
         (trans, quat) = tf_listener.lookupTransform(tgt_frame,
                                                     src_frame,
                                                     rospy.Time(0))

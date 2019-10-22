@@ -9,7 +9,7 @@ built off of urscript.py, part of python-urx library
 (https://github.com/anthonysimeonov/python-urx/blob/master/urx/urscript.py)
 """
 
-import logging
+import airobot as ar
 
 # Controller Settings
 CONTROLLER_PORTS = [0, 1]
@@ -35,7 +35,6 @@ OUTPUT_DOMAIN_VOLTAGE = [
 class URScript(object):
 
     def __init__(self):
-        self.logger = logging.getLogger(u"urscript")
         # The header is code that is before and outside the myProg() method
         self.header = ""
         # The program is code inside the myProg() method
@@ -43,7 +42,7 @@ class URScript(object):
 
     def __call__(self):
         if self.program == "":
-            self.logger.debug(u"urscript program is empty")
+            ar.log_debug("urscript program is empty")
             return ""
 
         # Construct the program

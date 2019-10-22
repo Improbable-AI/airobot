@@ -25,6 +25,10 @@ _C.ARM.ROSTOPIC_JOINT_STATES = '/joint_states'
 
 # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
 _C.ARM.MAX_TORQUES = [150, 150, 150, 28, 28, 28]
+_C.ARM.JOINT_NAMES = [
+    'shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
+    'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint'
+]
 # base frame for the arm
 _C.ARM.ROBOT_BASE_FRAME = 'base'
 # end-effector frame of the arm
@@ -44,6 +48,11 @@ _C.ARM.MAX_EE_POS_ERROR = 0.01
 # greater than 1-error
 _C.ARM.MAX_EE_ORI_ERROR = 0.02
 _C.ARM.TIMEOUT_LIMIT = 10
+
+# reset position for the robot in pybullet
+_C.ARM.PYBULLET_RESET_POS = [0, 0, 1]
+# reset orientation (euler angles) for the robot in pybullet
+_C.ARM.PYBULLET_RESET_ORI = [0, 0, 0]
 
 _C.CAM.SIM = get_sim_cam_cfg()
 _C.CAM.REAL = get_realsense_cam_cfg()

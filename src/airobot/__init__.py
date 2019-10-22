@@ -1,6 +1,8 @@
-import os
 import importlib
+import os
+
 import airobot as ar
+from airobot.utils.ai_logger import Logger
 from airobot.utils.common import load_class_from_path
 
 
@@ -81,8 +83,8 @@ class Robot:
             try:
                 rospy.init_node('airobot', anonymous=True)
             except rospy.exceptions.ROSException:
-                rospy.logwarn('ROS node [airobot] has already'
-                              ' been initialized')
+                log_info('ROS node [airobot] has already'
+                         ' been initialized')
 
         class_suffix = 'Pybullet' if pb else 'Real'
         if cfgs.HAS_ARM and use_arm:
@@ -109,3 +111,67 @@ class Robot:
                 cam_cfg['p'] = self.arm.p
             self.cam = camera_class(cfgs, **cam_cfg)
         cfgs.freeze()
+
+
+logger = Logger('debug')
+
+
+def set_log_level(log_level):
+    """
+    Set logging level
+
+    Args:
+        log_level (str): one of: 'debug', 'info',
+            'warn', 'error', 'critical'
+    """
+    logger.set_level(log_level)
+
+
+def log_warn(msg):
+    """
+    Logging warning information
+
+    Args:
+        msg (str): message to log
+    """
+    logger.warning(msg)
+
+
+def log_info(msg):
+    """
+    Logging info information
+
+    Args:
+        msg (str): message to log
+    """
+    logger.info(msg)
+
+
+def log_error(msg):
+    """
+    Logging error information
+
+    Args:
+        msg (str): message to log
+    """
+    logger.error(msg)
+
+
+def log_debug(msg):
+    """
+    Logging debug information
+
+    Args:
+        msg (str): message to log
+    """
+    logger.debug(msg)
+
+
+def log_critical(msg):
+    """
+    Logging critical information
+
+    Args:
+        msg (str): message to log
+    """
+    logger.critical(msg)

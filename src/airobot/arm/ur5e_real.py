@@ -6,10 +6,10 @@ from __future__ import division
 from __future__ import print_function
 
 import copy
+import numbers
 import sys
 import threading
 import time
-import numbers
 
 import PyKDL as kdl
 import moveit_commander
@@ -30,6 +30,7 @@ from airobot.utils.arm_util import wait_to_reach_ee_goal
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 from airobot.utils.common import print_red
 from airobot.utils.moveit_util import MoveitScene
+from airobot.utils.moveit_util import moveit_cartesian_path
 from airobot.utils.ros_util import get_tf_transform
 from airobot.utils.ros_util import joints_to_kdl
 from airobot.utils.ros_util import kdl_array_to_numpy
@@ -66,16 +67,18 @@ class UR5eReal(ARM):
 
     def set_comm_mode(self, use_urscript=False):
         """
-        Method to set whether to use ros or urscript to control the real robot
+        Method to set whether to use ros or urscript to control the real robot.
+        In gazebo, it's always False.
 
         Arguments:
             use_urscript (bool): True we should use urscript
                 False if we should use ros and moveit
         """
-        if not self.gazebo_sim:
-            self.use_urscript = use_urscript
-        else:
+        if self.gazebo_sim:
+            self.use_urscript = False
             arutil.print_yellow('Use urscript is not supported in Gazebo!')
+        else:
+            self.use_urscript = use_urscript
 
     def go_home(self):
         """
@@ -105,9 +108,9 @@ class UR5eReal(ARM):
         success = False
 
         if joint_name is None:
-            if len(position) != 6:
-                raise ValueError('position should contain 6 elements if '
-                                 'joint_name is not provided')
+            if len(position) != self.arm_dof:
+                raise ValueError('position should contain %d elements if '
+                                 'joint_name is not provided' % self.arm_dof)
             tgt_pos = position
         else:
             if not isinstance(position, numbers.Number):
@@ -168,9 +171,10 @@ class UR5eReal(ARM):
             raise NotImplementedError('cannot set_jvel in Gazebo')
 
         if joint_name is None:
-            if len(velocity) != 6:
-                raise ValueError('Velocity should contain 6 elements'
-                                 'if the joint name is not provided')
+            if len(velocity) != self.arm_dof:
+                raise ValueError('Velocity should contain %d elements'
+                                 'if the joint name is not '
+                                 'provided' % self.arm_dof)
             tgt_vel = velocity
         else:
             if not isinstance(velocity, float):
@@ -322,34 +326,11 @@ class UR5eReal(ARM):
             success = self.set_ee_pose(ee_pos, ee_euler, wait=wait,
                                        ik_first=False)
         else:
-            cur_pos = np.array(ee_pos)
-            cur_quat = ee_quat
-            delta_xyz = np.array(delta_xyz)
-            end_pos = cur_pos + delta_xyz
-            moveit_waypoints = []
-            wpose = self.moveit_group.get_current_pose().pose
-            wpose.position.x = cur_pos[0]
-            wpose.position.y = cur_pos[1]
-            wpose.position.z = cur_pos[2]
-            wpose.orientation.x = cur_quat[0]
-            wpose.orientation.y = cur_quat[1]
-            wpose.orientation.z = cur_quat[2]
-            wpose.orientation.w = cur_quat[3]
-            moveit_waypoints.append(copy.deepcopy(wpose))
-
-            wpose.position.x = end_pos[0]
-            wpose.position.y = end_pos[1]
-            wpose.position.z = end_pos[2]
-            wpose.orientation.x = cur_quat[0]
-            wpose.orientation.y = cur_quat[1]
-            wpose.orientation.z = cur_quat[2]
-            wpose.orientation.w = cur_quat[3]
-            moveit_waypoints.append(copy.deepcopy(wpose))
-
-            (plan, fraction) = self.moveit_group.compute_cartesian_path(
-                moveit_waypoints,  # waypoints to follow
-                eef_step,  # eef_step
-                0.0)  # jump_threshold
+            plan = moveit_cartesian_path(ee_pos,
+                                         ee_quat,
+                                         delta_xyz,
+                                         self.moveit_group,
+                                         eef_step)
             success = self.moveit_group.execute(plan, wait=wait)
         return success
 

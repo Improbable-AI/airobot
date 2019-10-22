@@ -30,9 +30,7 @@ def main():
     robot.arm.go_home()
 
     goal_pos = [0.45, 0.2, 0.3]
-    success = False
-    while not success:
-        success = robot.arm.set_ee_pose(goal_pos, wait=True)
+    success = robot.arm.set_ee_pose(goal_pos, wait=True)
     pos, quat, rot, euler = robot.arm.get_ee_pose()
     print('End effector pose:')
     print('Position:')
@@ -43,9 +41,7 @@ def main():
 
     goal_pos = [0.6, -0.15, 0.2]
     goal_ori = [1.57, 0.0, 0.0]
-    success = False
-    while not success:
-        success = robot.arm.set_ee_pose(goal_pos, goal_ori, wait=True)
+    success = robot.arm.set_ee_pose(goal_pos, goal_ori, wait=True)
     pos, quat, rot, euler = robot.arm.get_ee_pose()
     print('End effector pose:')
     print('Position:')
@@ -69,9 +65,7 @@ def main():
     robot.arm.set_comm_mode(use_urscript=True)
 
     goal_pos = [0.6, -0.4, 0.2]
-    success = False
-    while not success:
-        success = robot.arm.set_ee_pose(goal_pos, wait=True)
+    success = robot.arm.set_ee_pose(goal_pos, wait=True)
     pos, quat, rot, euler = robot.arm.get_ee_pose()
     print('End effector pose:')
     print('Position:')

@@ -1,3 +1,4 @@
+import copy
 import sys
 import time
 
@@ -196,3 +197,54 @@ class MoveitScene(object):
         self.scene.remove_attached_object(ref_frame, obj_name)
         if delete:
             self.remove_obj(obj_name)
+
+
+def moveit_cartesian_path(start_pos, start_quat,
+                          delta_xyz, moveit_group, eef_step):
+    """
+    Compute the motion plan for cartesian path
+
+    Args:
+        start_pos (list or np.ndarray): start position (shape: [3])
+        start_quat (list or np.ndarray): start quaternion
+            [x, y, z, w] (shape: [4])
+        delta_xyz (list or np.ndarray): Goal change in x, y, z position of
+            end effector
+        moveit_group (MoveGroupCommander): moveit group commander
+        eef_step (float): Discretization step in cartesian space
+            for computing waypoints along the path.
+
+    Returns:
+        moveit_msgs/RobotTrajectory: motion plan to move the end
+         effector in a straight line
+
+    """
+    start_pos = np.array(start_pos).flatten()
+
+    delta_xyz = np.array(delta_xyz).flatten()
+    end_pos = start_pos + delta_xyz
+    moveit_waypoints = []
+    wpose = moveit_group.get_current_pose().pose
+    wpose.position.x = start_pos[0]
+    wpose.position.y = start_pos[1]
+    wpose.position.z = start_pos[2]
+    wpose.orientation.x = start_quat[0]
+    wpose.orientation.y = start_quat[1]
+    wpose.orientation.z = start_quat[2]
+    wpose.orientation.w = start_quat[3]
+    moveit_waypoints.append(copy.deepcopy(wpose))
+
+    wpose.position.x = end_pos[0]
+    wpose.position.y = end_pos[1]
+    wpose.position.z = end_pos[2]
+    wpose.orientation.x = start_quat[0]
+    wpose.orientation.y = start_quat[1]
+    wpose.orientation.z = start_quat[2]
+    wpose.orientation.w = start_quat[3]
+    moveit_waypoints.append(copy.deepcopy(wpose))
+
+    (plan, fraction) = moveit_group.compute_cartesian_path(
+        moveit_waypoints,  # waypoints to follow
+        eef_step,  # eef_step
+        0.0)  # jump_threshold
+    return plan
