@@ -3,6 +3,7 @@ import sys
 import time
 
 import moveit_commander
+import numpy as np
 from geometry_msgs.msg import PoseStamped
 from moveit_commander import conversions
 

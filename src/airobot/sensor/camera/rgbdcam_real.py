@@ -199,14 +199,12 @@ class RGBDCameraReal(Camera):
             3D point coordinates of the pixels in
                  camera frame (np.ndarray, shape: [N, 3])
         """
-        assert isinstance(rs,
-                          int) or isinstance(rs,
-                                             list) or isinstance(rs,
-                                                                 np.ndarray)
-        assert isinstance(cs,
-                          int) or isinstance(cs,
-                                             list) or isinstance(cs,
-                                                                 np.ndarray)
+        if not isinstance(rs, int) and not isinstance(rs, list) and \
+                not isinstance(rs, np.ndarray):
+            raise TypeError('rs should be an int, a list or a numpy array')
+        if not isinstance(cs, int) and not isinstance(cs, list) and \
+                not isinstance(cs, np.ndarray):
+            raise TypeError('cs should be an int, a list or a numpy array')
         if isinstance(rs, int):
             rs = [rs]
         if isinstance(cs, int):

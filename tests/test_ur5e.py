@@ -7,13 +7,15 @@ from airobot import Robot
 
 
 @pytest.fixture(scope="module")
-def robot_name(request):
-    return request.config.getoption('robot_name')
-
-
-@pytest.fixture(scope="module")
-def create_robot(robot_name):
-    return Robot(robot_name, pb=False, use_cam=False)
+def create_robot(request):
+    robot_name = request.config.getoption('robot_name')
+    if request.config.getoption('sim_env') == 'gazebo':
+        return Robot(robot_name, pb=False, use_cam=False)
+    elif request.config.getoption('sim_env') == 'pybullet':
+        return Robot(robot_name, pb=True, use_cam=False,
+                     arm_cfg={'render': False})
+    else:
+        raise ValueError('unknown simulation environment')
 
 
 pos_name_pairs = [([0.5, -2, -1.1, -0.95, 1.7, -0.1], None),

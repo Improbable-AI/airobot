@@ -4,7 +4,10 @@
 - [Getting Started](#getting-started)
 - [Credits](#credits)
 - [Citation](#citation)
+- [Run Tests](#run-tests)
 - [License](#license)
+- [Contributing](#coding-style)
+
 
 ## Installation
 ```bash
@@ -42,5 +45,19 @@ If you use AIRobot in your research, please use the following BibTeX entry.
 }
 ```
 
+## Run tests
+```bash
+cd airobot/tests
+./run_pytest.sh
+```
+
 ## License
 MIT license
+
+## Coding Style
+
+The python code uses [Flake8](https://pypi.org/project/flake8/) style.
+
+
+
+
