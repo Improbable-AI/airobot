@@ -6,7 +6,7 @@
 - [Citation](#citation)
 - [Run Tests](#run-tests)
 - [License](#license)
-- [Contributing](#coding-style)
+- [Coding Style](#coding-style)
 
 
 ## Installation
@@ -46,6 +46,8 @@ If you use AIRobot in your research, please use the following BibTeX entry.
 ```
 
 ## Run tests
+
+[pytest](https://docs.pytest.org/en/latest/) is used for unit tests.
 ```bash
 cd airobot/tests
 ./run_pytest.sh
