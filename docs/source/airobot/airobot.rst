@@ -6,8 +6,8 @@ AIRobot API
 
     arm/airobot.arm
     base/airobot.base
-    cfgs/airobot.cfgs
     ee_tool/airobot.ee_tool
     sensor/airobot.sensor
+    cfgs/airobot.cfgs
     utils/airobot.utils
 
