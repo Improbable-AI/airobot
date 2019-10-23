@@ -8,16 +8,10 @@ Welcome to AIRobot's documentation!
    airobot/README
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Python API:
 
    airobot/airobot
-   airobot/arm/airobot.arm
-   airobot/base/airobot.base
-   airobot/ee_tool/airobot.ee_tool
-   airobot/cfgs/airobot.cfgs
-   airobot/sensor/airobot.sensor
-   airobot/utils/airobot.utils
 
 
 
