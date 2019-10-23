@@ -273,6 +273,19 @@ def list_class_names(dir_path):
 
 
 def load_class_from_path(cls_name, path):
+    """
+    Load a class from the file path
+
+    Args:
+        cls_name (str): class name
+        path (str): python file path
+
+    Returns:
+        Python Class: return the class A which is named as cls_name.
+        You can call A() to create an instance of this class using
+        the return value
+
+    """
     mod_name = 'MOD%s' % cls_name
     if sys.version_info.major == 2:
         import imp
