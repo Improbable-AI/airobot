@@ -389,7 +389,7 @@ class SingleArmPybullet(ARM):
 
             - float: joint position given joint_name
             - list: joint positions if joint_name is None
-              (shape: :math:`[6]`)
+              (shape: :math:`[DOF]`)
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id,
@@ -414,7 +414,7 @@ class SingleArmPybullet(ARM):
 
             - float: joint velocity given joint_name
             - list: joint velocities if joint_name is None
-              (shape: :math:`[6]`)
+              (shape: :math:`[DOF]`)
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id,
@@ -444,7 +444,7 @@ class SingleArmPybullet(ARM):
 
             - float: joint torque given joint_name
             - list: joint torques if joint_name is None
-              (shape: :math:`[6]`)
+              (shape: :math:`[DOF]`)
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id, self.arm_jnt_ids)
