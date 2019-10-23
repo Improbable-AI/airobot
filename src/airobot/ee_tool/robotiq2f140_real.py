@@ -1,5 +1,3 @@
-import time
-
 import rospy
 from std_msgs.msg import String
 from control_msgs.msg import GripperCommandActionGoal
@@ -44,7 +42,7 @@ class Robotiq2F140Real(EndEffectorTool):
             urscript = self._get_new_urscript()
 
             urscript.set_activate()
-            urscript.set_gripper_speed(255)  # move at max speed
+            urscript.set_gripper_speed(self.cfgs.EETOOL.DEFAULT_SPEED)
 
             urscript.sleep(0.1)
 
@@ -72,12 +70,28 @@ class Robotiq2F140Real(EndEffectorTool):
 
             urscript.set_gripper_position(pos)
             urscript.sleep(0.1)
-            
+
             gripper_cmd = urscript()
         else:
             gripper_cmd = GripperCommandActionGoal()
             gripper_cmd.goal.command.position = pos
         self.pub_command.publish(gripper_cmd)
+
+    def set_speed(self, speed):
+        """
+        Set the default speed which the gripper should move at
+
+        Args:
+            speed (int): Desired gripper speed (0 min, 255 max)
+        """
+        speed = int(clamp(speed, 0, 255))
+        if not self.gazebo_sim:
+            urscript = self._get_new_urscript()
+
+            urscript.set_gripper_speed(speed)
+            urscript.sleep(0.1)
+
+            self.pub_command.publish(urscript())
 
     def open(self):
         """
