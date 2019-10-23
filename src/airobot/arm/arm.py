@@ -47,9 +47,8 @@ class ARM(object):
                 for the action to complete
 
         Returns:
-            bool: A boolean variable representing
-                if the action is successful at
-                the moment when the function exits
+            bool: A boolean variable representing if the action is
+            successful at the moment when the function exits
         """
         raise NotImplementedError
 
@@ -68,9 +67,8 @@ class ARM(object):
                 for the action to complete
 
         Returns:
-            bool: A boolean variable representing
-                if the action is successful at
-                the moment when the function exits
+            bool: A boolean variable representing if the action is
+            successful at the moment when the function exits
         """
         raise NotImplementedError
 
@@ -90,9 +88,8 @@ class ARM(object):
                 for the action to complete
 
         Returns:
-            bool: A boolean variable representing
-                if the action is successful at
-                the moment when the function exits
+            bool: A boolean variable representing if the action is
+            successful at the moment when the function exits
 
         """
         raise NotImplementedError
@@ -100,16 +97,20 @@ class ARM(object):
     def set_ee_pose(self, pos=None, ori=None, *args, **kwargs):
         """
         Move the end effector to the specifed pose
+
         Args:
-            pos (list or np.ndarray): position
-            ori (list or np.ndarray): orientation.
-                It can be either quaternion (length is 4)
-                or euler angles ([roll, pitch, yaw])
+            pos (list or np.ndarray): Desired x, y, z positions in the robot's
+                base frame to move to (shape: :math:`[3,]`)
+            ori (list or np.ndarray, optional): It can be euler angles
+                ([roll, pitch, yaw], shape: :math:`[4,]`),
+                or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
+                or rotation matrix (shape: :math:`[3, 3]`). If it's None,
+                the solver will use the current end effector
+                orientation as the target orientation
 
         Returns:
-            bool: A boolean variable representing
-                if the action is successful at
-                the moment when the function exits
+            bool: A boolean variable representing if the action is
+            successful at the moment when the function exits
         """
         raise NotImplementedError
 
@@ -125,9 +126,8 @@ class ARM(object):
                 between the two end points
 
         Returns:
-            bool: A boolean variable representing
-                if the action is successful at
-                the moment when the function exits
+            bool: A boolean variable representing if the action is
+            successful at the moment when the function exits
         """
         raise NotImplementedError
 
@@ -141,9 +141,10 @@ class ARM(object):
                 return the joint position of the specified joint
 
         Returns:
-            float: joint position given joint_name
-            or
-            list: joint positions if joint_name is None
+            2-element tuple containing
+
+            - float: joint position given joint_name
+            - list: joint positions if joint_name is None
         """
         raise NotImplementedError
 
@@ -157,9 +158,10 @@ class ARM(object):
                 return the joint velocity of the specified joint
 
         Returns:
-            float: joint velocity given joint_name
-            or
-            list: joint velocities if joint_name is None
+            2-element tuple containing
+
+            - float: joint velocity given joint_name
+            - list: joint velocities if joint_name is None
         """
         raise NotImplementedError
 
@@ -173,9 +175,10 @@ class ARM(object):
                 return the joint torque of the specified joint
 
         Returns:
-            float: joint velocity given joint_name
-            or
-            list: joint velocities if joint_name is None
+            2-element tuple containing
+
+            - float: joint torque given joint_name
+            - list: joint torques if joint_name is None
         """
         raise NotImplementedError
 
@@ -184,13 +187,15 @@ class ARM(object):
         Return the end effector pose
 
         Returns:
-            np.ndarray: x, y, z position of the EE (shape: [3])
-            np.ndarray: quaternion representation ([x, y, z, w]) of the EE
-                orientation (shape: [4])
-            np.ndarray: rotation matrix representation of the EE orientation
-                (shape: [3, 3])
-            np.ndarray: euler angle representation of the EE orientation (roll,
-                pitch, yaw with static reference frame) (shape: [3])
+            4-element tuple containing
+
+            - np.ndarray: x, y, z position of the EE (shape: :math:`[3]`)
+            - np.ndarray: quaternion representation ([x, y, z, w]) of the EE
+              orientation (shape: :math:`[4]`)
+            - np.ndarray: rotation matrix representation of the EE orientation
+              (shape: :math:`[3, 3]`)
+            - np.ndarray: euler angle representation of the EE orientation (roll,
+              pitch, yaw with static reference frame) (shape: :math:`[3]`)
         """
         raise NotImplementedError
 
@@ -200,11 +205,11 @@ class ARM(object):
         position and orientation of the end effector
 
         Args:
-            pos (list or np.ndarray): position (shape: [3,])
+            pos (list or np.ndarray): position (shape: :math:`[3,]`)
             ori (list or np.ndarray): orientation. It can be euler angles
-                ([roll, pitch, yaw], shape: [4,]),
-                or quaternion ([qx, qy, qz, qw], shape: [4,]),
-                or rotation matrix (shape: [3, 3]). If it's None,
+                ([roll, pitch, yaw], shape: :math:`[4,]`),
+                or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
+                or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
                 orientation as the target orientation
 

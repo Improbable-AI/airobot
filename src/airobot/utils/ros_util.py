@@ -13,10 +13,10 @@ def kdl_array_to_numpy(kdl_data):
     Convert KDL array data into numpy array
 
     Args:
-        kdl_data: data in KDL format
+        kdl_data (PyKDL.JntArray): data in KDL format
 
     Returns:
-        numpy array
+        np.ndarray: numpy array of the kdl_data
     """
     np_array = np.zeros((kdl_data.rows(), kdl_data.columns()))
     for i in range(kdl_data.rows()):
@@ -30,10 +30,10 @@ def kdl_frame_to_numpy(frame):
     Convert KDL Frame data into numpy array
 
     Args:
-        frame: data of KDL Frame
+        frame (PyKDL.Frame): data of KDL Frame
 
     Returns:
-        transformation matrix in numpy [4x4]
+        np.ndarray: transformation matrix in numpy (shape: [4, 4])
     """
     p = frame.p
     M = frame.M
@@ -51,7 +51,7 @@ def joints_to_kdl(joint_values):
         joint_values (np.ndarray): values for the joints
 
     Returns:
-
+        PyKDL.JntArray: joint values in the form of PyKDL.JntArray
     """
     num_jts = joint_values.size
     kdl_array = kdl.JntArray(num_jts)

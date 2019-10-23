@@ -114,7 +114,7 @@ class SingleArmPybullet(ARM):
                 for the action to complete
 
         Returns:
-            A boolean variable representing if the action is successful at
+            bool: A boolean variable representing if the action is successful at
             the moment when the function exits
         """
         position = copy.deepcopy(position)
@@ -169,7 +169,7 @@ class SingleArmPybullet(ARM):
                 for the action to complete
 
         Returns:
-            A boolean variable representing if the action is successful at
+            bool: A boolean variable representing if the action is successful at
             the moment when the function exits
         """
         velocity = copy.deepcopy(velocity)
@@ -233,7 +233,7 @@ class SingleArmPybullet(ARM):
                 to keep the method signature consistent
 
         Returns:
-            Always return True as the torque will be applied as specified
+            bool: Always return True as the torque will be applied as specified
             in Pybullet
 
         """
@@ -263,15 +263,19 @@ class SingleArmPybullet(ARM):
     def set_ee_pose(self, pos=None, ori=None, wait=True, *args, **kwargs):
         """
         Move the end effector to the specifed pose
+
         Args:
-            pos (list or np.ndarray): position (shape: [3,])
-            ori (list or np.ndarray): orientation.
-                It can be rotation matrix (shape: [3,3]),
-                quaternion ([qx, qy, qz, qw], shape: [4,]),
-                or euler angles ([roll, pitch, yaw], shape: [3,])
+            pos (list or np.ndarray): Desired x, y, z positions in the robot's
+                base frame to move to (shape: [3,])
+            ori (list or np.ndarray, optional): It can be euler angles
+                ([roll, pitch, yaw], shape: [4,]),
+                or quaternion ([qx, qy, qz, qw], shape: [4,]),
+                or rotation matrix (shape: [3, 3]). If it's None,
+                the solver will use the current end effector
+                orientation as the target orientation
 
         Returns:
-            A boolean variable representing if the action is successful at
+            bool: A boolean variable representing if the action is successful at
             the moment when the function exits
         """
         if pos is None:
@@ -294,7 +298,7 @@ class SingleArmPybullet(ARM):
                 between the two end points
 
         Returns:
-            A boolean variable representing if the action is successful at
+            bool: A boolean variable representing if the action is successful at
             the moment when the function exits
         """
         if self._step_sim_mode:
@@ -323,7 +327,7 @@ class SingleArmPybullet(ARM):
         Enable the torque control mode in Pybullet
 
         Args:
-            joint_name: If it's none, then all the six joints
+            joint_name (str): If it's none, then all the six joints
                 on the UR robot are enabled in torque control mode.
                 Otherwise, only the specified joint is enabled
                 in torque control mode.
@@ -353,7 +357,7 @@ class SingleArmPybullet(ARM):
         Disable the torque control mode in Pybullet
 
         Args:
-            joint_name: If it's none, then all the six joints
+            joint_name (str): If it's none, then all the six joints
                 on the UR robot are disabled with torque control.
                 Otherwise, only the specified joint is disabled with
                 torque control.
@@ -379,9 +383,10 @@ class SingleArmPybullet(ARM):
                 return the joint position of the specified joint
 
         Returns:
-            float: joint position given joint_name
-            or
-            list: joint positions if joint_name is None (shape: [6,])
+            2-element tuple containing
+
+            - float: joint position given joint_name
+            - list: joint positions if joint_name is None (shape: :math:`[6]`)
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id,
