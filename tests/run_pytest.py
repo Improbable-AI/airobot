@@ -60,7 +60,7 @@ def exit_gazebo(gp):
     print('Gazebo exit successfully!')
 
 
-def main(_):
+def main():
     # # delete old coverage reports
     # # all the coverage reports generated below
     # # will be appended
@@ -78,11 +78,11 @@ def main(_):
     args = 'sim:=true'
     ur5e_p = launch_ur5e_gazebo(args)
     test_cmds = ['test_ur5e.py --robot_name=ur5e --sim_env=gazebo']
-    run_test(test_cmds, 'ur5e.html')
+    run_test(test_cmds, 'ur5e_gazebo.html')
     exit_gazebo(ur5e_p)
 
     test_cmds = ['test_ur5e.py --robot_name=ur5e --sim_env=pybullet']
-    run_test(test_cmds, 'ur5e.html')
+    run_test(test_cmds, 'ur5e_pybullet.html')
 
     # # Write put coverage results.
     gen_html_anno()
