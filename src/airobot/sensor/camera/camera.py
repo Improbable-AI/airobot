@@ -25,6 +25,9 @@ class Camera(object):
             get_depth (bool): return depth image if True, None otherwise
 
         Returns:
-            rgb and depth images (np.ndarray)
+            2-element tuple containing
+
+            - np.ndarray: rgb image
+            - np.ndarray: depth image
         """
         raise NotImplementedError

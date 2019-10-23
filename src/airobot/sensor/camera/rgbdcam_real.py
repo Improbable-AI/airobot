@@ -128,7 +128,7 @@ class RGBDCameraReal(Camera):
 
     def set_cam_ext(self, pos=None, ori=None, cam_ext=None):
         """
-        Set camera extrinsic matrix
+        Set the camera extrinsic matrix
 
         Args:
             pos (np.ndarray): position of the camera (shape: [3,])
@@ -160,7 +160,10 @@ class RGBDCameraReal(Camera):
             get_depth (bool): return depth image if True, None otherwise
 
         Returns:
-            rgb and depth images (np.ndarray)
+            2-element tuple containing
+
+            - np.ndarray: rgb image (shape: [H, W, 3])
+            - np.ndarray: depth image (shape: [H, W])
         """
         rgb_img = None
         depth_img = None
@@ -194,7 +197,7 @@ class RGBDCameraReal(Camera):
 
         Returns:
             np.ndarray: 3D point coordinates of the pixels in
-                 camera frame (shape: [N, 3])
+            camera frame (shape: [N, 3])
         """
         if not isinstance(rs, int) and not isinstance(rs, list) and \
                 not isinstance(rs, np.ndarray):
@@ -250,8 +253,10 @@ class RGBDCameraReal(Camera):
                 lying in [self.depth_min, self.depth_max]
 
         Returns:
-            np.ndarray: point coordinates (shape: [N, 3])
-            np.ndarray: rgb values (shape: [N, 3])
+            2-element tuple containing
+
+            - np.ndarray: point coordinates (shape: [N, 3])
+            - np.ndarray: rgb values (shape: [N, 3])
         """
         rgb_im, depth_im = self.get_images(get_rgb=True, get_depth=True)
         # pcd in camera from depth

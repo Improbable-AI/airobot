@@ -103,9 +103,9 @@ def wait_to_reach_ee_goal(pos, ori, get_func, get_func_derv=None,
     Args:
         pos (list): goal position
         ori (list or np.ndarray): goal orientation. It can be:
-            quaternion ([qx, qy, qz, qw])
-            rotation matrix ([3, 3])
-            euler angles ([roll, pitch, yaw])
+            **quaternion** ([qx, qy, qz, qw], shape: :math:`[4]`)
+            **rotation matrix** (shape: :math:`[3, 3]`)
+            **euler angles** ([roll, pitch, yaw], shape: :math:`[3]`)
         get_func (function): name of the function with which we can get
             the end effector pose
         get_func_derv (function): the name of the function with which we
@@ -158,9 +158,9 @@ def reach_ee_goal(pos, ori, get_func, pos_tol=0.01, ori_tol=0.02):
     Args:
         pos (list np.ndarray): goal position
         ori (list or np.ndarray): goal orientation. It can be:
-            quaternion ([qx, qy, qz, qw])
-            rotation matrix ([3, 3])
-            euler angles ([roll, pitch, yaw])
+            **quaternion** ([qx, qy, qz, qw], shape: :math:`[4]`)
+            **rotation matrix** (shape: :math:`[3, 3]`)
+            **euler angles** ([roll, pitch, yaw], shape: :math:`[3]`)
         get_func (function): name of the function with which we can get
             the current end effector pose
         pos_tol (float): tolerance of position error

@@ -40,7 +40,7 @@ class MoveitScene(object):
                 that specifies the 3 edge lengths of the cuboid
                 if the object is a sphere, size is a float,
                 (which means the radius)
-            obj_type (str): one of ['sphere', 'box', 'plane']
+            obj_type (str): one of [`sphere`, `box`, `plane`]
             ref_frame (str): reference frame on which
                 the pos and ori are specified
             normal (list or tuple): only used if the
@@ -186,9 +186,9 @@ class MoveitScene(object):
         Unlink the attached object from ref_frame
 
         Args:
-            ref_frame: the parent link at which the object is attached to
-            obj_name: the object name
-            delete: If True, the object will be deleted from the scene.
+            ref_frame (str): the parent link at which the object is attached to
+            obj_name (str): the object name
+            delete (bool): If True, the object will be deleted from the scene.
                 Otherwise, the object will be unlinked
                 from the parent link only,
                 but the object is still there in the scene.
@@ -205,9 +205,9 @@ def moveit_cartesian_path(start_pos, start_quat,
     Compute the motion plan for cartesian path
 
     Args:
-        start_pos (list or np.ndarray): start position (shape: [3])
+        start_pos (list or np.ndarray): start position (shape: :math:`[3]`)
         start_quat (list or np.ndarray): start quaternion
-            [x, y, z, w] (shape: [4])
+            [x, y, z, w] (shape: :math:`[4]`)
         delta_xyz (list or np.ndarray): Goal change in x, y, z position of
             end effector
         moveit_group (MoveGroupCommander): moveit group commander

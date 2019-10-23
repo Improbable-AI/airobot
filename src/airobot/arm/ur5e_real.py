@@ -1,5 +1,5 @@
 """
-A UR5e robot with a robotiq 2f140 gripper
+A UR5e robot arm
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -70,7 +70,7 @@ class UR5eReal(ARM):
         Method to set whether to use ros or urscript to control the real robot.
         In gazebo, it's always False.
 
-        Arguments:
+        Args:
             use_urscript (bool): True we should use urscript
                 False if we should use ros and moveit
         """
@@ -100,8 +100,8 @@ class UR5eReal(ARM):
             wait (bool): whether position command should be blocking or non
                 blocking. Defaults to True
 
-        Return:
-            success (bool): True if command was completed successfully, returns
+        Returns:
+            bool: True if command was completed successfully, returns
             False if wait flag is set to False.
         """
         position = copy.deepcopy(position)
@@ -163,6 +163,10 @@ class UR5eReal(ARM):
                 Defaults to None.
             wait (bool, optional): If True, block until robot reaches
                 desired joint velocity value(s). Defaults to False.
+
+        Returns:
+            bool: True if command was completed successfully, returns
+            False if wait flag is set to False.
         """
         velocity = copy.deepcopy(velocity)
         success = False
@@ -347,9 +351,11 @@ class UR5eReal(ARM):
                 return the joint position of the specified joint
 
         Returns:
-            float: joint position given joint_name
-            or
-            list: joint positions if joint_name is None (shape: :math:`[6,]`)
+            One of the following
+
+            - float: joint position given joint_name
+            - list: joint positions if joint_name is None
+              (shape: :math:`[6]`)
 
         """
         self._j_state_lock.acquire()
@@ -377,9 +383,11 @@ class UR5eReal(ARM):
                 return the joint position of the specified joint
 
         Returns:
-            float: joint velocity given joint_name
-            or
-            list: joint velocities if joint_name is None (shape: :math:`[6,]`)
+            One of the following
+
+            - float: joint velocity given joint_name
+            - list: joint velocities if joint_name is None
+              (shape: :math:`[6]`)
         """
         self._j_state_lock.acquire()
         if joint_name is not None:
@@ -422,9 +430,11 @@ class UR5eReal(ARM):
         Return the end effector's velocity
 
         Returns:
-            np.ndarray: translational velocity (vx, vy, vz)
-            (shape: :math:`[3,]`)
-            np.ndarray: rotational velocity (wx, wy, wz) (shape: :math:`[3,]`)
+            2-element tuple containing
+
+            - np.ndarray: translational velocity (vx, vy, vz)
+              (shape: :math:`[3,]`)
+            - np.ndarray: rotational velocity (wx, wy, wz) (shape: :math:`[3,]`)
         """
         jpos = self.get_jpos()
         jvel = self.get_jvel()
@@ -464,8 +474,10 @@ class UR5eReal(ARM):
             tgt_frame (str): target link frame
 
         Returns:
-            np.ndarray: translational vector (shape: :math:`[3,]`)
-            np.ndarray: rotational matrix (shape: :math:`[3, 3]`)
+            2-element tuple containing
+
+            - np.ndarray: translational vector (shape: :math:`[3,]`)
+            - np.ndarray: rotational matrix (shape: :math:`[3, 3]`)
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -500,9 +512,8 @@ class UR5eReal(ARM):
             tgt_frame (str): target link frame
 
         Returns:
-            np.ndarray: translational and rotational
-                 velocities (vx, vy, vz, wx, wy, wz)
-                 (shape: :math:`[6,]`)
+            np.ndarray: translational velocity and rotational velocity
+            (vx, vy, vz, wx, wy, wz) (shape: :math:`[6,]`)
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -685,8 +696,6 @@ class UR5eReal(ARM):
         Args:
             msg (str): message to display
 
-        Return:
-            None
         """
         prog = 'textmsg(%s)' % msg
         self._send_urscript(prog)
@@ -698,9 +707,9 @@ class UR5eReal(ARM):
         from 0.0 - 1.0 of the maximum velocity and acceleration
         specified in the MoveIt joint limits configuration file.
 
-        Keyword Arguments:
-            vel_scale (float): Defaults to 1.0
-            acc_scale (float): Defaults to 1.0
+        Args:
+            vel_scale (float): velocity scale, Defaults to 1.0
+            acc_scale (float): acceleration scale, Defaults to 1.0
         """
         vel_scale = arutil.clamp(vel_scale, 0.0, 1.0)
         acc_scale = arutil.clamp(acc_scale, 0.0, 1.0)
@@ -766,10 +775,12 @@ class UR5eReal(ARM):
         wrist and the tip of the gripper
 
         Returns:
-            list: Translation component of the gripper tip transform
-                (shape :math:`[3,]`)
-            list: Euler angle orientation component of the gripper
-                tip transform. (shape :math:`[3,]`)
+            2-element tuple containing
+
+            - list: Translation component of the gripper tip transform
+              (shape :math:`[3,]`)
+            - list: Euler angle orientation component of the gripper
+              tip transform. (shape :math:`[3,]`)
         """
         ee_frame = self.cfgs.ARM.ROBOT_EE_FRAME
         gripper_tip_id = self.arm_link_names.index(ee_frame)

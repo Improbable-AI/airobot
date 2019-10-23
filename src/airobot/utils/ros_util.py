@@ -33,7 +33,7 @@ def kdl_frame_to_numpy(frame):
         frame (PyKDL.Frame): data of KDL Frame
 
     Returns:
-        np.ndarray: transformation matrix in numpy (shape: [4, 4])
+        np.ndarray: transformation matrix in numpy (shape: :math:`[4, 4]`)
     """
     p = frame.p
     M = frame.M
@@ -103,8 +103,8 @@ def read_cam_ext(robot_name):
     Returns:
         2-element tuple containing
 
-        - np.ndarray: position of the camera (shape: [3])
-        - np.ndarray: orientation (quaternion) of the camera (shape: [4])
+        - np.ndarray: position of the camera (shape: :math:`[3]`)
+        - np.ndarray: orientation (quaternion) of the camera (shape: :math:`[4]`)
     """
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')

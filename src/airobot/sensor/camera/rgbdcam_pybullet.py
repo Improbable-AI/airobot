@@ -59,8 +59,10 @@ class RGBDCameraPybullet(Camera):
             get_depth (bool): return depth image if True, None otherwise
 
         Returns:
-            np.ndarray: rgb image (shape: [H, W, 3])
-            np.ndarray: depth image (shape: [H, W])
+            2-element tuple containing
+
+            - np.ndarray: rgb image (shape: [H, W, 3])
+            - np.ndarray: depth image (shape: [H, W])
         """
 
         if self.view_matrix is None:

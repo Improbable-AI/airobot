@@ -87,6 +87,8 @@ class Robotiq2F140Pybullet(EndEffectorTool):
 
         Args:
             pos (float): joint position
+            wait (bool): wait until the joint position is set
+                to the target position
 
         Returns:
             bool: A boolean variable representing if the action is

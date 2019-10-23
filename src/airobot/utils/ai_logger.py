@@ -37,7 +37,6 @@ class Logger:
         self.logger.addHandler(handler)
         self.set_level(log_level)
 
-
     def debug(self, msg):
         """
         Logging debug information
@@ -89,7 +88,7 @@ class Logger:
 
         Args:
             log_level (str): the following modes are supported:
-                'debug', 'info', 'warn', 'error', 'critical'
+                `debug`, `info`, `warn`, `error`, `critical`
 
         """
         if 'debug' in log_level:
