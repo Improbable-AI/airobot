@@ -34,13 +34,12 @@ class MoveitScene(object):
                 or euler angles ([roll, pitch, yaw])
             size (float or list or tuple): size of the object.
                 if the object is a plane, size should be None
-                if the object is a box, size can be a float,
-                    which means the edge
-                    length of a cube. size can also be a list
-                     or tuple of length 3,
-                    the it specifies the 3 edge lengths of the cuboid
+                if the object is a box, size can be a float
+                (which means the edge length of a cube.)
+                size can also be a list or tuple of length 3,
+                that specifies the 3 edge lengths of the cuboid
                 if the object is a sphere, size is a float,
-                which means the radius
+                (which means the radius)
             obj_type (str): one of ['sphere', 'box', 'plane']
             ref_frame (str): reference frame on which
                 the pos and ori are specified
@@ -217,7 +216,7 @@ def moveit_cartesian_path(start_pos, start_quat,
 
     Returns:
         moveit_msgs/RobotTrajectory: motion plan to move the end
-         effector in a straight line
+        effector in a straight line
 
     """
     start_pos = np.array(start_pos).flatten()

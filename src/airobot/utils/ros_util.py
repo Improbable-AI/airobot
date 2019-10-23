@@ -72,8 +72,10 @@ def get_tf_transform(tf_listener, tgt_frame, src_frame):
         src_frame: source frame
 
     Returns:
-        list: translation [x, y, z]
-        list: quaternion [qx, qy, qz, qw]
+        2-element tuple containing
+
+        - list: translation ([x, y, z], shape: :math:`[3,]`)
+        - list: quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`)
     """
 
     try:
@@ -99,8 +101,10 @@ def read_cam_ext(robot_name):
         robot_name (str): robot name
 
     Returns:
-        np.ndarray: position of the camera (shape: [3])
-        np.ndarray: orientation (quaternion) of the camera (shape: [4])
+        2-element tuple containing
+
+        - np.ndarray: position of the camera (shape: [3])
+        - np.ndarray: orientation (quaternion) of the camera (shape: [4])
     """
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')

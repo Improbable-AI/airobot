@@ -42,7 +42,7 @@ def quat2euler(quat, axes='xyz'):
             for intrinsic rotations (rotation about the axes of a
             coordinate system XYZ attached to a moving body),
             or {'x', 'y', 'z'} for extrinsic rotations (rotation about
-             the axes of the fixed coordinate system).
+            the axes of the fixed coordinate system).
 
     Returns:
         np.ndarray: euler angles (shape: [3,])
@@ -107,7 +107,7 @@ def euler2rot(euler, axes='xyz'):
             for intrinsic rotations (rotation about the axes of a
             coordinate system XYZ attached to a moving body),
             or {'x', 'y', 'z'} for extrinsic rotations (rotation about
-             the axes of the fixed coordinate system).
+            the axes of the fixed coordinate system).
 
     Returns:
         np.ndarray: rotation matrix (shape: [3, 3])
@@ -127,7 +127,7 @@ def euler2quat(euler, axes='xyz'):
             for intrinsic rotations (rotation about the axes of a
             coordinate system XYZ attached to a moving body),
             or {'x', 'y', 'z'} for extrinsic rotations (rotation about
-             the axes of the fixed coordinate system).
+            the axes of the fixed coordinate system).
 
     Returns:
         np.ndarray: quaternion [x,y,z,w] (shape: [4,])
@@ -161,7 +161,7 @@ def rot2euler(rot, axes='xyz'):
             for intrinsic rotations (rotation about the axes of a
             coordinate system XYZ attached to a moving body),
             or {'x', 'y', 'z'} for extrinsic rotations (rotation about
-             the axes of the fixed coordinate system).
+            the axes of the fixed coordinate system).
 
     Returns:
         np.ndarray: euler angles (shape: [3,])

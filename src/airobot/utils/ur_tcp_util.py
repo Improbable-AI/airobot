@@ -2,7 +2,7 @@
 This file contains 2 classes:
     - ParseUtils containing utilies to parse data from UR robot
     - SecondaryMonitor, a class opening a socket to the robot and with methods
-        to access data and send programs to the robot
+      to access data and send programs to the robot
 Both use data from the secondary port of the URRobot.
 Only the last connected socket on 3001 is the primary client !!!!
 So do not rely on it unless you know no other client is running
@@ -86,7 +86,7 @@ class ParserUtils(object):
 
         Return:
             dict: Dictionary with interpretable state data from robot, with
-                keys corresponding to different types of data
+            keys corresponding to different types of data
 
         """
         allData = {}
@@ -321,7 +321,7 @@ class ParserUtils(object):
 
         Return:
             dict: Dictionary with keys from names arg, and values filled
-                in by unpacking the data with struct
+            in by unpacking the data with struct
         """
         tmpdata = copy(data)
         fmt = struct_fmt.strip()  # remove whitespace
@@ -378,6 +378,8 @@ class ParserUtils(object):
                  to robot
 
         Returns:
+            2-element tuple containing
+
             int: Size of the packet, in bytes
             int: Indication of the type of packet we got
         """
@@ -403,12 +405,14 @@ class ParserUtils(object):
                 smaller than measured number of bytes in the packet
 
         Returns:
-            int: Number of bytes in the packet
-            int: Indication of the type of packet
-            bytes: Sliced packet, only taking how many bytes the
-                header says we received
-            bytes: The rest of the packet, data that will be
-                unpacked on the next parser iteration
+            4-element tuple containing:
+
+            - int: Number of bytes in the packet
+            - int: Indication of the type of packet
+            - bytes: Sliced packet, only taking how many bytes the
+              header says we received
+            - bytes: The rest of the packet, data that will be
+              unpacked on the next parser iteration
         """
         if len(data) < 5:
             raise ParsingException("Packet size %s smaller than header size"
@@ -427,10 +431,6 @@ class ParserUtils(object):
         return packet_size, packet_type, data[:packet_size], data[packet_size:]
 
     def find_first_packet(self, data):
-        """
-        find the first complete packet in a string by checking for length
-        matching expected length, returns None if none found
-        """
         """
         Finds the first complete packet in a string, and returns
         None if none found
@@ -488,7 +488,7 @@ class SecondaryMonitor(Thread):
         """
         Constructor for UR monitor class
 
-        Arguments:
+        Args:
             host (str): Robot's IP address
         """
         Thread.__init__(self)
@@ -676,9 +676,9 @@ class SecondaryMonitor(Thread):
         """
         Return all most recent data in big dictionary
 
-        Keyword Arguments:
+        Args:
             wait (bool): Boolean to tell whether to block
-                until data is returned (default: {False})
+                until data is returned (default: False)
 
         Returns:
             dict: Full state dict

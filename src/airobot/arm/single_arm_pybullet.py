@@ -47,7 +47,8 @@ class SingleArmPybullet(ARM):
             eetool_cfg = {'p': self.p}
         else:
             eetool_cfg['p'] = self.p
-        super(SingleArmPybullet, self).__init__(cfgs=cfgs, eetool_cfg=eetool_cfg)
+        super(SingleArmPybullet, self).__init__(cfgs=cfgs,
+                                                eetool_cfg=eetool_cfg)
 
         if self._render:
             p.connect(p.GUI)
@@ -115,8 +116,8 @@ class SingleArmPybullet(ARM):
                 for the action to complete
 
         Returns:
-            bool: A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing if the action is successful
+            at the moment when the function exits
         """
         position = copy.deepcopy(position)
         success = False
@@ -170,8 +171,8 @@ class SingleArmPybullet(ARM):
                 for the action to complete
 
         Returns:
-            bool: A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing if the action is successful
+            at the moment when the function exits
         """
         velocity = copy.deepcopy(velocity)
         success = False
@@ -267,17 +268,17 @@ class SingleArmPybullet(ARM):
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
-                base frame to move to (shape: [3,])
+                base frame to move to (shape: :math:`[3,]`)
             ori (list or np.ndarray, optional): It can be euler angles
-                ([roll, pitch, yaw], shape: [4,]),
-                or quaternion ([qx, qy, qz, qw], shape: [4,]),
-                or rotation matrix (shape: [3, 3]). If it's None,
+                ([roll, pitch, yaw], shape: :math:`[4,]`),
+                or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
+                or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
                 orientation as the target orientation
 
         Returns:
-            bool: A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing if the action is successful
+            at the moment when the function exits
         """
         if pos is None:
             pose = self.get_ee_pose()
@@ -293,14 +294,14 @@ class SingleArmPybullet(ARM):
 
         Args:
             delta_xyz (list or np.ndarray): movement in x, y, z
-                directions (shape: [3,])
+                directions (shape: :math:`[3,]`)
             eef_step (float): interpolation interval along delta_xyz.
                 Interpolate a point every eef_step distance
                 between the two end points
 
         Returns:
-            bool: A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing if the action is successful
+            at the moment when the function exits
         """
         if self._step_sim_mode:
             raise AssertionError('move_ee_xyz() can '
@@ -387,7 +388,8 @@ class SingleArmPybullet(ARM):
             2-element tuple containing
 
             - float: joint position given joint_name
-            - list: joint positions if joint_name is None (shape: :math:`[6]`)
+            - list: joint positions if joint_name is None
+              (shape: :math:`[DOF]`)
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id,
@@ -410,7 +412,8 @@ class SingleArmPybullet(ARM):
         Returns:
             float: joint velocity given joint_name
             or
-            list: joint velocities if joint_name is None (shape: [6,])
+            list: joint velocities if joint_name is None
+            (shape: :math:`[DOF,]`)
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id,
@@ -428,7 +431,7 @@ class SingleArmPybullet(ARM):
         TORQUE_CONTROL, the applied joint motor torque is exactly what
         you provide, so there is no need to report it separately.
         So don't use this method to get the joint torque values when
-         the robot is in TORQUE_CONTROL mode.
+        the robot is in TORQUE_CONTROL mode.
 
         Args:
             joint_name: If it's None, it will return joint torques
@@ -454,14 +457,16 @@ class SingleArmPybullet(ARM):
         Return the end effector pose
 
         Returns:
-            np.ndarray: x, y, z position of the EE (shape: [3,])
-            np.ndarray: quaternion representation of the
-                EE orientation (shape: [4,])
-            np.ndarray: rotation matrix representation of the
-                EE orientation (shape: [3, 3])
-            np.ndarray: euler angle representation of the
-                EE orientation (roll, pitch, yaw with
-                static reference frame) (shape: [3,])
+            4-element tuple containing
+
+            - np.ndarray: x, y, z position of the EE (shape: :math:`[3,]`)
+            - np.ndarray: quaternion representation of the
+              EE orientation (shape: :math:`[4,]`)
+            - np.ndarray: rotation matrix representation of the
+              EE orientation (shape: :math:`[3, 3]`)
+            - np.ndarray: euler angle representation of the
+              EE orientation (roll, pitch, yaw with
+              static reference frame) (shape: :math:`[3,]`)
         """
         info = p.getLinkState(self.robot_id, self.ee_link_id)
         pos = info[4]
@@ -476,8 +481,10 @@ class SingleArmPybullet(ARM):
         Return the end effector's velocity
 
         Returns:
-            np.ndarray: translational velocity (shape: [3,])
-            np.ndarray: rotational velocity (shape: [3,])
+            2-element tuple containing
+
+            - np.ndarray: translational velocity (shape: :math:`[3,]`)
+            - np.ndarray: rotational velocity (shape: :math:`[3,]`)
         """
         info = p.getLinkState(self.robot_id,
                               self.ee_link_id,
@@ -492,14 +499,15 @@ class SingleArmPybullet(ARM):
         position and orientation of the end effector
 
         Args:
-            pos (list or np.ndarray): position (shape: [3,])
+            pos (list or np.ndarray): position (shape: :math:`[3,]`)
             ori (list or np.ndarray): orientation. It can be euler angles
-                ([roll, pitch, yaw], shape: [3,]), or
-                quaternion ([qx, qy, qz, qw], shape: [4,]),
-                or rotation matrix (shape: [3, 3]).
+                ([roll, pitch, yaw], shape: :math:`[3,]`), or
+                quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
+                or rotation matrix (shape: :math:`[3, 3]`).
 
         Returns:
-            inverse kinematics solution (joint angles, list)
+            list: solution to inverse kinematics, joint angles which achieve
+            the specified EE pose (shape: :math:`[DOF]`)
         """
         if ori is not None:
             ori = arutil.to_quat(ori)

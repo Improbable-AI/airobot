@@ -93,7 +93,7 @@ class UR5eReal(ARM):
         Args:
             position (float or list or flattened np.ndarray):
                 desired joint position(s)
-                (shape: [6,] if list, otherwise a single value)
+                (shape: :math:`[6,]` if list, otherwise a single value)
             joint_name (str): If not provided, position should be a list and
                 all actuated joints will be moved to specified positions. If
                 provided, only specified joint will move. Defaults to None
@@ -102,7 +102,7 @@ class UR5eReal(ARM):
 
         Return:
             success (bool): True if command was completed successfully, returns
-                False if wait flag is set to False.
+            False if wait flag is set to False.
         """
         position = copy.deepcopy(position)
         success = False
@@ -154,8 +154,8 @@ class UR5eReal(ARM):
 
         Args:
             velocity (float or list or flattened np.ndarray): list of target
-                 joint velocity value(s)
-                (shape: [6,] if list, otherwise a single value)
+                joint velocity value(s)
+                (shape: :math:`[6,]` if list, otherwise a single value)
             acc (float): Value with which to accelerate when robot starts
                 moving. Only used if self.use_urscript=True. Defaults to 0.1.
             joint_name (str, optional): If not provided, velocity should be
@@ -219,11 +219,11 @@ class UR5eReal(ARM):
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
-                base frame to move to (shape: [3,])
+                base frame to move to (shape: :math:`[3,]`)
             ori (list or np.ndarray, optional): It can be euler angles
-                ([roll, pitch, yaw], shape: [4,]),
-                or quaternion ([qx, qy, qz, qw], shape: [4,]),
-                or rotation matrix (shape: [3, 3]). If it's None,
+                ([roll, pitch, yaw], shape: :math:`[4,]`),
+                or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
+                or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
                 orientation as the target orientation
             acc (float, optional): Acceleration of end effector during
@@ -232,7 +232,7 @@ class UR5eReal(ARM):
                 Defaults to 0.3.
             vel (float, optional): Velocity of end effector during movement.
                 This parameter takes effect only when self.use_urscript is
-                 True and ik_first is False. Defaults to 0.2.
+                True and ik_first is False. Defaults to 0.2.
             ik_first (bool, optional): Whether to use the solution computed
                 by IK, or to use UR built in movel function which moves
                 linearly in tool space (movel may sometimes fail due to
@@ -349,7 +349,7 @@ class UR5eReal(ARM):
         Returns:
             float: joint position given joint_name
             or
-            list: joint positions if joint_name is None (shape: [6,])
+            list: joint positions if joint_name is None (shape: :math:`[6,]`)
 
         """
         self._j_state_lock.acquire()
@@ -379,7 +379,7 @@ class UR5eReal(ARM):
         Returns:
             float: joint velocity given joint_name
             or
-            list: joint velocities if joint_name is None (shape: [6,])
+            list: joint velocities if joint_name is None (shape: :math:`[6,]`)
         """
         self._j_state_lock.acquire()
         if joint_name is not None:
@@ -399,13 +399,16 @@ class UR5eReal(ARM):
         using ROS subscriber to the tf tree topic
 
         Returns:
-            np.ndarray: x, y, z position of the EE (shape: [3])
-            np.ndarray: quaternion representation ([x, y, z, w]) of the EE
-                orientation (shape: [4])
-            np.ndarray: rotation matrix representation of the EE orientation
-                (shape: [3, 3])
-            np.ndarray: euler angle representation of the EE orientation (roll,
-                pitch, yaw with static reference frame) (shape: [3])
+            4-element tuple containing
+
+            - np.ndarray: x, y, z position of the EE (shape: :math:`[3]`)
+            - np.ndarray: quaternion representation ([x, y, z, w]) of the EE
+              orientation (shape: :math:`[4]`)
+            - np.ndarray: rotation matrix representation of the EE orientation
+              (shape: :math:`[3, 3]`)
+            - np.ndarray: euler angle representation of the EE orientation
+              (roll, pitch, yaw with static reference frame)
+              (shape: :math:`[3]`)
         """
         pos, quat = get_tf_transform(self.tf_listener,
                                      self.cfgs.ARM.ROBOT_BASE_FRAME,
@@ -419,8 +422,9 @@ class UR5eReal(ARM):
         Return the end effector's velocity
 
         Returns:
-            np.ndarray: translational velocity (vx, vy, vz) (shape: [3,])
-            np.ndarray: rotational velocity (wx, wy, wz) (shape: [3,])
+            np.ndarray: translational velocity (vx, vy, vz)
+            (shape: :math:`[3,]`)
+            np.ndarray: rotational velocity (wx, wy, wz) (shape: :math:`[3,]`)
         """
         jpos = self.get_jpos()
         jvel = self.get_jvel()
@@ -437,7 +441,7 @@ class UR5eReal(ARM):
             joint_angles (list or flattened np.ndarray): joint angles
 
         Returns:
-            np.ndarray: jacobian (shape: [6, 6])
+            np.ndarray: jacobian (shape: :math:`[6, 6]`)
         """
         q = kdl.JntArray(self.urdf_chain.getNrOfJoints())
         for i in range(q.rows()):
@@ -460,8 +464,8 @@ class UR5eReal(ARM):
             tgt_frame (str): target link frame
 
         Returns:
-            np.ndarray: translational vector (shape: [3,])
-            np.ndarray: rotational matrix (shape: [3, 3])
+            np.ndarray: translational vector (shape: :math:`[3,]`)
+            np.ndarray: rotational matrix (shape: :math:`[3, 3]`)
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -498,7 +502,7 @@ class UR5eReal(ARM):
         Returns:
             np.ndarray: translational and rotational
                  velocities (vx, vy, vz, wx, wy, wz)
-                 (shape: [6,])
+                 (shape: :math:`[6,]`)
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -525,15 +529,15 @@ class UR5eReal(ARM):
         (self.cfgs.ARM.ROBOT_EE_FRAME)
 
         Args:
-            pos (list or np.ndarray): position (shape: [3,])
+            pos (list or np.ndarray): position (shape: :math:`[3,]`)
             ori (list or np.ndarray): orientation. It can be euler angles
-                ([roll, pitch, yaw], shape: [4,]),
-                or quaternion ([qx, qy, qz, qw], shape: [4,]),
-                or rotation matrix (shape: [3, 3]). If it's None,
+                ([roll, pitch, yaw], shape: :math:`[4,]`),
+                or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
+                or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
                 orientation as the target orientation
             qinit (list or np.ndarray): initial joint positions for numerical
-                IK (shape: [6,])
+                IK (shape: :math:`[6,]`)
 
         Returns:
             list: inverse kinematics solution (joint angles)
@@ -763,9 +767,9 @@ class UR5eReal(ARM):
 
         Returns:
             list: Translation component of the gripper tip transform
-                (shape [3,])
+                (shape :math:`[3,]`)
             list: Euler angle orientation component of the gripper
-                tip transform. (shape [3,])
+                tip transform. (shape :math:`[3,]`)
         """
         ee_frame = self.cfgs.ARM.ROBOT_EE_FRAME
         gripper_tip_id = self.arm_link_names.index(ee_frame)
