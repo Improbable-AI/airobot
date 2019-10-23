@@ -1,6 +1,8 @@
 # AIRobot
 
+AIRobot is a python library to interface with robots. It follows the same architecture from [PyRobot](https://pyrobot.org).
 - [Installation](#installation)
+- [Supported Robots](#supported-robots)
 - [Getting Started](#getting-started)
 - [Credits](#credits)
 - [Citation](#citation)
@@ -11,19 +13,46 @@
 
 
 ## Installation
+
+### Pre-installation steps for ROS 
+
+If you want to use ROS to interface with robots, please install [ROS Kinetic](http://wiki.ros.org/kinetic/Installation/Ubuntu) first.
+
+If you want to use ROS for UR5e robots, please install [ur5e driver](https://github.com/Improbable-AI/ur5e_robotiq_2f140). 
+
+If you are using RealSense cameras, please follow the instructions [here](https://github.com/IntelRealSense/realsense-ros#installation-instructions) or [here](https://github.com/Improbable-AI/camera_calibration/tree/qa).
+
+### Install AIRobot
+
+You might want to install it in a virtual environment. 
+
+If you are using ROS, you can use [virtualenv](https://virtualenv.pypa.io/en/latest/installation/). Note that Anaconda doesn't work well with ROS. And only Python 2.7 is recommended for ROS at this point.
+
+If you only want to use the robots in the PyBullet simulation environment, then you can use Python 2.7 or Python 3.7. And you can use either [virtualenv for Python 2.7](https://virtualenv.pypa.io/en/latest/installation/), [venv for Python 3.7](https://docs.python.org/3.7/tutorial/venv.html) or [Anaconda](https://docs.anaconda.com/anaconda/install/linux/).
+
 ```bash
 git clone https://github.com/Improbable-AI/airobot.git
 cd airobot
 pip install .
 ```
 
+## Supported Robots
+* [UR5e](https://www.universal-robots.com/products/ur5-robot/) with ROS
+* [UR5e](https://www.universal-robots.com/products/ur5-robot/) in PyBullet
+
+If you want to use [Sawyer](https://www.rethinkrobotics.com/sawyer) or [LoCoBot](https://locobot-website.netlify.com/), you can use [PyRobot](https://pyrobot.org).
+
 ## Getting Started
+A sample script is shown below. You can find more examples [here](https://github.com/Improbable-AI/airobot/examples)
+
 ```python
-import airobot as ar
-robot = ar.create_robot('ur5e',
-                        robot_cfg={'render': True})
-robot.go_home()
-robot.move_ee_xyz([0.1, 0.1, 0.1])
+from airobot import Robot
+# create a UR5e robot in pybullet
+robot = Robot('ur5e',
+              pb=True,
+              arm_cfg={'render': True})
+robot.arm.go_home()
+robot.arm.move_ee_xyz([0.1, 0.1, 0.1])
 ```
 
 ## Credits
@@ -48,7 +77,7 @@ If you use AIRobot in your research, please use the following BibTeX entry.
 
 ## Build API Docs
 
-Run the following commands to build the api webpage.
+Run the following commands to build the API webpage.
 
 ```bash
 cd docs

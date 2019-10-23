@@ -296,9 +296,15 @@ class ExampleClass(object):
     def _private_without_docstring(self):
         pass
 
-def multiple_returns:
+
+def multiple_returns(x, y, z):
     """
     Multiple returns
+
+    Args:
+        x (float): x
+        y (float): y
+        z (float): z
 
     Returns:
         3-element tuple containing

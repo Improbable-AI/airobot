@@ -1,12 +1,15 @@
 """
-This file contains 2 classes:
-    - ParseUtils containing utilies to parse data from UR robot
-    - SecondaryMonitor, a class opening a socket to the robot and with methods
-      to access data and send programs to the robot
+**ParseUtils**: a class containing utilies to parse data
+from UR robot
+
+**SecondaryMonitor**: a class opening a socket to the robot
+and with methods to access data and send programs to the robot
+
 Both use data from the secondary port of the URRobot.
 Only the last connected socket on 3001 is the primary client !!!!
 So do not rely on it unless you know no other client is running
 (Hint the UR java interface is a client...)
+
 http://support.universal-robots.com/Technical/PrimaryAndSecondaryClientInterface
 """
 
@@ -84,7 +87,7 @@ class ParserUtils(object):
         Args:
             data (str? bytes?): Packet data in raw form
 
-        Return:
+        Returns:
             dict: Dictionary with interpretable state data from robot, with
             keys corresponding to different types of data
 
@@ -373,7 +376,7 @@ class ParserUtils(object):
         Looks at raw data sent from robot and unpacks it's header
         (first 5 bytes)
 
-        Arguments:
+        Args:
             data (binary? bytes?) -- Raw data received from socket connection
                  to robot
 
@@ -394,7 +397,7 @@ class ParserUtils(object):
         so that parser knows how much data we got and
         what type it is?
 
-        Arguments:
+        Args:
             data (str): Raw data received from socket connection
 
         Raises:
@@ -405,7 +408,7 @@ class ParserUtils(object):
                 smaller than measured number of bytes in the packet
 
         Returns:
-            4-element tuple containing:
+            4-element tuple containing
 
             - int: Number of bytes in the packet
             - int: Indication of the type of packet
@@ -596,7 +599,7 @@ class SecondaryMonitor(Thread):
         tells us that everything is fine with the robot. If not, will
         return False and the main monitor thread will send out an error
 
-        Arguments:
+        Args:
             rmode (int): Varible indicating robotMode value that is sent
                 to the monitor from the robot. Used for one of the checks
                 for if the robot is running or not
@@ -657,7 +660,7 @@ class SecondaryMonitor(Thread):
         """
         Get end effector information from robot
 
-        Keyword Arguments:
+        Args:
             wait (bool): Boolean to tell whether to block
                 until data is returned (default: {False})
 

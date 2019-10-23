@@ -6,7 +6,7 @@ robots over TCP/IP by creating URScript programs and sending them for
 execution on the robot's system
 
 built off of urscript.py, part of python-urx library
-(https://github.com/anthonysimeonov/python-urx/blob/master/urx/urscript.py)
+(https://github.com/SintefManufacturing/python-urx)
 """
 
 import airobot as ar

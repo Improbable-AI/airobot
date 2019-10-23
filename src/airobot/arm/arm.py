@@ -141,7 +141,7 @@ class ARM(object):
                 return the joint position of the specified joint
 
         Returns:
-            2-element tuple containing
+            One of the following
 
             - float: joint position given joint_name
             - list: joint positions if joint_name is None
@@ -158,7 +158,7 @@ class ARM(object):
                 return the joint velocity of the specified joint
 
         Returns:
-            2-element tuple containing
+            One of the following
 
             - float: joint velocity given joint_name
             - list: joint velocities if joint_name is None
@@ -175,7 +175,7 @@ class ARM(object):
                 return the joint torque of the specified joint
 
         Returns:
-            2-element tuple containing
+            One of the following
 
             - float: joint torque given joint_name
             - list: joint torques if joint_name is None

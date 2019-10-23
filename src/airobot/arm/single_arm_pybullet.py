@@ -385,7 +385,7 @@ class SingleArmPybullet(ARM):
                 return the joint position of the specified joint
 
         Returns:
-            2-element tuple containing
+            One of the following
 
             - float: joint position given joint_name
             - list: joint positions if joint_name is None
@@ -405,15 +405,16 @@ class SingleArmPybullet(ARM):
         Return the joint velocity(ies) of the arm
 
         Args:
-            joint_name: If it's None, it will return joint velocities
-                of all the actuated joints. Otherwise, it will
-                return the joint velocity of the specified joint
+            joint_name (str, optional): If it's None, it will return
+                joint velocities of all the actuated joints. Otherwise,
+                it will return the joint velocity of the specified joint
 
         Returns:
-            float: joint velocity given joint_name
-            or
-            list: joint velocities if joint_name is None
-            (shape: :math:`[DOF,]`)
+            One of the following
+
+            - float: joint velocity given joint_name
+            - list: joint velocities if joint_name is None
+              (shape: :math:`[DOF]`)
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id,
@@ -434,14 +435,16 @@ class SingleArmPybullet(ARM):
         the robot is in TORQUE_CONTROL mode.
 
         Args:
-            joint_name: If it's None, it will return joint torques
+            joint_name (str, optional): If it's None, it will return joint torques
                 of all the actuated joints. Otherwise, it will
                 return the joint torque of the specified joint
 
         Returns:
-            float: joint torque given joint_name
-            or
-            list: joint torques if joint_name is None
+            One of the following
+
+            - float: joint torque given joint_name
+            - list: joint torques if joint_name is None
+              (shape: :math:`[DOF]`)
         """
         if joint_name is None:
             states = p.getJointStates(self.robot_id, self.arm_jnt_ids)
