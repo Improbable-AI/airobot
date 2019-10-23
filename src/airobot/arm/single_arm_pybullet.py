@@ -20,7 +20,8 @@ from airobot.utils.arm_util import wait_to_reach_jnt_goal
 class SingleArmPybullet(ARM):
     """
     Class for the pybullet simulation environment
-        of a UR5e robot with a robotiq 2f140 gripper.
+    of a UR5e robot with a robotiq 2f140 gripper.
+
     """
 
     def __init__(self, cfgs, render=False, seed=None, self_collision=False,

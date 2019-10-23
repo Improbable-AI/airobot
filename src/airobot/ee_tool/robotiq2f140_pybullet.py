@@ -8,9 +8,8 @@ from airobot.utils.arm_util import wait_to_reach_jnt_goal
 
 class Robotiq2F140Pybullet(EndEffectorTool):
     """
-    Class for interfacing with Robotiq 2F140 gripper when
-    it is attached to UR5e arm. Communication with the gripper
-    is either through ROS over through a TCP/IP socket
+    Class for interfacing with a Robotiq 2F140 gripper when
+    it is attached to UR5e arm in pybullet.
     """
 
     def __init__(self, cfgs, p):
@@ -63,7 +62,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Open the gripper
 
         Returns:
-            return if the action is sucessful or not
+            bool: return if the action is sucessful or not
         """
         if not self._gripper_activated:
             raise RuntimeError('Call activate function first!')
@@ -75,7 +74,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Close the gripper
 
         Returns:
-            return if the action is sucessful or not
+            bool: return if the action is sucessful or not
         """
         if not self._gripper_activated:
             raise RuntimeError('Call activate function first!')
@@ -90,8 +89,8 @@ class Robotiq2F140Pybullet(EndEffectorTool):
             pos (float): joint position
 
         Returns:
-            A boolean variable representing if the action is successful at
-            the moment when the function exits
+            bool: A boolean variable representing if the action is
+            successful at the moment when the function exits
         """
         joint_name = self.jnt_names[0]
         tgt_pos = arutil.clamp(pos,

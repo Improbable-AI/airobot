@@ -1,6 +1,6 @@
 """
 Pybullet simulation environment of a UR5e
- robot with a robotiq 2f140 gripper
+robot with a robotiq 2f140 gripper
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -15,7 +15,7 @@ from airobot.arm.single_arm_pybullet import SingleArmPybullet
 class UR5ePybullet(SingleArmPybullet):
     """
     Class for the pybullet simulation environment
-        of a UR5e robot with a robotiq 2f140 gripper.
+    of a UR5e robot with a robotiq 2f140 gripper.
     """
 
     def __init__(self, cfgs, render=False, seed=None, self_collision=False,

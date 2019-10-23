@@ -84,6 +84,14 @@ class Logger:
         self.logger.critical(msg)
 
     def set_level(self, log_level):
+        """
+        Set logging level
+
+        Args:
+            log_level (str): the following modes are supported:
+                'debug', 'info', 'warn', 'error', 'critical'
+
+        """
         if 'debug' in log_level:
             self.log_level = logging.DEBUG
         elif 'info' in log_level:

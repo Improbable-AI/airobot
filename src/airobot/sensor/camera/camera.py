@@ -18,13 +18,13 @@ class Camera(object):
 
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
-        Return rgba/depth images
+        Return rgb/depth images
 
         Args:
             get_rgb (bool): return rgb image if True, None otherwise
             get_depth (bool): return depth image if True, None otherwise
 
         Returns:
-            rgba and depth images (np.ndarray)
+            rgb and depth images (np.ndarray)
         """
         raise NotImplementedError
