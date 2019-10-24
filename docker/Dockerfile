@@ -204,6 +204,7 @@ ENV HOME=/home/improbable
 RUN mkdir ${HOME}
 
 # copy local requirements file for pip install python deps
+ARG CACHEBUST=1
 COPY ./requirements.txt ${HOME}
 WORKDIR ${HOME}
 RUN pip install -r requirements.txt

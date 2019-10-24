@@ -44,14 +44,16 @@ sudo systemctl restart docker
 ## Building
 ### Pull the image from dockerhub
 ```
-docker pull anthonysimeonov/airobot-dev:firsttry
+docker pull anthonysimeonov/airobot-dev:latest
 ```
 
 ### Building the image locally
-From within this directory (```/path/to/airobot/docker/```), run the following command to build the image (this will take quite a bit of time)
+From within this directory (```/path/to/airobot/docker/```), run the following command to build the image (this will take quite a bit of time if you have not done it locally before)
 ```
-DOCKER_BUILDKIT=1 docker build -t airobot-dev --ssh default .
+python docker_build.py
 ```
+
+(if you are building the image locally you will need to set up your machine with public keys linked to your github account for cloning private repositories required during building)
 
 ## Usage
 ### Running the container

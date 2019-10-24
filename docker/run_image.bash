@@ -1,4 +1,4 @@
-IMAGE=anthonysimeonov/airobot-dev:firsttry
+IMAGE=anthonysimeonov/airobot-dev:latest
 # IMAGE=airobot-dev
 
 XAUTH=/tmp/.docker.xauth
