@@ -31,9 +31,7 @@ pos_name_pairs = [([0.5, -2, -1.1, -0.95, 1.7, -0.1], None),
 def test_set_jpos(create_robot, position, joint_name):
     bot = create_robot
     bot.arm.go_home()
-    time.sleep(1)
     bot.arm.set_jpos(position, joint_name)
-    time.sleep(1)
     jnt_pos = bot.arm.get_jpos(joint_name)
     jnt_pos = np.array(jnt_pos)
     position = np.array(position)
