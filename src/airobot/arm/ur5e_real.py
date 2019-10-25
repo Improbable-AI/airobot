@@ -580,6 +580,24 @@ class UR5eReal(ARM):
             return None
         return list(jnt_poss)
 
+    def scale_motion(self, vel_scale=1.0, acc_scale=1.0):
+        """
+        Sets the maximum velocity and acceleration for the robot
+        motion. Specified as a fraction
+        from 0.0 - 1.0 of the maximum velocity and acceleration
+        specified in the MoveIt joint limits configuration file.
+
+        Args:
+            vel_scale (float): velocity scale, Defaults to 1.0
+            acc_scale (float): acceleration scale, Defaults to 1.0
+        """
+        vel_scale = arutil.clamp(vel_scale, 0.0, 1.0)
+        acc_scale = arutil.clamp(acc_scale, 0.0, 1.0)
+        self.moveit_group.set_max_velocity_scaling_factor(vel_scale)
+        self.moveit_group.set_max_acceleration_scaling_factor(acc_scale)
+        self._motion_vel = self.max_vel * vel_scale
+        self._motion_acc = self.max_acc * acc_scale
+
     def _init_consts(self):
         """
         Initialize constants
@@ -608,19 +626,20 @@ class UR5eReal(ARM):
         self.moveit_group.set_planning_time(1.0)
         self.moveit_scene = MoveitScene()
 
+        # read the joint limit (max velocity and acceleration) from the
+        # moveit configuration file
         jnt_params = []
         max_vels = []
         max_accs = []
         for arm_jnt in self.arm_jnt_names:
             jnt_param = self.cfgs.ROBOT_DESCRIPTION + \
-                        '_planning/joint_limits' + arm_jnt
+                        '_planning/joint_limits/' + arm_jnt
             jnt_params.append(copy.deepcopy(jnt_param))
             max_vels.append(rospy.get_param(jnt_param + '/max_velocity'))
             max_accs.append(rospy.get_param(jnt_param + '/max_acceleration'))
         self.max_vel = np.min(max_vels)
         self.max_acc = np.min(max_accs)
-
-        self._scale_motion(vel_scale=0.2, acc_scale=0.2)
+        self.scale_motion(vel_scale=0.2, acc_scale=0.2)
 
         # add a virtual base support frame of the real robot:
         ur_base_name = 'ur_base'
@@ -707,24 +726,6 @@ class UR5eReal(ARM):
         """
         prog = 'textmsg(%s)' % msg
         self._send_urscript(prog)
-
-    def _scale_motion(self, vel_scale=1.0, acc_scale=1.0):
-        """
-        Sets the maximum velocity and acceleration for the robot
-        motion. Specified as a fraction
-        from 0.0 - 1.0 of the maximum velocity and acceleration
-        specified in the MoveIt joint limits configuration file.
-
-        Args:
-            vel_scale (float): velocity scale, Defaults to 1.0
-            acc_scale (float): acceleration scale, Defaults to 1.0
-        """
-        vel_scale = arutil.clamp(vel_scale, 0.0, 1.0)
-        acc_scale = arutil.clamp(acc_scale, 0.0, 1.0)
-        self.moveit_group.set_max_velocity_scaling_factor(vel_scale)
-        self.moveit_group.set_max_acceleration_scaling_factor(acc_scale)
-        self._motion_vel = self.max_vel * vel_scale
-        self._motion_acc = self.max_acc * acc_scale
 
     def _callback_joint_states(self, msg):
         """
