@@ -124,12 +124,15 @@ class UR5eReal(ARM):
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_pos[arm_jnt_idx] = position
         if self.use_urscript:
-            prog = 'movej([%f, %f, %f, %f, %f, %f])' % (tgt_pos[0],
-                                                        tgt_pos[1],
-                                                        tgt_pos[2],
-                                                        tgt_pos[3],
-                                                        tgt_pos[4],
-                                                        tgt_pos[5])
+            prog = 'movej([%f, %f, %f, %f, %f, %f],' \
+                   ' a=%f, v=%f)' % (tgt_pos[0],
+                                     tgt_pos[1],
+                                     tgt_pos[2],
+                                     tgt_pos[3],
+                                     tgt_pos[4],
+                                     tgt_pos[5],
+                                     self._motion_acc,
+                                     self._motion_vel)
             self._send_urscript(prog)
 
             if wait:
@@ -147,7 +150,7 @@ class UR5eReal(ARM):
 
         return success
 
-    def set_jvel(self, velocity, acc=0.1, joint_name=None, wait=False,
+    def set_jvel(self, velocity, joint_name=None, wait=False,
                  *args, **kwargs):
         """
         Set joint velocity command to the robot (units in rad/s)
@@ -156,8 +159,6 @@ class UR5eReal(ARM):
             velocity (float or list or flattened np.ndarray): list of target
                 joint velocity value(s)
                 (shape: :math:`[6,]` if list, otherwise a single value)
-            acc (float): Value with which to accelerate when robot starts
-                moving. Only used if self.use_urscript=True. Defaults to 0.1.
             joint_name (str, optional): If not provided, velocity should be
                 list and all joints will be turned on at specified velocity.
                 Defaults to None.
@@ -192,13 +193,14 @@ class UR5eReal(ARM):
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_vel[arm_jnt_idx] = velocity
         if self.use_urscript:
-            prog = 'speedj([%f, %f, %f, %f, %f, %f], a=%f)' % (tgt_vel[0],
-                                                               tgt_vel[1],
-                                                               tgt_vel[2],
-                                                               tgt_vel[3],
-                                                               tgt_vel[4],
-                                                               tgt_vel[5],
-                                                               acc)
+            prog = 'speedj([%f, %f, %f, %f, %f, %f],' \
+                   ' a=%f)' % (tgt_vel[0],
+                               tgt_vel[1],
+                               tgt_vel[2],
+                               tgt_vel[3],
+                               tgt_vel[4],
+                               tgt_vel[5],
+                               self._motion_acc)
             self._send_urscript(prog)
         else:
             # self._pub_joint_vel(tgt_vel)
@@ -216,7 +218,7 @@ class UR5eReal(ARM):
 
         return success
 
-    def set_ee_pose(self, pos=None, ori=None, acc=0.2, vel=0.3, wait=True,
+    def set_ee_pose(self, pos=None, ori=None, wait=True,
                     ik_first=False, *args, **kwargs):
         """
         Set cartesian space pose of end effector
@@ -230,13 +232,6 @@ class UR5eReal(ARM):
                 or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
                 orientation as the target orientation
-            acc (float, optional): Acceleration of end effector during
-                beginning of movement. This arg takes effect only when
-                self.use_urscript is True and ik_first is False.
-                Defaults to 0.3.
-            vel (float, optional): Velocity of end effector during movement.
-                This parameter takes effect only when self.use_urscript is
-                True and ik_first is False. Defaults to 0.2.
             ik_first (bool, optional): Whether to use the solution computed
                 by IK, or to use UR built in movel function which moves
                 linearly in tool space (movel may sometimes fail due to
@@ -277,8 +272,8 @@ class UR5eReal(ARM):
                     ee_pos[3],
                     ee_pos[4],
                     ee_pos[5],
-                    acc,
-                    vel,
+                    self._motion_acc,
+                    self._motion_vel,
                     0.0)
                 self._send_urscript(prog)
                 if wait:
@@ -612,7 +607,20 @@ class UR5eReal(ARM):
         self.moveit_group.set_planner_id(self.moveit_planner)
         self.moveit_group.set_planning_time(1.0)
         self.moveit_scene = MoveitScene()
-        self._scale_moveit_motion(vel_scale=0.2, acc_scale=0.2)
+
+        jnt_params = []
+        max_vels = []
+        max_accs = []
+        for arm_jnt in self.arm_jnt_names:
+            jnt_param = self.cfgs.ROBOT_DESCRIPTION + \
+                        '_planning/joint_limits' + arm_jnt
+            jnt_params.append(copy.deepcopy(jnt_param))
+            max_vels.append(rospy.get_param(jnt_param + '/max_velocity'))
+            max_accs.append(rospy.get_param(jnt_param + '/max_acceleration'))
+        self.max_vel = np.min(max_vels)
+        self.max_acc = np.min(max_accs)
+
+        self._scale_motion(vel_scale=0.2, acc_scale=0.2)
 
         # add a virtual base support frame of the real robot:
         ur_base_name = 'ur_base'
@@ -700,10 +708,10 @@ class UR5eReal(ARM):
         prog = 'textmsg(%s)' % msg
         self._send_urscript(prog)
 
-    def _scale_moveit_motion(self, vel_scale=1.0, acc_scale=1.0):
+    def _scale_motion(self, vel_scale=1.0, acc_scale=1.0):
         """
-        Sets the maximum velocity and acceleration MoveIt can set
-        in the trajectories it returns. Specified as a fraction
+        Sets the maximum velocity and acceleration for the robot
+        motion. Specified as a fraction
         from 0.0 - 1.0 of the maximum velocity and acceleration
         specified in the MoveIt joint limits configuration file.
 
@@ -715,6 +723,8 @@ class UR5eReal(ARM):
         acc_scale = arutil.clamp(acc_scale, 0.0, 1.0)
         self.moveit_group.set_max_velocity_scaling_factor(vel_scale)
         self.moveit_group.set_max_acceleration_scaling_factor(acc_scale)
+        self._motion_vel = self.max_vel * vel_scale
+        self._motion_acc = self.max_acc * acc_scale
 
     def _callback_joint_states(self, msg):
         """
