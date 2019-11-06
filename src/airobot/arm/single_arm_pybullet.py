@@ -3,8 +3,6 @@ from __future__ import division
 from __future__ import print_function
 
 import copy
-import threading
-import time
 
 import numpy as np
 from gym.utils import seeding
@@ -13,6 +11,7 @@ import airobot.utils.common as arutil
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 from airobot.utils.pb_util import PB_CLIENT
+from airobot.utils.pb_util import set_step_sim
 
 
 class SingleArmPybullet(ARM):
@@ -47,7 +46,7 @@ class SingleArmPybullet(ARM):
         self.np_random, _ = self._seed(seed)
 
         self._init_consts()
-        self._init_threads()
+        self.realtime_simulation(True)
         self._in_torque_mode = [False] * self.arm_dof
 
     def go_home(self):
@@ -77,14 +76,10 @@ class SingleArmPybullet(ARM):
             on (bool): run the simulation in realtime if True
                 stop the realtime simulation if False
         """
-        if on:
-            self._set_step_sim(step_mode=False)
-            if self._render:
-                self.p.setRealTimeSimulation(1)
-        else:
-            self._set_step_sim(step_mode=True)
-            if self._render:
-                self.p.setRealTimeSimulation(0)
+        self._step_sim_mode = not on
+        if self.cfgs.HAS_EETOOL:
+            self.eetool._step_sim_mode = self._step_sim_mode
+        set_step_sim(self._step_sim_mode)
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
@@ -526,22 +521,6 @@ class SingleArmPybullet(ARM):
         np_random, seed = seeding.np_random(seed)
         return np_random, seed
 
-    def _init_threads(self):
-        """
-        Start threads.
-        One is for realtime simulation
-        One is to constrain the gripper joints so
-        that they move simultaneously
-        """
-        # realtime simulation thread
-        self._set_step_sim(step_mode=False)
-        if not self._render:
-            self._th_sim = threading.Thread(target=self._rt_simulation)
-            self._th_sim.daemon = True
-            self._th_sim.start()
-        else:
-            self.realtime_simulation(True)
-
     def _init_consts(self):
         """
         Initialize constants
@@ -549,7 +528,6 @@ class SingleArmPybullet(ARM):
         self._home_position = self.cfgs.ARM.HOME_POSITION
         # joint damping for inverse kinematics
         self._ik_jd = 0.05
-        self._thread_sleep = 0.001
         self.arm_jnt_names = self.cfgs.ARM.JOINT_NAMES
 
         self.arm_jnt_names_set = set(self.arm_jnt_names)
@@ -559,15 +537,6 @@ class SingleArmPybullet(ARM):
         self.ee_link_jnt = self.cfgs.ARM.ROBOT_EE_FRAME_JOINT
 
         self._max_torques = self.cfgs.ARM.MAX_TORQUES
-
-    def _rt_simulation(self):
-        """
-        Run step simulation all the time in backend
-        """
-        while True:
-            if not self._step_sim_mode:
-                self.p.stepSimulation()
-            time.sleep(self._thread_sleep)
 
     def _build_jnt_id(self):
         """
@@ -581,8 +550,3 @@ class SingleArmPybullet(ARM):
 
         self.ee_link_id = self.jnt_to_id[self.ee_link_jnt]
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
-
-    def _set_step_sim(self, step_mode=True):
-        self._step_sim_mode = step_mode
-        if self.cfgs.HAS_EETOOL:
-            self.eetool._step_sim_mode = step_mode
