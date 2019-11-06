@@ -19,4 +19,5 @@ def load_pb(render=False):
         else:
             p.loadPlugin("eglRendererPlugin")
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
+    p.setGravity(0, 0, -9.8)
     PB_CLIENT = p

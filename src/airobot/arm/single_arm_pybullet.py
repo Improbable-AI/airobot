@@ -550,7 +550,6 @@ class SingleArmPybullet(ARM):
         # joint damping for inverse kinematics
         self._ik_jd = 0.05
         self._thread_sleep = 0.001
-        self.p.setGravity(0, 0, -9.8)
         self.arm_jnt_names = self.cfgs.ARM.JOINT_NAMES
 
         self.arm_jnt_names_set = set(self.arm_jnt_names)
