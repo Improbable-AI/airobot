@@ -1,6 +1,6 @@
 import rospy
-from std_msgs.msg import String
 from control_msgs.msg import GripperCommandActionGoal
+from std_msgs.msg import String
 
 from airobot.ee_tool.ee import EndEffectorTool
 from airobot.utils.common import clamp

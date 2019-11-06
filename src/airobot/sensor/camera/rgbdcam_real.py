@@ -9,6 +9,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image
 from tf import TransformListener
+
 import airobot as ar
 from airobot.sensor.camera.camera import Camera
 from airobot.utils.common import to_rot_mat
@@ -175,7 +176,7 @@ class RGBDCameraReal(Camera):
         self.cam_img_lock.release()
         return rgb_img, depth_img
 
-    def get_pix_3dpt(self, rs, cs, in_world=True, filter_depth=False):
+    def get_pix_3dpt(self, rs, cs, in_world=True, filter_depth=False, k=1, ktype='median'):
         """
         Calculate the 3D position of pixels in the RGB image
 
@@ -194,6 +195,14 @@ class RGBDCameraReal(Camera):
             filter_depth (bool): if True, only pixels with depth values
                 between [self.depth_min, self.depth_max]
                 will remain
+            k (int): kernel size. A kernel (slicing window) will be used to get the
+               neighboring depth values of the pixels specified by rs and cs. And depending
+               on the ktype, a corresponding method will be applied to use some statistical value
+               (such as minimum, maximum, median, mean) of all the depth values in the slicing
+               window as a more robust estimate of the depth value of the specified pixels
+            ktype (str): what kind of statistical value of all the depth values in the sliced kernel
+               to use as a proxy of the depth value at specified pixels. It can be `median`,
+               `min`, `max`, `mean`.
 
         Returns:
             np.ndarray: 3D point coordinates of the pixels in
@@ -213,8 +222,32 @@ class RGBDCameraReal(Camera):
             rs = rs.flatten()
         if isinstance(cs, np.ndarray):
             cs = cs.flatten()
+        if not (isinstance(k, int) and (k % 2) == 1):
+            raise TypeError('k should be a positive odd integer.')
         _, depth_im = self.get_images(get_rgb=False, get_depth=True)
-        depth_im = depth_im[rs, cs]
+        if k == 1:
+            depth_im = depth_im[rs, cs]
+        else:
+            depth_im_list = []
+            if ktype == 'min':
+                ktype_func = np.min
+            elif ktype == 'max':
+                ktype_func = np.max
+            elif ktype == 'median':
+                ktype_func = np.median
+            elif ktype == 'mean':
+                ktype_func = np.mean
+            else:
+                raise TypeError('Unsupported ktype:[%s]' % ktype)
+            for r, c in zip(rs, cs):
+                s = k // 2
+                rmin = max(0, r - s)
+                rmax = min(self.cam_height, r + s + 1)
+                cmin = max(0, c - s)
+                cmax = min(self.cam_width, c + s + 1)
+                depth_im_list.append(ktype_func(depth_im[rmin:rmax, cmin:cmax]))
+            depth_im = np.array(depth_im_list)
+
         depth = depth_im.reshape(-1) * self.depth_scale
         img_pixs = np.stack((rs, cs)).reshape(2, -1)
         img_pixs[[0, 1], :] = img_pixs[[1, 0], :]

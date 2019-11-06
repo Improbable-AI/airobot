@@ -1,5 +1,6 @@
 import importlib
 import os
+import time
 
 import airobot as ar
 from airobot.utils.ai_logger import Logger
@@ -112,6 +113,7 @@ class Robot:
                 cam_cfg['p'] = self.arm.p
             self.cam = camera_class(cfgs, **cam_cfg)
         cfgs.freeze()
+        time.sleep(1.0)  # sleep to give subscribers time to connect
 
 
 logger = Logger('debug')
