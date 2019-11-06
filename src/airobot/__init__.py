@@ -80,6 +80,8 @@ class Robot:
             urdf = os.path.join(urdfs_root_path,
                                 cfgs.PYBULLET_URDF)
             cfgs.PYBULLET_URDF = urdf
+            import airobot.utils.pb_util as pb_util
+            pb_util.load_pb(render=arm_cfg.get('render', False))
         else:
             import rospy
             try:
@@ -109,8 +111,6 @@ class Robot:
             from airobot.sensor.camera import cls_name_to_path as cam_cls_name_to_path
             camera_class = load_class_from_path(cls_name,
                                                 cam_cls_name_to_path[cls_name])
-            if pb:
-                cam_cfg['p'] = self.arm.p
             self.cam = camera_class(cfgs, **cam_cfg)
         cfgs.freeze()
         time.sleep(1.0)  # sleep to give subscribers time to connect

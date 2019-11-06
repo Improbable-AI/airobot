@@ -4,6 +4,7 @@ import time
 import airobot.utils.common as arutil
 from airobot.ee_tool.ee import EndEffectorTool
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
+from airobot.utils.pb_util import PB_CLIENT
 
 
 class Robotiq2F140Pybullet(EndEffectorTool):
@@ -12,14 +13,14 @@ class Robotiq2F140Pybullet(EndEffectorTool):
     it is attached to UR5e arm in pybullet.
     """
 
-    def __init__(self, cfgs, p):
+    def __init__(self, cfgs):
         """
 
         Args:
             cfgs (YACS CfgNode): configurations for the gripper
         """
         super(Robotiq2F140Pybullet, self).__init__(cfgs=cfgs)
-        self.p = p
+        self.p = PB_CLIENT
         self._gripper_mimic_coeff = [1, -1, 1, -1, -1, 1]
         self.jnt_names = [
             'finger_joint', 'left_inner_knuckle_joint',

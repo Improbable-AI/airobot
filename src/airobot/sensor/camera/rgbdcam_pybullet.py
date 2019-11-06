@@ -1,16 +1,17 @@
 import numpy as np
 
 from airobot.sensor.camera.camera import Camera
+from airobot.utils.pb_util import PB_CLIENT
 
 
 class RGBDCameraPybullet(Camera):
-    def __init__(self, cfgs, p):
+    def __init__(self, cfgs):
         """
         Args:
             cfgs (YACS CfgNode): configurations for the camera
         """
         super(RGBDCameraPybullet, self).__init__(cfgs=cfgs)
-        self.p = p
+        self.p = PB_CLIENT
         self.view_matrix = None
         self.proj_matrix = None
 

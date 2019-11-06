@@ -1,9 +1,9 @@
 import json
 import os
-import rospkg
 
 import PyKDL as kdl
 import numpy as np
+import rospkg
 import rospy
 import tf
 
