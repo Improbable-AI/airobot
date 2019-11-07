@@ -1,4 +1,4 @@
-    from __future__ import absolute_import
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
@@ -8,7 +8,6 @@ import threading
 import time
 
 import numpy as np
-import pybullet as p
 import pybullet_data
 from gym.utils import seeding
 
@@ -56,7 +55,7 @@ class DualArmPybullet(ARM):
 
         self._init_consts()
         self._init_threads()
-        self._in_torque_mode = [False] * self.arm_dof
+        self._in_torque_mode = [False] * self.dual_arm_dof
 
     def go_home(self, arm=None):
         """
@@ -156,11 +155,11 @@ class DualArmPybullet(ARM):
                                  '("right" or "left")')
             if arm == 'right':
                 success = self.right_arm.set_jpos(position,
-                                                  joint_name=joint_name
+                                                  joint_name=joint_name,
                                                   wait=wait)
             elif arm == 'left':
                 success = self.left_arm.set_jpos(position,
-                                                 joint_name=joint_name
+                                                 joint_name=joint_name,
                                                  wait=wait)
         return success
 
@@ -216,11 +215,11 @@ class DualArmPybullet(ARM):
                                  '("right" or "left")')
             if arm == 'right':
                 success = self.right_arm.set_jvel(velocity,
-                                                  joint_name=joint_name
+                                                  joint_name=joint_name,
                                                   wait=wait)
             elif arm == 'left':
                 success = self.left_arm.set_jvel(velocity,
-                                                 joint_name=joint_name
+                                                 joint_name=joint_name,
                                                  wait=wait)
         return success
 
@@ -279,11 +278,11 @@ class DualArmPybullet(ARM):
                                  '("right" or "left")')
             if arm == 'right':
                 success = self.right_arm.set_jtorq(torque,
-                                                   joint_name=joint_name
+                                                   joint_name=joint_name,
                                                    wait=wait)
             elif arm == 'left':
                 success = self.left_arm.set_jtorq(torque,
-                                                  joint_name=joint_name
+                                                  joint_name=joint_name,
                                                   wait=wait)
         return success
 
@@ -375,14 +374,14 @@ class DualArmPybullet(ARM):
 
         """
         if joint_name is None:
-            tgt_vels = [0.0] * self.arm_dof
-            forces = [0.0] * self.arm_dof
+            tgt_vels = [0.0] * self.dual_arm_dof
+            forces = [0.0] * self.dual_arm_dof
             self.p.setJointMotorControlArray(self.robot_id,
-                                        self.arm_jnt_ids,
-                                        self.p.VELOCITY_CONTROL,
-                                        targetVelocities=tgt_vels,
-                                        forces=forces)
-            self._in_torque_mode = [True] * self.arm_dof
+                                             self.arm_jnt_ids,
+                                             self.p.VELOCITY_CONTROL,
+                                             targetVelocities=tgt_vels,
+                                             forces=forces)
+            self._in_torque_mode = [True] * self.dual_arm_dof
         else:
             jnt_id = self.jnt_to_id[joint_name]
             self.p.setJointMotorControl2(self.robot_id,
@@ -406,8 +405,8 @@ class DualArmPybullet(ARM):
 
         """
         if joint_name is None:
-            self.set_jvel([0.0] * self.arm_dof)
-            self._in_torque_mode = [False] * self.arm_dof
+            self.set_jvel([0.0] * self.dual_arm_dof)
+            self._in_torque_mode = [False] * self.dual_arm_dof
         else:
             self.set_jvel(0.0, joint_name)
             arm_jnt_id = self.arm_jnt_names.index(joint_name)
@@ -525,7 +524,7 @@ class DualArmPybullet(ARM):
             elif arm == 'left':
                 return self.left_arm.get_ee_pose()
 
-    def get_ee_vel(self):
+    def get_ee_vel(self, arm=None):
         """
         Return the end effector's velocity
 
@@ -535,12 +534,16 @@ class DualArmPybullet(ARM):
             - np.ndarray: translational velocity (shape: :math:`[3,]`)
             - np.ndarray: rotational velocity (shape: :math:`[3,]`)
         """
-        info = self.p.getLinkState(self.robot_id,
-                              self.ee_link_id,
-                              computeLinkVelocity=1)
-        trans_vel = info[6]
-        rot_vel = info[7]
-        return np.array(trans_vel), np.array(rot_vel)
+        if arm is None:
+            raise NotImplementedError
+        else:
+            if arm != 'right' and arm != 'left':
+                raise ValueError('Valid arm name must be specified'
+                                 '("right" or "left")')
+            if arm == 'right':
+                return self.right_arm.get_ee_vel()
+            elif arm == 'left':
+                return self.left_arm.get_ee_vel()
 
     def compute_ik(self, pos, ori=None, arm=None, *args, **kwargs):
         """
@@ -604,8 +607,8 @@ class DualArmPybullet(ARM):
         """
         Initialize constants
         """
-        self._r_home_position = self.cfgs.RIGHT.ARM.HOME_POSITION
-        self._l_home_position = self.cfgs.LEFT.ARM.HOME_POSITION
+        self._r_home_position = self.cfgs.ARM.RIGHT.ARM.HOME_POSITION
+        self._l_home_position = self.cfgs.ARM.LEFT.ARM.HOME_POSITION
         self._home_position = self._r_home_position + self._l_home_position
         # joint damping for inverse kinematics
         self._ik_jd = 0.05
@@ -613,21 +616,25 @@ class DualArmPybullet(ARM):
         self.psetGravity(0, 0, -9.8)
         self.psetAdditionalSearchPath(pybullet_data.getDataPath())
 
-        self.right_arm_jnt_names = self.cfgs.RIGHT.ARM.JOINT_NAMES
-        self.left_arm_jnt_names = self.cfgs.LEFT.ARM.JOINT_NAMES
+        self.right_arm_jnt_names = self.cfgs.ARM.RIGHT.ARM.JOINT_NAMES
+        self.left_arm_jnt_names = self.cfgs.ARM.LEFT.ARM.JOINT_NAMES
         self.arm_jnt_names = self.right_arm_jnt_names + self.left_arm_jnt_names
 
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.dual_arm_dof = len(self.arm_jnt_names)
         self.single_arm_dof = self.dual_arm_dof / 2
-        self.rvl_joint_names = self.arm_jnt_names + self.eetool.jnt_names
+        
+        self.rvl_joint_names = self.arm_jnt_names
+        if self.cfgs.HAS_EETOOL:
+            self.rvl_joint_names = self.rvl_joint_names + self.eetool.jnt_names
+
         self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
 
-        self.r_ee_link_jnt = self.cfgs.RIGHT.ARM.ROBOT_EE_FRAME_JOINT
-        self.l_ee_link_jnt = self.cfgs.LEFT.ARM.ROBOT_EE_FRAME_JOINT
+        self.r_ee_link_jnt = self.cfgs.ARM.RIGHT.ARM.ROBOT_EE_FRAME_JOINT
+        self.l_ee_link_jnt = self.cfgs.ARM.LEFT.ARM.ROBOT_EE_FRAME_JOINT
 
-        self._r_max_torques = self.cfgs.RIGHT.ARM.MAX_TORQUES
-        self._l_max_torques = self.cfgs.LEFT.ARM.MAX_TORQUES
+        self._r_max_torques = self.cfgs.ARM.RIGHT.ARM.MAX_TORQUES
+        self._l_max_torques = self.cfgs.ARM.LEFT.ARM.MAX_TORQUES
         self._max_torques = self._r_max_torques + self._l_max_torques
 
     def _rt_simulation(self):
@@ -644,12 +651,11 @@ class DualArmPybullet(ARM):
         Build the mapping from the joint name to joint index
         """
         self.jnt_to_id = {}
-        for i in range(self.pgetNumJoints(self.robot_id)):
-            info = self.pgetJointInfo(self.robot_id, i)
+        for i in range(self.p.getNumJoints(self.robot_id)):
+            info = self.p.getJointInfo(self.robot_id, i)
             jnt_name = info[1].decode('UTF-8')
             self.jnt_to_id[jnt_name] = info[0]
 
-        self.ee_link_id = self.jnt_to_id[self.ee_link_jnt]
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
 
     def _set_step_sim(self, step_mode=True):
