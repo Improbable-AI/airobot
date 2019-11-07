@@ -6,8 +6,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import pybullet as p
-
 import airobot.utils.common as arutil
 from airobot.arm.single_arm_pybullet import SingleArmPybullet
 
@@ -44,24 +42,26 @@ class UR5ePybullet(SingleArmPybullet):
         """
         Reset the simulation environment.
         """
-        p.resetSimulation()
+        self.eetool.deactivate()
+        self.p.resetSimulation()
 
         plane_pos = [0, 0, 0]
         plane_ori = arutil.euler2quat([0, 0, 0])
-        self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
+        self.plane_id = self.p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
         ur_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         ur_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
         if self.self_collision:
-            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       ur_pos,
-                                       ur_ori,
-                                       flags=p.URDF_USE_SELF_COLLISION)
+            self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,
+                                            ur_pos,
+                                            ur_ori,
+                                            flags=p.URDF_USE_SELF_COLLISION)
         else:
-            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       ur_pos, ur_ori)
+            self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,
+                                            ur_pos, ur_ori)
         self._build_jnt_id()
-        self.eetool.activate(self.robot_id, self.jnt_to_id)
+        self.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
+        self.eetool.activate()
         if self.self_collision:
             # weird behavior occurs on the gripper
             # when self-collision is enforced

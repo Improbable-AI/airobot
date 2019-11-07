@@ -28,29 +28,32 @@ class Robotiq2F140Pybullet(EndEffectorTool):
             'right_inner_knuckle_joint', 'right_inner_finger_joint'
         ]
         self._step_sim_mode = False
-        self._thread_sleep = 0.001
         self.max_torque = 10.0
         self.gripper_close_angle = self.cfgs.EETOOL.CLOSE_ANGLE
         self.gripper_open_angle = self.cfgs.EETOOL.OPEN_ANGLE
         self.jnt_names_set = set(self.jnt_names)
-        self._gripper_activated = False
+        self._mthread_started = False
+        self.deactivate()
 
-    def activate(self, robot_id, jnt_to_id):
+    def feed_robot_info(self, robot_id, jnt_to_id):
         """
-        Setup the gripper
+        Setup the gripper, pass the robot info from the arm to the gripper
 
         Args:
             robot_id (int): robot id in Pybullet
             jnt_to_id (dict): mapping from the joint name to joint id
 
         """
-        if not self._gripper_activated:
-            self.robot_id = robot_id
-            self.jnt_to_id = jnt_to_id
-            self.gripper_jnt_ids = [
-                self.jnt_to_id[jnt] for jnt in self.jnt_names
-            ]
-            self._gripper_activated = True
+        self.robot_id = robot_id
+        self.jnt_to_id = jnt_to_id
+        self.gripper_jnt_ids = [
+            self.jnt_to_id[jnt] for jnt in self.jnt_names
+        ]
+        # if the gripper has been activated once,
+        # the following code is used to prevent starting
+        # a new thread after the arm reset if a thread has been started
+        if not self._mthread_started:
+            self._mthread_started = True
             # gripper thread
             self._th_gripper = threading.Thread(target=self._th_mimic_gripper)
             self._th_gripper.daemon = True
@@ -65,7 +68,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Returns:
             bool: return if the action is sucessful or not
         """
-        if not self._gripper_activated:
+        if not self._is_activated:
             raise RuntimeError('Call activate function first!')
         success = self.set_pos(self.gripper_open_angle)
         return success
@@ -77,7 +80,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Returns:
             bool: return if the action is sucessful or not
         """
-        if not self._gripper_activated:
+        if not self._is_activated:
             raise RuntimeError('Call activate function first!')
         success = self.set_pos(self.gripper_close_angle)
         return success
@@ -127,7 +130,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Returns:
             float: joint position
         """
-        if not self._gripper_activated:
+        if not self._is_activated:
             raise RuntimeError('Call activate function first!')
         jnt_id = self.jnt_to_id[self.jnt_names[0]]
         pos = self.p.getJointState(self.robot_id, jnt_id)[0]
@@ -143,7 +146,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Returns:
             float: joint velocity
         """
-        if not self._gripper_activated:
+        if not self._is_activated:
             raise RuntimeError('Call activate function first!')
         jnt_id = self.jnt_to_id[self.jnt_names[0]]
         vel = self.p.getJointState(self.robot_id, jnt_id)[1]
@@ -153,7 +156,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         """
         Disable the gripper collision checking in Pybullet
         """
-        if not self._gripper_activated:
+        if not self._is_activated:
             raise RuntimeError('Call activate function first!')
         for i in range(len(self.jnt_names)):
             for j in range(i + 1, len(self.jnt_names)):
@@ -181,13 +184,20 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         follow the motion of the first joint of the gripper
         """
         while True:
-            max_torq = self.max_torque
-            max_torques = [max_torq] * (len(self.jnt_names) - 1)
-            gripper_pos = self.get_pos()
-            gripper_poss = self._mimic_gripper(gripper_pos)
-            self.p.setJointMotorControlArray(self.robot_id,
-                                             self.gripper_jnt_ids[1:],
-                                             self.p.POSITION_CONTROL,
-                                             targetPositions=gripper_poss[1:],
-                                             forces=max_torques)
-            time.sleep(self._thread_sleep)
+            if self._is_activated:
+                max_torq = self.max_torque
+                max_torques = [max_torq] * (len(self.jnt_names))
+                gripper_pos = self.get_pos()
+                gripper_poss = self._mimic_gripper(gripper_pos)
+                self.p.setJointMotorControlArray(self.robot_id,
+                                                 self.gripper_jnt_ids[:],
+                                                 self.p.POSITION_CONTROL,
+                                                 targetPositions=gripper_poss[:],
+                                                 forces=max_torques)
+            time.sleep(0.05)
+
+    def deactivate(self):
+        self._is_activated = False
+
+    def activate(self):
+        self._is_activated = True

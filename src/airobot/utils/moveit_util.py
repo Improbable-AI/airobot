@@ -81,7 +81,10 @@ class MoveitScene(object):
             elif isinstance(size, list) or isinstance(size, tuple):
                 if len(size) != 3:
                     raise ValueError('If size is a list or tuple, its length'
-                                     ' should be 3 for box')
+                                     ' should be 3 for a box')
+            else:
+                raise TypeError('size should be a float number, a 3-element list '
+                                'or a 3-element tuple for a box')
             if isinstance(size, list):
                 size = tuple(size)
             self.scene.add_box(obj_name, pose_stamped, size)
@@ -132,7 +135,10 @@ class MoveitScene(object):
         elif isinstance(size, list) or isinstance(size, tuple):
             if len(size) != 3:
                 raise ValueError('If size is a list or tuple, its length'
-                                 ' should be 3 for box')
+                                 ' should be 3 for a box')
+        else:
+            raise TypeError('size should be a float number, a 3-element list '
+                            'or a 3-element tuple for a box')
         if isinstance(size, list):
             size = tuple(size)
         if touch_links is None:
