@@ -39,8 +39,8 @@ class YumiPybullet(DualArmPybullet):
                                            seed=seed,
                                            self_collision=self_collision,
                                            eetool_cfg=eetool_cfg)
-        r_cfg = cfgs.RIGHT
-        l_cfg = cfgs.LEFT
+        r_cfg = cfgs.ARM.RIGHT
+        l_cfg = cfgs.ARM.LEFT
         self.right_arm = SingleArmPybullet(cfgs=r_cfg,
                                            render=render,
                                            seed=seed,
@@ -63,16 +63,16 @@ class YumiPybullet(DualArmPybullet):
         plane_ori = arutil.euler2quat([0, 0, 0])
         self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
-        ur_pos = self.cfgs.ARM.PYBULLET_RESET_POS
-        ur_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
+        yumi_pos = self.cfgs.ARM.PYBULLET_RESET_POS
+        yumi_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
         if self.self_collision:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       ur_pos,
-                                       ur_ori,
+                                       yumi_pos,
+                                       yumi_ori,
                                        flags=p.URDF_USE_SELF_COLLISION)
         else:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       ur_pos, ur_ori)
+                                       yumi_pos, yumi_ori)
         self.right_arm.robot_id = self.robot_id
         self.left_arm.robot_id = self.robot_id
 
@@ -80,8 +80,10 @@ class YumiPybullet(DualArmPybullet):
         self.right_arm._build_jnt_id()
         self.left_arm._build_jnt_id()
 
-        self.eetool.activate(self.robot_id, self.jnt_to_id)
+        if self.cfgs.HAS_EETOOL:
+            self.eetool.activate(self.robot_id, self.jnt_to_id)
         if self.self_collision:
             # weird behavior occurs on the gripper
             # when self-collision is enforced
-            self.eetool.disable_gripper_self_collision()
+            if self.cfgs.HAS_EETOOL:
+                self.eetool.disable_gripper_self_collision()
