@@ -10,4 +10,5 @@ airobot.utils
    airobot.utils.ros_util
    airobot.utils.ur_tcp_util
    airobot.utils.urscript_util
+   airobot.utils.pb_util
 

@@ -67,3 +67,32 @@ def set_step_sim(step_mode=True):
             PB_CLIENT.setRealTimeSimulation(0)
         else:
             PB_CLIENT.setRealTimeSimulation(1)
+
+
+def load_urdf(filename, base_pos, base_ori, scaling=1.0, **kwargs):
+    """
+    Load URDF into the pybullet client
+
+    Args:
+        filename (str): a relative or absolute path to the URDF
+            file on the file system of the physics server.
+        base_pos (list or np.ndarray): create the base of the object
+            at the specified position in world space coordinates [X,Y,Z].
+            Note that this position is of the URDF link position.
+        base_ori (list or np.ndarray): create the base of the object
+            at the specified orientation as world space
+            quaternion [X,Y,Z,W].
+        scaling (float): apply a scale factor to the URDF model
+
+    Returns:
+        int: a body unique id, a non-negative integer value.
+        If the URDF file cannot be loaded, this integer will
+        be negative and not a valid body unique id.
+
+    """
+    body_id = PB_CLIENT.loadURDF(filename,
+                                 base_pos,
+                                 base_ori,
+                                 globalScaling=scaling,
+                                 **kwargs)
+    return body_id
