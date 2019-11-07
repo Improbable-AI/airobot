@@ -159,9 +159,10 @@ def load_geom(shape_type, size=None, mass=0.5, filename=None,
     Load a regular geometry (`sphere`, `box`, `capsule`, `cylinder`, `mesh`)
 
     Note:
-        Please do not call load_geom('capsule') when you are using robotiq gripper.
-        The capsule generated will be in wrong size if the mimicing thread
-        (_th_mimic_gripper) in the robotiq gripper class starts running.
+        Please do not call **load_geom('capsule')** when you are using
+        **robotiq gripper**. The capsule generated will be in wrong size
+        if the mimicing thread (_th_mimic_gripper) in the robotiq
+        gripper class starts running.
         This might be a PyBullet Bug (current version is 2.5.6).
         Note that other geometries(box, sphere, cylinder, etc.)
         are not affected by the threading in the robotiq gripper.
@@ -194,12 +195,12 @@ def load_geom(shape_type, size=None, mass=0.5, filename=None,
         specular(list): specular reflection color components for red, green, blue
             and alpha, each in range [0, 1] (shape: :math:`[4,]`)
         shift_pos (list): translational offset of collision shape, visual shape,
-            and inertial frame (shape: :math`[3,]`)
+            and inertial frame (shape: :math:`[3,]`)
         shift_ori (list): rotational offset (quaternion [x, y, z, w]) of collision shape,
-            visual shape, and inertial frame (shape: :math`[4,]`)
-        base_pos (list): cartesian world position of the base (shape: :math`[3,]`)
+            visual shape, and inertial frame (shape: :math:`[4,]`)
+        base_pos (list): cartesian world position of the base (shape: :math:`[3,]`)
         base_ori (list): cartesian world orientation of the base as
-            quaternion [x, y, z, w] (shape: :math`[4,]`)
+            quaternion [x, y, z, w] (shape: :math:`[4,]`)
 
     Returns:
         int: a body unique id, a non-negative integer value or -1 for failure.
