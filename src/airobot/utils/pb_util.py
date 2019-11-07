@@ -151,9 +151,9 @@ def load_mjcf(filename, **kwargs):
     return body_id
 
 
-def load_geom(shape_type, size=None, mass=0.5, filename=None,
-              mesh_scale=None, rgba=None, specular=None,
-              shift_pos=None, shift_ori=None,
+def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
+              collifile=None, mesh_scale=None, rgba=None,
+              specular=None, shift_pos=None, shift_ori=None,
               base_pos=None, base_ori=None):
     """
     Load a regular geometry (`sphere`, `box`, `capsule`, `cylinder`, `mesh`)
@@ -185,8 +185,14 @@ def load_geom(shape_type, size=None, mass=0.5, filename=None,
 
         mass (float): mass of the object in kg
 
-        filename (str): path to the mesh file.
-            only needed when the shape_type is mesh.
+        visualfile (str): path to the visual mesh file.
+            only needed when the shape_type is mesh. If it's None, same
+            collision mesh file will be used as the visual mesh file.
+
+        collifile (str): path to the collision mesh file.
+            only needed when the shape_type is mesh. If it's None, same
+            viusal mesh file will be used as the collision mesh file.
+
         mesh_scale (float or list): scale the mesh. If it's a float number,
             the mesh will be scaled in same ratio along 3 dimensions. If it's
             a list, then it should contain 3 elements (scales along 3 dimensions).
@@ -250,10 +256,21 @@ def load_geom(shape_type, size=None, mass=0.5, filename=None,
         collision_args['height'] = 1.0 if size is None else size[1]
         visual_args['length'] = collision_args['height']
     elif shape_type == 'mesh':
-        if filename is None or not isinstance(filename, str):
-            raise TypeError('filename should be the path to the mesh file')
-        collision_args['fileName'] = filename
-        visual_args['fileName'] = filename
+        if visualfile is None and collifile is None:
+            raise ValueError('At least one of the visualfile and collifile'
+                             'should be provided!')
+        if visualfile is None:
+            visualfile = collifile
+        elif collifile is None:
+            collifile = visualfile
+        if not isinstance(visualfile, str):
+            raise TypeError('visualfile should be the path to '
+                            'the visual mesh file!')
+        if not isinstance(collifile, str):
+            raise TypeError('collifile should be the path to '
+                            'the collision mesh file!')
+        collision_args['fileName'] = collifile
+        visual_args['fileName'] = visualfile
         if isinstance(mesh_scale, float):
             mesh_scale = [mesh_scale, mesh_scale, mesh_scale]
         elif isinstance(mesh_scale, list):

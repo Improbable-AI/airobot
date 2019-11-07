@@ -24,7 +24,7 @@ def main():
               base_pos=[1.3, 0.12, 1.0], rgba=[0, 0, 1, 1])
     load_geom('cylinder', size=[0.06, 0.08], mass=1,
               base_pos=[0.8, -0.12, 1.0], rgba=[0, 1, 1, 1])
-    load_geom('mesh', mass=1, filename='duck.obj',
+    load_geom('mesh', mass=1, visualfile='duck.obj',
               mesh_scale=0.1,
               base_pos=[0.9, -0.4, 1.0],
               rgba=[0.5, 0.2, 1, 1])
