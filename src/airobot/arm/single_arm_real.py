@@ -193,7 +193,8 @@ class SingleArmReal(ARM):
 
             - np.ndarray: translational velocity (vx, vy, vz)
               (shape: :math:`[3,]`)
-            - np.ndarray: rotational velocity (wx, wy, wz) (shape: :math:`[3,]`)
+            - np.ndarray: rotational velocity
+              (wx, wy, wz) (shape: :math:`[3,]`)
         """
         raise NotImplementedError
 

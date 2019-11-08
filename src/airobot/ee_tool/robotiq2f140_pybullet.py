@@ -194,11 +194,11 @@ class Robotiq2F140Pybullet(EndEffectorTool):
                 max_torq = self.max_torque
                 max_torques = [max_torq] * (len(self.jnt_names) - 1)
                 gripper_pos = self.get_pos()
-                gripper_poss = self._mimic_gripper(gripper_pos)
+                gripper_poss = self._mimic_gripper(gripper_pos)[1:]
                 self.p.setJointMotorControlArray(self.robot_id,
                                                  self.gripper_jnt_ids[1:],
                                                  self.p.POSITION_CONTROL,
-                                                 targetPositions=gripper_poss[1:],
+                                                 targetPositions=gripper_poss,
                                                  forces=max_torques,
                                                  physicsClientId=PB_CLIENT)
             time.sleep(0.05)

@@ -194,7 +194,8 @@ class SingleArmROS(SingleArmReal):
         self._j_state_lock.acquire()
         if joint_name is not None:
             if joint_name not in self.arm_jnt_names:
-                raise TypeError('Joint name [%s] not recognized!' % joint_name)
+                raise TypeError('Joint name [%s] '
+                                'not recognized!' % joint_name)
             jpos = self._j_pos[joint_name]
         else:
             jpos = []
@@ -267,7 +268,8 @@ class SingleArmROS(SingleArmReal):
 
             - np.ndarray: translational velocity (vx, vy, vz)
               (shape: :math:`[3,]`)
-            - np.ndarray: rotational velocity (wx, wy, wz) (shape: :math:`[3,]`)
+            - np.ndarray: rotational velocity
+              (wx, wy, wz) (shape: :math:`[3,]`)
         """
         jpos = self.get_jpos()
         jvel = self.get_jvel()

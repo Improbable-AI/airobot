@@ -34,24 +34,26 @@ class RGBDCameraPybullet(Camera):
             focus_pt = [0, 0, 0]
         if len(focus_pt) != 3:
             raise ValueError('Length of focus_pt should be 3 ([x, y, z]).')
-        self.view_matrix = p.computeViewMatrixFromYawPitchRoll(focus_pt,
-                                                               dist,
-                                                               yaw,
-                                                               pitch,
-                                                               roll,
-                                                               upAxisIndex=2,
-                                                               physicsClientId=PB_CLIENT)
+        vm = p.computeViewMatrixFromYawPitchRoll(focus_pt,
+                                                 dist,
+                                                 yaw,
+                                                 pitch,
+                                                 roll,
+                                                 upAxisIndex=2,
+                                                 physicsClientId=PB_CLIENT)
+        self.view_matrix = vm
         height = self.cfgs.CAM.SIM.HEIGHT
         width = self.cfgs.CAM.SIM.WIDTH
         aspect = width / float(height)
         znear = self.cfgs.CAM.SIM.ZNEAR
         zfar = self.cfgs.CAM.SIM.ZFAR
         fov = self.cfgs.CAM.SIM.FOV
-        self.proj_matrix = p.computeProjectionMatrixFOV(fov,
-                                                        aspect,
-                                                        znear,
-                                                        zfar,
-                                                        physicsClientId=PB_CLIENT)
+        pm = p.computeProjectionMatrixFOV(fov,
+                                          aspect,
+                                          znear,
+                                          zfar,
+                                          physicsClientId=PB_CLIENT)
+        self.proj_matrix = pm
 
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """

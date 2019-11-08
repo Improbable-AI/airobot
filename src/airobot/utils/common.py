@@ -95,8 +95,10 @@ def quat_multiply(quat1, quat2):
     Quaternion mulitplication
 
     Args:
-        quat1 (list or np.ndarray): first quaternion [x,y,z,w] (shape: :math:`[4,]`)
-        quat2 (list or np.ndarray): second quaternion [x,y,z,w] (shape: :math:`[4,]`)
+        quat1 (list or np.ndarray): first quaternion [x,y,z,w]
+            (shape: :math:`[4,]`)
+        quat2 (list or np.ndarray): second quaternion [x,y,z,w]
+            (shape: :math:`[4,]`)
 
     Returns:
         np.ndarray: quat1 * quat2 (shape: :math:`[4,]`)
@@ -258,7 +260,8 @@ def create_folder(path, delete=True):
 
 def list_class_names(dir_path):
     """
-    Return the mapping of class names in all files in dir_path to their file path
+    Return the mapping of class names in all files
+    in dir_path to their file path
 
     Args:
         dir_path (str): absolute path of the folder
@@ -323,7 +326,8 @@ def linear_interpolate_path(start_pos, delta_xyz, interval):
     Linear interpolation in a path
 
     Args:
-        start_pos (list or np.ndarray): start position ([x, y, z], shape: :math:`[3]`)
+        start_pos (list or np.ndarray): start position
+            ([x, y, z], shape: :math:`[3]`)
         delta_xyz (list or np.ndarray): movement in x, y, z
             directions (shape: :math:`[3,]`)
         interval (float): interpolation interval along delta_xyz.

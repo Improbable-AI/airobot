@@ -76,7 +76,7 @@ class RGBDCameraReal(Camera):
         self.cam_K_inv = np.linalg.inv(self.cam_K)
 
         img_pixs = np.mgrid[0: self.cam_height,
-                   0: self.cam_width].reshape(2, -1)
+                            0: self.cam_width].reshape(2, -1)
         img_pixs[[0, 1], :] = img_pixs[[1, 0], :]
         self.uv_one = np.concatenate((img_pixs,
                                       np.ones((1, img_pixs.shape[1]))))
@@ -133,11 +133,12 @@ class RGBDCameraReal(Camera):
 
         Args:
             pos (np.ndarray): position of the camera (shape: [3,])
-            ori (np.ndarray): orientation. It can be rotation matrix (shape:[3, 3])
-                quaternion ([x, y, z, w], shape: [4]), or euler angles ([roll, pitch, yaw],
-                shape: [3])
-            cam_ext (np.ndarray): extrinsic matrix (shape: [4, 4]). If this is provided,
-                pos and ori will be ignored
+            ori (np.ndarray): orientation.
+                It can be rotation matrix (shape:[3, 3])
+                quaternion ([x, y, z, w], shape: [4]), or
+                euler angles ([roll, pitch, yaw], shape: [3])
+            cam_ext (np.ndarray): extrinsic matrix (shape: [4, 4]).
+                If this is provided, pos and ori will be ignored
         """
         if cam_ext is not None:
             self.cam_ext_mat = cam_ext
@@ -176,7 +177,8 @@ class RGBDCameraReal(Camera):
         self.cam_img_lock.release()
         return rgb_img, depth_img
 
-    def get_pix_3dpt(self, rs, cs, in_world=True, filter_depth=False, k=1, ktype='median'):
+    def get_pix_3dpt(self, rs, cs, in_world=True, filter_depth=False,
+                     k=1, ktype='median'):
         """
         Calculate the 3D position of pixels in the RGB image
 
@@ -195,14 +197,17 @@ class RGBDCameraReal(Camera):
             filter_depth (bool): if True, only pixels with depth values
                 between [self.depth_min, self.depth_max]
                 will remain
-            k (int): kernel size. A kernel (slicing window) will be used to get the
-               neighboring depth values of the pixels specified by rs and cs. And depending
-               on the ktype, a corresponding method will be applied to use some statistical value
-               (such as minimum, maximum, median, mean) of all the depth values in the slicing
-               window as a more robust estimate of the depth value of the specified pixels
-            ktype (str): what kind of statistical value of all the depth values in the sliced kernel
-               to use as a proxy of the depth value at specified pixels. It can be `median`,
-               `min`, `max`, `mean`.
+            k (int): kernel size. A kernel (slicing window) will be used
+               to get the neighboring depth values of the pixels specified
+               by rs and cs. And depending on the ktype, a corresponding
+               method will be applied to use some statistical value
+               (such as minimum, maximum, median, mean) of all the depth
+               values in the slicing window as a more robust estimate of
+               the depth value of the specified pixels
+            ktype (str): what kind of statistical value of all the depth
+               values in the sliced kernel
+               to use as a proxy of the depth value at specified pixels.
+               It can be `median`, `min`, `max`, `mean`.
 
         Returns:
             np.ndarray: 3D point coordinates of the pixels in
@@ -245,7 +250,8 @@ class RGBDCameraReal(Camera):
                 rmax = min(self.cam_height, r + s + 1)
                 cmin = max(0, c - s)
                 cmax = min(self.cam_width, c + s + 1)
-                depth_im_list.append(ktype_func(depth_im[rmin:rmax, cmin:cmax]))
+                depth_im_list.append(ktype_func(depth_im[rmin:rmax,
+                                                         cmin:cmax]))
             depth_im = np.array(depth_im_list)
 
         depth = depth_im.reshape(-1) * self.depth_scale

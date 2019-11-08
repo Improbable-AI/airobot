@@ -194,7 +194,8 @@ class ARM(object):
               orientation (shape: :math:`[4]`)
             - np.ndarray: rotation matrix representation of the EE orientation
               (shape: :math:`[3, 3]`)
-            - np.ndarray: euler angle representation of the EE orientation (roll,
+            - np.ndarray: euler angle representation of
+              the EE orientation (roll,
               pitch, yaw with static reference frame) (shape: :math:`[3]`)
         """
         raise NotImplementedError

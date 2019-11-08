@@ -429,7 +429,8 @@ class SingleArmPybullet(ARM):
         the robot is in TORQUE_CONTROL mode.
 
         Args:
-            joint_name (str, optional): If it's None, it will return joint torques
+            joint_name (str, optional): If it's None,
+                it will return joint torques
                 of all the actuated joints. Otherwise, it will
                 return the joint torque of the specified joint
 
@@ -512,20 +513,20 @@ class SingleArmPybullet(ARM):
             list: solution to inverse kinematics, joint angles which achieve
             the specified EE pose (shape: :math:`[DOF]`)
         """
+        ex_args = {'jointDamping': self._ik_jds,
+                   'physicsClientId': PB_CLIENT}
         if ori is not None:
             ori = arutil.to_quat(ori)
             jnt_poss = self.p.calculateInverseKinematics(self.robot_id,
                                                          self.ee_link_id,
                                                          pos,
                                                          ori,
-                                                         jointDamping=self._ik_jds,
-                                                         physicsClientId=PB_CLIENT)
+                                                         **ex_args)
         else:
             jnt_poss = self.p.calculateInverseKinematics(self.robot_id,
                                                          self.ee_link_id,
                                                          pos,
-                                                         jointDamping=self._ik_jds,
-                                                         physicsClientId=PB_CLIENT)
+                                                         **ex_args)
         jnt_poss = list(jnt_poss)
         return jnt_poss[:self.arm_dof]
 

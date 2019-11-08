@@ -200,16 +200,20 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
 
         mesh_scale (float or list): scale the mesh. If it's a float number,
             the mesh will be scaled in same ratio along 3 dimensions. If it's
-            a list, then it should contain 3 elements (scales along 3 dimensions).
+            a list, then it should contain 3 elements
+            (scales along 3 dimensions).
         rgba (list): color components for red, green, blue and alpha, each in
             range [0, 1] (shape: :math:`[4,]`)
-        specular(list): specular reflection color components for red, green, blue
-            and alpha, each in range [0, 1] (shape: :math:`[4,]`)
-        shift_pos (list): translational offset of collision shape, visual shape,
-            and inertial frame (shape: :math:`[3,]`)
-        shift_ori (list): rotational offset (quaternion [x, y, z, w]) of collision shape,
-            visual shape, and inertial frame (shape: :math:`[4,]`)
-        base_pos (list): cartesian world position of the base (shape: :math:`[3,]`)
+        specular(list): specular reflection color components
+            for red, green, blue and alpha, each in
+            range [0, 1] (shape: :math:`[4,]`)
+        shift_pos (list): translational offset of collision
+            shape, visual shape, and inertial frame (shape: :math:`[3,]`)
+        shift_ori (list): rotational offset (quaternion [x, y, z, w])
+            of collision shape, visual shape, and inertial
+            frame (shape: :math:`[4,]`)
+        base_pos (list): cartesian world position of
+            the base (shape: :math:`[3,]`)
         base_ori (list): cartesian world orientation of the base as
             quaternion [x, y, z, w] (shape: :math:`[4,]`)
 
@@ -231,7 +235,8 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
     visual_args = {'shapeType': pb_shape_types[shape_type]}
     if shape_type == 'sphere':
         if size is not None and not (isinstance(size, float) and size > 0):
-            raise TypeError('size should be a positive float number for a sphere.')
+            raise TypeError('size should be a positive '
+                            'float number for a sphere.')
         collision_args['radius'] = 0.5 if size is None else size
         visual_args['radius'] = collision_args['radius']
     elif shape_type == 'box':
@@ -242,19 +247,23 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
                 raise ValueError('If size is a list, its length'
                                  ' should be 3 for a box')
         elif size is not None:
-            raise TypeError('size should be a float number, or a 3-element list '
+            raise TypeError('size should be a float number, '
+                            'or a 3-element list '
                             'for a box')
         collision_args['halfExtents'] = [1, 1, 1] if size is None else size
         visual_args['halfExtents'] = collision_args['halfExtents']
     elif shape_type in ['capsule', 'cylinder']:
         if size is not None:
             if not isinstance(size, list) or len(size) != 2:
-                raise TypeError('size should be a 2-element list (radius, length)'
+                raise TypeError('size should be a 2-element '
+                                'list (radius, length)'
                                 'for a capsule or a cylinder.')
             for si in size:
                 if not isinstance(si, Number) or si <= 0.0:
-                    raise TypeError('size should be a list that contains 2 positive'
-                                    'numbers (radius, length) for a capsule or '
+                    raise TypeError('size should be a list that '
+                                    'contains 2 positive'
+                                    'numbers (radius, length) for '
+                                    'a capsule or '
                                     'a cylinder.')
         collision_args['radius'] = 0.5 if size is None else size[0]
         visual_args['radius'] = collision_args['radius']
@@ -283,8 +292,10 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
                 raise ValueError('If mesh_scale is a list, its length'
                                  ' should be 3.')
         elif mesh_scale is not None:
-            raise TypeError('mesh_scale should be a float number, or a 3-element list.')
-        collision_args['meshScale'] = [1, 1, 1] if mesh_scale is None else mesh_scale
+            raise TypeError('mesh_scale should be a float number'
+                            ', or a 3-element list.')
+        collision_args['meshScale'] = [1, 1, 1] if mesh_scale is None\
+            else mesh_scale
         visual_args['meshScale'] = collision_args['meshScale']
     else:
         raise TypeError('The following shape type is not '

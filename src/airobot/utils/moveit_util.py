@@ -83,7 +83,8 @@ class MoveitScene(object):
                     raise ValueError('If size is a list or tuple, its length'
                                      ' should be 3 for a box')
             else:
-                raise TypeError('size should be a float number, a 3-element list '
+                raise TypeError('size should be a float number, '
+                                'a 3-element list '
                                 'or a 3-element tuple for a box')
             if isinstance(size, list):
                 size = tuple(size)

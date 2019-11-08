@@ -109,8 +109,8 @@ class Logger:
 
 if __name__ == '__main__':
     ai_logger = Logger('debug')
-    logger.debug("A quirky message only developers care about")
-    logger.info("Curious users might want to know this")
-    logger.warning("Something is wrong and any user should be informed")
-    logger.error("Serious stuff, this is red for a reason")
-    logger.critical("OH NO everything is on fire")
+    ai_logger.debug("A quirky message only developers care about")
+    ai_logger.info("Curious users might want to know this")
+    ai_logger.warning("Something is wrong and any user should be informed")
+    ai_logger.error("Serious stuff, this is red for a reason")
+    ai_logger.critical("OH NO everything is on fire")

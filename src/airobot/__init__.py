@@ -2,7 +2,6 @@ import importlib
 import os
 import time
 
-import airobot as ar
 from airobot.utils.ai_logger import Logger
 from airobot.utils.common import load_class_from_path
 from airobot.version import __version__
@@ -108,7 +107,8 @@ class Robot:
             self.base = base_class(cfgs, **base_cfg)
         if cfgs.HAS_CAMERA and use_cam:
             cls_name = cfgs.CAM.CLASS + class_suffix
-            from airobot.sensor.camera import cls_name_to_path as cam_cls_name_to_path
+            from airobot.sensor.camera import cls_name_to_path\
+                as cam_cls_name_to_path
             camera_class = load_class_from_path(cls_name,
                                                 cam_cls_name_to_path[cls_name])
             self.cam = camera_class(cfgs, **cam_cfg)

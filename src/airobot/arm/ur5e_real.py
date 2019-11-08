@@ -9,7 +9,6 @@ import copy
 import numbers
 import time
 
-import numpy as np
 import rospy
 from std_msgs.msg import String
 from trajectory_msgs.msg import JointTrajectory

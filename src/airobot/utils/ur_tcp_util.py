@@ -460,12 +460,14 @@ class ParserUtils(object):
                     counter += 1
                     if counter > limit:
                         ar.log_warn("tried %s times to find a packet in data,"
-                                    "advertised packet size: %s, type: %s" % (counter,
-                                                                              psize, ptype))
+                                    "advertised packet size: %s, "
+                                    "type: %s" % (counter,
+                                                  psize, ptype))
                         ar.log_warn("Data length: %d" % len(data))
                         limit = limit * 10
                 elif len(data) >= psize:
-                    ar.log_debug("Got packet with size %s and type %s" % (psize, ptype))
+                    ar.log_debug("Got packet with size %s "
+                                 "and type %s" % (psize, ptype))
 
                     if counter:
                         ar.log_info("Remove %s bytes of garbage at"

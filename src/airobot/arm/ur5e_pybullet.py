@@ -17,7 +17,11 @@ class UR5ePybullet(SingleArmPybullet):
     of a UR5e robot with a robotiq 2f140 gripper.
     """
 
-    def __init__(self, cfgs, render=False, seed=None, self_collision=False,
+    def __init__(self,
+                 cfgs,
+                 render=False,
+                 seed=None,
+                 self_collision=False,
                  eetool_cfg=None):
         """
         Constructor for the pybullet simulation environment
@@ -45,7 +49,8 @@ class UR5ePybullet(SingleArmPybullet):
         """
         self.eetool.deactivate()
         self.p.resetSimulation(physicsClientId=PB_CLIENT)
-
+        self.p.configureDebugVisualizer(self.p.COV_ENABLE_RENDERING, 0,
+                                        physicsClientId=PB_CLIENT)
         plane_pos = [0, 0, 0]
         plane_ori = arutil.euler2quat([0, 0, 0])
         self.plane_id = self.p.loadURDF("plane.urdf",
@@ -56,19 +61,55 @@ class UR5ePybullet(SingleArmPybullet):
         ur_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         ur_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
         if self.self_collision:
+            colli_flag = self.p.URDF_USE_SELF_COLLISION
             self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,
                                             ur_pos,
                                             ur_ori,
-                                            flags=self.p.URDF_USE_SELF_COLLISION,
+                                            flags=colli_flag,
                                             physicsClientId=PB_CLIENT)
         else:
             self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,
                                             ur_pos, ur_ori,
                                             physicsClientId=PB_CLIENT)
         self._build_jnt_id()
+        self.set_visual_shape()
+        self.p.configureDebugVisualizer(self.p.COV_ENABLE_RENDERING, 1,
+                                        physicsClientId=PB_CLIENT)
         self.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
         self.eetool.activate()
         if self.self_collision:
             # weird behavior occurs on the gripper
             # when self-collision is enforced
             self.eetool.disable_gripper_self_collision()
+
+    def set_visual_shape(self):
+        """
+        Set the color of the UR arm
+        """
+        color1 = [0.25, 0.25, 0.25, 1]
+        color2 = [0.95, 0.95, 0.95, 1]
+
+        self.p.changeVisualShape(self.robot_id,
+                                 self.jnt_to_id['base-base_link_fixed_joint'],
+                                 rgbaColor=color1)
+        self.p.changeVisualShape(self.robot_id,
+                                 self.jnt_to_id['shoulder_pan_joint'],
+                                 rgbaColor=color2)
+        self.p.changeVisualShape(self.robot_id,
+                                 self.jnt_to_id['shoulder_lift_joint'],
+                                 rgbaColor=color1)
+        self.p.changeVisualShape(self.robot_id,
+                                 self.jnt_to_id['elbow_joint'],
+                                 rgbaColor=color2)
+        self.p.changeVisualShape(self.robot_id,
+                                 self.jnt_to_id['wrist_1_joint'],
+                                 rgbaColor=color1)
+        self.p.changeVisualShape(self.robot_id,
+                                 self.jnt_to_id['wrist_2_joint'],
+                                 rgbaColor=color2)
+        self.p.changeVisualShape(self.robot_id,
+                                 self.jnt_to_id['wrist_3_joint'],
+                                 rgbaColor=color1)
+        self.p.changeVisualShape(self.robot_id,
+                                 self.jnt_to_id['ur5_ee_link-gripper_base'],
+                                 rgbaColor=color1)
