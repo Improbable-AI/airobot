@@ -1,6 +1,8 @@
 import threading
 import time
 
+import pybullet as p
+
 import airobot.utils.common as arutil
 from airobot.ee_tool.ee import EndEffectorTool
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
@@ -20,7 +22,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
             cfgs (YACS CfgNode): configurations for the gripper
         """
         super(Robotiq2F140Pybullet, self).__init__(cfgs=cfgs)
-        self.p = PB_CLIENT
+        self.p = p
         self._gripper_mimic_coeff = [1, -1, 1, -1, -1, 1]
         self.jnt_names = [
             'finger_joint', 'left_inner_knuckle_joint',
@@ -107,7 +109,8 @@ class Robotiq2F140Pybullet(EndEffectorTool):
                                      jnt_id,
                                      self.p.POSITION_CONTROL,
                                      targetPosition=tgt_pos,
-                                     force=self.max_torque)
+                                     force=self.max_torque,
+                                     physicsClientId=PB_CLIENT)
         success = False
         if not self._step_sim_mode and wait:
             success = wait_to_reach_jnt_goal(
@@ -133,7 +136,8 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
         jnt_id = self.jnt_to_id[self.jnt_names[0]]
-        pos = self.p.getJointState(self.robot_id, jnt_id)[0]
+        pos = self.p.getJointState(self.robot_id, jnt_id,
+                                   physicsClientId=PB_CLIENT)[0]
         return pos
 
     def get_vel(self, joint_name=None):
@@ -149,7 +153,8 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
         jnt_id = self.jnt_to_id[self.jnt_names[0]]
-        vel = self.p.getJointState(self.robot_id, jnt_id)[1]
+        vel = self.p.getJointState(self.robot_id, jnt_id,
+                                   physicsClientId=PB_CLIENT)[1]
         return vel
 
     def disable_gripper_self_collision(self):
@@ -166,7 +171,8 @@ class Robotiq2F140Pybullet(EndEffectorTool):
                                               self.robot_id,
                                               jnt_idx1,
                                               jnt_idx2,
-                                              enableCollision=0)
+                                              enableCollision=0,
+                                              physicsClientId=PB_CLIENT)
 
     def _mimic_gripper(self, joint_val):
         """
@@ -186,14 +192,15 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         while True:
             if self._is_activated:
                 max_torq = self.max_torque
-                max_torques = [max_torq] * (len(self.jnt_names))
+                max_torques = [max_torq] * (len(self.jnt_names) - 1)
                 gripper_pos = self.get_pos()
                 gripper_poss = self._mimic_gripper(gripper_pos)
                 self.p.setJointMotorControlArray(self.robot_id,
-                                                 self.gripper_jnt_ids[:],
+                                                 self.gripper_jnt_ids[1:],
                                                  self.p.POSITION_CONTROL,
-                                                 targetPositions=gripper_poss[:],
-                                                 forces=max_torques)
+                                                 targetPositions=gripper_poss[1:],
+                                                 forces=max_torques,
+                                                 physicsClientId=PB_CLIENT)
             time.sleep(0.05)
 
     def deactivate(self):

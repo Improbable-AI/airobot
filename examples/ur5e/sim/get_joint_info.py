@@ -8,7 +8,7 @@ def main():
     This function demonstrates how to get joint information
     such as joint positions/velocities/torques.
     """
-    robot = Robot('ur5e', arm_cfg={'render': False})
+    robot = Robot('ur5e', arm_cfg={'render': True})
     robot.arm.go_home()
     print('\nJoint positions for all actuated joints:')
     jpos = robot.arm.get_jpos()

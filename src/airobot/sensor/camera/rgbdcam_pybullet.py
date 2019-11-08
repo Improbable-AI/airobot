@@ -1,4 +1,5 @@
 import numpy as np
+import pybullet as p
 
 from airobot.sensor.camera.camera import Camera
 from airobot.utils.pb_util import PB_CLIENT
@@ -11,7 +12,7 @@ class RGBDCameraPybullet(Camera):
             cfgs (YACS CfgNode): configurations for the camera
         """
         super(RGBDCameraPybullet, self).__init__(cfgs=cfgs)
-        self.p = PB_CLIENT
+        self.p = p
         self.view_matrix = None
         self.proj_matrix = None
 
@@ -33,23 +34,24 @@ class RGBDCameraPybullet(Camera):
             focus_pt = [0, 0, 0]
         if len(focus_pt) != 3:
             raise ValueError('Length of focus_pt should be 3 ([x, y, z]).')
-        p = self.p
         self.view_matrix = p.computeViewMatrixFromYawPitchRoll(focus_pt,
                                                                dist,
                                                                yaw,
                                                                pitch,
                                                                roll,
-                                                               upAxisIndex=2)
+                                                               upAxisIndex=2,
+                                                               physicsClientId=PB_CLIENT)
         height = self.cfgs.CAM.SIM.HEIGHT
         width = self.cfgs.CAM.SIM.WIDTH
         aspect = width / float(height)
         znear = self.cfgs.CAM.SIM.ZNEAR
         zfar = self.cfgs.CAM.SIM.ZFAR
         fov = self.cfgs.CAM.SIM.FOV
-        self.proj_matrix = self.p.computeProjectionMatrixFOV(fov,
-                                                             aspect,
-                                                             znear,
-                                                             zfar)
+        self.proj_matrix = p.computeProjectionMatrixFOV(fov,
+                                                        aspect,
+                                                        znear,
+                                                        zfar,
+                                                        physicsClientId=PB_CLIENT)
 
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
@@ -70,14 +72,14 @@ class RGBDCameraPybullet(Camera):
             raise ValueError('Please call setup_camera() first!')
         height = self.cfgs.CAM.SIM.HEIGHT
         width = self.cfgs.CAM.SIM.WIDTH
-        p = self.p
-        images = self.p.getCameraImage(width=width,
-                                       height=height,
-                                       viewMatrix=self.view_matrix,
-                                       projectionMatrix=self.proj_matrix,
-                                       shadow=True,
-                                       flags=p.ER_NO_SEGMENTATION_MASK,
-                                       renderer=p.ER_BULLET_HARDWARE_OPENGL)
+        images = p.getCameraImage(width=width,
+                                  height=height,
+                                  viewMatrix=self.view_matrix,
+                                  projectionMatrix=self.proj_matrix,
+                                  shadow=True,
+                                  flags=p.ER_NO_SEGMENTATION_MASK,
+                                  renderer=p.ER_BULLET_HARDWARE_OPENGL,
+                                  physicsClientId=PB_CLIENT)
         rgb = None
         depth = None
         if get_rgb:

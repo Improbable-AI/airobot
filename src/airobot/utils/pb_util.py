@@ -22,24 +22,26 @@ def load_pb(render=False):
     global PB_CLIENT, RENDER, GRAVITY_CONST
     RENDER = render
     if render:
-        p.connect(p.GUI)
+        PB_CLIENT = p.connect(p.GUI)
     else:
-        p.connect(p.DIRECT)
+        PB_CLIENT = p.connect(p.DIRECT)
         # # using the eglRendererPlugin (hardware OpenGL acceleration)
         egl = pkgutil.get_loader('eglRenderer')
         if egl:
-            p.loadPlugin(egl.get_filename(), "_eglRendererPlugin")
+            p.loadPlugin(egl.get_filename(), "_eglRendererPlugin",
+                         physicsClientId=PB_CLIENT)
         else:
-            p.loadPlugin("eglRendererPlugin")
+            p.loadPlugin("eglRendererPlugin",
+                         physicsClientId=PB_CLIENT)
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    p.setGravity(0, 0, GRAVITY_CONST)
-    PB_CLIENT = p
+    p.setGravity(0, 0, GRAVITY_CONST,
+                 physicsClientId=PB_CLIENT)
     if not render:
         th_sim = threading.Thread(target=step_rt_simulation)
         th_sim.daemon = True
         th_sim.start()
     else:
-        PB_CLIENT.setRealTimeSimulation(1)
+        p.setRealTimeSimulation(1, physicsClientId=PB_CLIENT)
 
 
 def step_rt_simulation():
@@ -49,7 +51,7 @@ def step_rt_simulation():
     global STEP_SIM_MODE, PB_CLIENT
     while True:
         if not STEP_SIM_MODE:
-            PB_CLIENT.stepSimulation()
+            p.stepSimulation(physicsClientId=PB_CLIENT)
         time.sleep(0.001)
 
 
@@ -66,9 +68,9 @@ def set_step_sim(step_mode=True):
     STEP_SIM_MODE = step_mode
     if RENDER:
         if step_mode:
-            PB_CLIENT.setRealTimeSimulation(0)
+            p.setRealTimeSimulation(0, physicsClientId=PB_CLIENT)
         else:
-            PB_CLIENT.setRealTimeSimulation(1)
+            p.setRealTimeSimulation(1, physicsClientId=PB_CLIENT)
 
 
 def load_urdf(filename, base_pos=None, base_ori=None, scaling=1.0, **kwargs):
@@ -98,12 +100,13 @@ def load_urdf(filename, base_pos=None, base_ori=None, scaling=1.0, **kwargs):
         base_pos = [0, 0, 0]
     if base_ori is None:
         base_ori = [0, 0, 0, 1]
-    body_id = PB_CLIENT.loadURDF(filename,
-                                 basePosition=base_pos,
-                                 baseOrientation=base_ori,
-                                 globalScaling=scaling,
-                                 **kwargs)
-    PB_CLIENT.setGravity(0, 0, GRAVITY_CONST)
+    body_id = p.loadURDF(filename,
+                         basePosition=base_pos,
+                         baseOrientation=base_ori,
+                         globalScaling=scaling,
+                         physicsClientId=PB_CLIENT,
+                         **kwargs)
+    p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
     return body_id
 
 
@@ -124,10 +127,11 @@ def load_sdf(filename, scaling=1.0, **kwargs):
     """
     if scaling <= 0:
         raise ValueError('Scaling should be a positive number.')
-    body_id = PB_CLIENT.loadSDF(filename,
-                                globalScaling=scaling,
-                                **kwargs)
-    PB_CLIENT.setGravity(0, 0, GRAVITY_CONST)
+    body_id = p.loadSDF(filename,
+                        globalScaling=scaling,
+                        physicsClientId=PB_CLIENT,
+                        **kwargs)
+    p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
     return body_id
 
 
@@ -145,9 +149,10 @@ def load_mjcf(filename, **kwargs):
         be negative and not a valid body unique id.
 
     """
-    body_id = PB_CLIENT.loadMJCF(filename,
-                                 **kwargs)
-    PB_CLIENT.setGravity(0, 0, GRAVITY_CONST)
+    body_id = p.loadMJCF(filename,
+                         physicsClientId=PB_CLIENT,
+                         **kwargs)
+    p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
     return body_id
 
 
@@ -213,11 +218,11 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
 
     """
     global GRAVITY_CONST
-    pb_shape_types = {'sphere': PB_CLIENT.GEOM_SPHERE,
-                      'box': PB_CLIENT.GEOM_BOX,
-                      'capsule': PB_CLIENT.GEOM_CAPSULE,
-                      'cylinder': PB_CLIENT.GEOM_CYLINDER,
-                      'mesh': PB_CLIENT.GEOM_MESH}
+    pb_shape_types = {'sphere': p.GEOM_SPHERE,
+                      'box': p.GEOM_BOX,
+                      'capsule': p.GEOM_CAPSULE,
+                      'cylinder': p.GEOM_CYLINDER,
+                      'mesh': p.GEOM_MESH}
     if shape_type not in pb_shape_types.keys():
         raise TypeError('The following shape type is not '
                         'supported: %s' % shape_type)
@@ -292,14 +297,22 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
     visual_args['visualFramePosition'] = shift_pos
     visual_args['visualFrameOrientation'] = shift_ori
 
-    vs_id = PB_CLIENT.createVisualShape(**visual_args)
-    cs_id = PB_CLIENT.createCollisionShape(**collision_args)
-    body_id = PB_CLIENT.createMultiBody(baseMass=mass,
-                                        baseInertialFramePosition=shift_pos,
-                                        baseInertialFrameOrientation=shift_ori,
-                                        baseCollisionShapeIndex=cs_id,
-                                        baseVisualShapeIndex=vs_id,
-                                        basePosition=base_pos,
-                                        baseOrientation=base_ori)
-    PB_CLIENT.setGravity(0, 0, GRAVITY_CONST)
+    collision_args['physicsClientId'] = PB_CLIENT
+    visual_args['physicsClientId'] = PB_CLIENT
+
+    p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0,
+                               physicsClientId=PB_CLIENT)
+    vs_id = p.createVisualShape(**visual_args)
+    cs_id = p.createCollisionShape(**collision_args)
+    body_id = p.createMultiBody(baseMass=mass,
+                                baseInertialFramePosition=shift_pos,
+                                baseInertialFrameOrientation=shift_ori,
+                                baseCollisionShapeIndex=cs_id,
+                                baseVisualShapeIndex=vs_id,
+                                basePosition=base_pos,
+                                baseOrientation=base_ori,
+                                physicsClientId=PB_CLIENT)
+    p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1,
+                               physicsClientId=PB_CLIENT)
+    p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
     return body_id
