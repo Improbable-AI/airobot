@@ -18,7 +18,7 @@ _C.DEFAULT_FORCE = 50
 
 _C.COMMAND_TOPIC = '/ur_driver/URScript'
 _C.GAZEBO_COMMAND_TOPIC = '/gripper/gripper_cmd/goal'
-_C.GAZEBO_SUBSCRIBE_TOPIC = '/joint_states'
+_C.JOINT_STATE_TOPIC = '/joint_states'
 
 # default maximum values for gripper state varibles
 # minimum values are all 0
