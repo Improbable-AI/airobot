@@ -1,6 +1,13 @@
 import rospy
+import threading
+import struct
+import socket
+import time
+
 from control_msgs.msg import GripperCommandActionGoal
+from sensor_msgs.msg import JointState
 from std_msgs.msg import String
+from ur_msgs.msg import RobotModeDataMsg
 
 from airobot.ee_tool.ee import EndEffectorTool
 from airobot.utils.common import clamp
@@ -27,12 +34,16 @@ class Robotiq2F140Real(EndEffectorTool):
             'left_inner_finger_joint', 'right_outer_knuckle_joint',
             'right_inner_knuckle_joint', 'right_inner_finger_joint'
         ]
+
         self.gazebo_sim = rospy.get_param('sim')
 
         self.jnt_names_set = set(self.jnt_names)
 
-        self._ros_initialized = False
-        self._initialize_ros_comm()
+        self._comm_initialized = False
+        self._initialize_comm()
+
+        self._gripper_data = None
+        self._get_state_lock = threading.RLock()
 
     def activate(self):
         """
@@ -105,6 +116,47 @@ class Robotiq2F140Real(EndEffectorTool):
         """
         self.set_pos(self.cfgs.EETOOL.CLOSE_ANGLE)
 
+    def get_pos(self):
+        """
+        Get the current position of the gripper
+        """
+        self._get_state_lock.acquire()
+        pos = self._gripper_data
+        self._get_state_lock.release()
+        return pos
+
+    def _get_current_pos_cb(self, msg):
+        """
+        Callback for rospy subscriber to get joint information
+        when using Gazebo
+        
+        Args:
+            msg (JointState): Contains the full joint state topic
+                published by Gazebo
+        """
+        if 'finger_joint' in msg.name:
+            idx = msg.name.index('finger_joint')
+            if idx < len(msg.position):
+                self._gripper_data = msg.position[idx]
+
+    def _get_gripper_state(self):
+        """
+        Function to be run in background thread which creates socket
+        connection with UR and receives position data
+        """
+        buffer_size = 1024
+        state_socket = socket.socket(socket.AF_INET,
+                                     socket.SOCK_STREAM)
+        state_socket.bind((self.hostname, self.tcp_port))
+        while True:
+            time.sleep(0.005)
+            state_socket.listen(1)
+            conn = state_socket.accept()[0]
+            data = conn.recv(buffer_size)
+            if not data:
+                continue
+            self._gripper_data = int(struct.unpack('!i', data[0:4])[0])
+
     def _get_new_urscript(self):
         """
         Internal method used to create an empty URScript
@@ -120,7 +172,7 @@ class Robotiq2F140Real(EndEffectorTool):
         urscript.sleep(0.1)
         return urscript
 
-    def _initialize_ros_comm(self):
+    def _initialize_comm(self):
         """
         Set up the internal publisher to send gripper command
         URScript programs to the robot thorugh ROS
@@ -130,9 +182,19 @@ class Robotiq2F140Real(EndEffectorTool):
                 self.cfgs.EETOOL.GAZEBO_COMMAND_TOPIC,
                 GripperCommandActionGoal,
                 queue_size=10)
+            self.sub_position = rospy.Subscriber(
+                self.cfgs.EETOOL.JOINT_STATE_TOPIC,
+                JointState,
+                self._get_current_pos_cb
+            )
         else:
             self.pub_command = rospy.Publisher(
                 self.cfgs.EETOOL.COMMAND_TOPIC,
                 String,
                 queue_size=10)
-        self._ros_initialized = True
+            self.sub_position = rospy.Subscriber(
+                self.cfgs.EETOOL.JOINT_STATE_TOPIC,
+                JointState,
+                self._get_current_pos_cb
+            )
+        self._comm_initialized = True
