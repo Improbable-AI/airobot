@@ -344,6 +344,7 @@ class TextureModder:
         # {body_id: {link_id: [texture_id, height, width]}}
         self.texture_dict = {}
         self.texture_files = []
+        self.texture_color = None
 
     def set_texture(self, body_id, link_id, texture_file):
         """
@@ -546,8 +547,10 @@ class TextureModder:
                                   axis=0).flatten()
 
         new_color = new_color.astype(np.uint8)
+        self.texture_color = new_color.copy()
+        del new_color
         p.changeTexture(tex_id,
-                        new_color.copy(),
+                        self.texture_color,
                         width,
                         height,
                         physicsClientId=PB_CLIENT)
