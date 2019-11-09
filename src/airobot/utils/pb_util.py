@@ -344,7 +344,6 @@ class TextureModder:
         # {body_id: {link_id: [texture_id, height, width]}}
         self.texture_dict = {}
         self.texture_files = []
-        self.texture_color = None
 
     def set_texture(self, body_id, link_id, texture_file):
         """
@@ -355,7 +354,7 @@ class TextureModder:
             body_id (int): body index
             link_id (int): link index in the body
             texture_file (str): path to the texture files (image, supported
-                format: jpg, png, etc.)
+                format: `jpg`, `png`, `jpeg`, `tga`, or `gif`etc.)
 
         """
         img = cv2.imread(texture_file)
@@ -367,7 +366,6 @@ class TextureModder:
         if body_id not in self.texture_dict:
             self.texture_dict[body_id] = {}
         self.texture_dict[body_id][link_id] = [tex_id, height, width]
-        del img
 
     def set_texture_path(self, path):
         """
@@ -547,10 +545,8 @@ class TextureModder:
                                   axis=0).flatten()
 
         new_color = new_color.astype(np.uint8)
-        self.texture_color = new_color.copy()
-        del new_color
         p.changeTexture(tex_id,
-                        self.texture_color,
+                        new_color,
                         width,
                         height,
                         physicsClientId=PB_CLIENT)
