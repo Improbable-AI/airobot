@@ -1,4 +1,6 @@
+import os
 import pkgutil
+import random
 import threading
 import time
 from numbers import Number
@@ -341,6 +343,7 @@ class TextureModder:
     def __init__(self):
         # {body_id: {link_id: [texture_id, height, width]}}
         self.texture_dict = {}
+        self.texture_files = []
 
     def set_texture(self, body_id, link_id, texture_file):
         """
@@ -351,7 +354,7 @@ class TextureModder:
             body_id (int): body index
             link_id (int): link index in the body
             texture_file (str): path to the texture files (image, supported
-                format: jpg, png, tga, gif, etc.)
+                format: jpg, png, etc.)
 
         """
         img = cv2.imread(texture_file)
@@ -363,6 +366,40 @@ class TextureModder:
         if body_id not in self.texture_dict:
             self.texture_dict[body_id] = {}
         self.texture_dict[body_id][link_id] = [tex_id, height, width]
+        del img
+
+    def set_texture_path(self, path):
+        """
+        Set the root path to the texture files. It will search all the files
+        in the folder (including subfolders), and find all files that end with
+        `.png`, `jpg`, `jpeg`, `tga`, or `gif`.
+
+        Args:
+            path (str): root path to the texture files
+
+        """
+        self.texture_files = []
+        for root, dirs, files in os.walk(path):
+            for name in files:
+                if name.lower().endswith(('.png', '.jpg', '.jpeg', '.tga', '.gif')):
+                    self.texture_files.append(os.path.join(root, name))
+        print('Number of texture files found: %d' % len(self.texture_files))
+
+    def rand_texture(self, body_id, link_id):
+        """
+        Randomly apply a texture to the link. Call `set_texture_path` first
+        to set the root path to the texture files.
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+
+        """
+        if len(self.texture_files) < 1:
+            raise RuntimeError('Please call `set_texture_path` first to set the '
+                               'root path to the texture files')
+        tex_file = random.choice(self.texture_files)
+        self.set_texture(body_id, link_id, tex_file)
 
     def rand_rgb(self, body_id, link_id):
         """
@@ -405,7 +442,7 @@ class TextureModder:
 
     def rand_all(self, body_id, link_id):
         """
-        Randomize color, gradient, noise of the specified link
+        Randomize color, gradient, noise, texture of the specified link
 
         Args:
             body_id (int): body index
@@ -416,18 +453,21 @@ class TextureModder:
             self.rand_gradient,
             self.rand_noise,
             self.rand_rgb,
+            # self.rand_texture,
         ]
         choice = np.random.randint(len(choices))
         choices[choice](body_id, link_id)
 
-    def randomize(self, mode='all'):
+    def randomize(self, mode='all', exclude=None):
         """
         Randomize all the links in the scene
 
         Args:
             mode (str): one of `all`, `rgb`, `noise`, `gradient`.
-
-        Returns:
+            exclude (dict): exclude bodies or links from randomization.
+                `exclude` is a dict with body_id as the key,
+                and a list of link ids as the value. If the value (link ids)
+                is an empty list, then all links on the body will be excluded.
 
         """
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0,
@@ -436,17 +476,26 @@ class TextureModder:
             'all': self.rand_all,
             'rgb': self.rand_rgb,
             'noise': self.rand_noise,
-            'gradient': self.rand_gradient
+            'gradient': self.rand_gradient,
+            'texture': self.rand_texture,
         }
         body_num = p.getNumBodies(physicsClientId=PB_CLIENT)
+        if exclude is None:
+            sep_bodies = set()
+        else:
+            sep_bodies = set(exclude.keys())
         for body_idx in range(body_num):
             if not self._check_body_exist(body_idx):
+                continue
+            if body_idx in sep_bodies and not exclude[body_idx]:
                 continue
             num_jnts = p.getNumJoints(body_idx,
                                       physicsClientId=PB_CLIENT)
             # start from -1 for urdf that has no joint but one link
             start = -1 if num_jnts == 0 else 0
             for link_idx in range(start, num_jnts):
+                if body_idx in sep_bodies and link_idx in exclude[body_idx]:
+                    continue
                 mode_to_func[mode](body_idx, link_idx)
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1,
                                    physicsClientId=PB_CLIENT)
@@ -487,18 +536,18 @@ class TextureModder:
             comp_intp = 1.0 - intp
             rgb_intp = np.multiply(rgb1, intp[:, None])
             rgb_intp += np.multiply(rgb2, comp_intp[:, None])
-            new_color = np.tile(rgb_intp, (1, width, 1))
+            new_color = np.repeat(rgb_intp, width, axis=0).flatten()
         else:
             intp = np.linspace(0, 1, width)
             comp_intp = 1.0 - intp
             rgb_intp = np.multiply(rgb1, intp[:, None])
             rgb_intp += np.multiply(rgb2, comp_intp[:, None])
-            new_color = np.tile(rgb_intp, (height, 1, 1))
+            new_color = np.repeat(rgb_intp[None, :, :], height,
+                                  axis=0).flatten()
 
         new_color = new_color.astype(np.uint8)
-
         p.changeTexture(tex_id,
-                        new_color.flatten(),
+                        new_color.copy(),
                         width,
                         height,
                         physicsClientId=PB_CLIENT)
