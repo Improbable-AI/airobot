@@ -273,8 +273,8 @@ def list_class_names(dir_path):
     """
 
     py_files = glob.glob(os.path.join(dir_path, "*.py"))
-    py_files = [f for f in py_files if os.path.isfile(f)
-                and not f.endswith('__init__.py')]
+    py_files = [f for f in py_files if os.path.isfile(f) and
+                not f.endswith('__init__.py')]
     cls_name_to_path = dict()
     for py_file in py_files:
         with open(py_file) as f:

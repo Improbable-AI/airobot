@@ -3,8 +3,12 @@ import threading
 import time
 from numbers import Number
 
+import cv2
+import numpy as np
 import pybullet as p
 import pybullet_data
+
+from airobot.utils.common import clamp
 
 PB_CLIENT = None
 STEP_SIM_MODE = True
@@ -294,7 +298,7 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
         elif mesh_scale is not None:
             raise TypeError('mesh_scale should be a float number'
                             ', or a 3-element list.')
-        collision_args['meshScale'] = [1, 1, 1] if mesh_scale is None\
+        collision_args['meshScale'] = [1, 1, 1] if mesh_scale is None \
             else mesh_scale
         visual_args['meshScale'] = collision_args['meshScale']
     else:
@@ -327,3 +331,298 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
                                physicsClientId=PB_CLIENT)
     p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
     return body_id
+
+
+class TextureModder:
+    """
+    Modify textures in model
+    """
+
+    def __init__(self):
+        # {body_id: {link_id: [texture_id, height, width]}}
+        self.texture_dict = {}
+
+    def set_texture(self, body_id, link_id, texture_file):
+        """
+        Apply texture to a link. You can download texture files from:
+        https://www.robots.ox.ac.uk/~vgg/data/dtd/index.html
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+            texture_file (str): path to the texture files (image, supported
+                format: jpg, png, tga, gif, etc.)
+
+        """
+        img = cv2.imread(texture_file)
+        width = img.shape[1]
+        height = img.shape[0]
+        tex_id = p.loadTexture(texture_file)
+        p.changeVisualShape(body_id, link_id,
+                            textureUniqueId=tex_id)
+        if body_id not in self.texture_dict:
+            self.texture_dict[body_id] = {}
+        self.texture_dict[body_id][link_id] = [tex_id, height, width]
+
+    def rand_rgb(self, body_id, link_id):
+        """
+        Randomize the color of the link
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+
+        """
+        rgb = np.random.uniform(size=3).flatten()
+        rgba = np.append(rgb, 1)
+        self.set_rgba(body_id, link_id, rgba=rgba)
+
+    def rand_gradient(self, body_id, link_id):
+        """
+        Randomize the gradient of the color of the link
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+
+        """
+        rgb1, rgb2 = self._get_rand_rgb(2)
+        vertical = bool(np.random.uniform() > 0.5)
+        self.set_gradient(body_id, link_id, rgb1, rgb2, vertical)
+
+    def rand_noise(self, body_id, link_id):
+        """
+        Randomly add noise to the foreground
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+
+        """
+        fraction = 0.1 + np.random.uniform() * 0.8
+        rgb1, rgb2 = self._get_rand_rgb(2)
+        self.set_noise(body_id, link_id, rgb1, rgb2, fraction)
+
+    def rand_all(self, body_id, link_id):
+        """
+        Randomize color, gradient, noise of the specified link
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+
+        """
+        choices = [
+            self.rand_gradient,
+            self.rand_noise,
+            self.rand_rgb,
+        ]
+        choice = np.random.randint(len(choices))
+        choices[choice](body_id, link_id)
+
+    def randomize(self, mode='all'):
+        """
+        Randomize all the links in the scene
+
+        Args:
+            mode (str): one of `all`, `rgb`, `noise`, `gradient`.
+
+        Returns:
+
+        """
+        p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0,
+                                   physicsClientId=PB_CLIENT)
+        mode_to_func = {
+            'all': self.rand_all,
+            'rgb': self.rand_rgb,
+            'noise': self.rand_noise,
+            'gradient': self.rand_gradient
+        }
+        body_num = p.getNumBodies(physicsClientId=PB_CLIENT)
+        for body_idx in range(body_num):
+            if not self._check_body_exist(body_idx):
+                continue
+            num_jnts = p.getNumJoints(body_idx,
+                                      physicsClientId=PB_CLIENT)
+            # start from -1 for urdf that has no joint but one link
+            start = -1 if num_jnts == 0 else 0
+            for link_idx in range(start, num_jnts):
+                mode_to_func[mode](body_idx, link_idx)
+        p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1,
+                                   physicsClientId=PB_CLIENT)
+
+    def set_rgba(self, body_id, link_id, rgba):
+        """
+        Set color to the link
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+            rgba (list or np.ndarray): red, green, blue, alpha channel
+                (opacity of the color), (shape: :math:`[4,]`)
+
+        """
+        p.changeVisualShape(body_id, link_id, rgbaColor=rgba,
+                            physicsClientId=PB_CLIENT)
+
+    def set_gradient(self, body_id, link_id, rgb1, rgb2, vertical=True):
+        """
+        Creates a linear gradient from rgb1 to rgb2
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+            rgb1 (list or np.ndarray): first rgb color (shape: :math:`[3,]`)
+            rgb2 (list or np.ndarray): second rgb color (shape: :math:`[3,]`)
+            vertical (bool): if True, the gradient in the vertical direction,
+                if False it's in the horizontal direction.
+        """
+        rgb1 = np.array(rgb1).reshape(1, 3)
+        rgb2 = np.array(rgb2).reshape(1, 3)
+        if not self._check_link_has_tex(body_id, link_id):
+            return
+        tex_id, height, width = self.texture_dict[body_id][link_id]
+        if vertical:
+            intp = np.linspace(0, 1, height)
+            comp_intp = 1.0 - intp
+            rgb_intp = np.multiply(rgb1, intp[:, None])
+            rgb_intp += np.multiply(rgb2, comp_intp[:, None])
+            new_color = np.tile(rgb_intp, (1, width, 1))
+        else:
+            intp = np.linspace(0, 1, width)
+            comp_intp = 1.0 - intp
+            rgb_intp = np.multiply(rgb1, intp[:, None])
+            rgb_intp += np.multiply(rgb2, comp_intp[:, None])
+            new_color = np.tile(rgb_intp, (height, 1, 1))
+
+        new_color = new_color.astype(np.uint8)
+
+        p.changeTexture(tex_id,
+                        new_color.flatten(),
+                        width,
+                        height,
+                        physicsClientId=PB_CLIENT)
+
+    def set_noise(self, body_id, link_id, rgb1, rgb2, fraction=0.9):
+        """
+        Apply noise to the texture
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+            rgb1 (list or np.ndarray): background rgb color
+                (shape: :math:`[3,]`)
+            rgb2 (list or np.ndarray): color of random noise
+                foreground color (shape: :math:`[3,]`)
+            fraction (float): fraction of pixels with
+                foreground color
+
+        """
+        if not self._check_link_has_tex(body_id, link_id):
+            return
+        rgb1 = np.array(rgb1).flatten()
+        rgb2 = np.array(rgb2).flatten()
+        tex_id, height, width = self.texture_dict[body_id][link_id]
+        fraction = clamp(fraction, 0.0, 1.0)
+
+        mask = np.random.uniform(size=(height, width)) < fraction
+        new_color = np.tile(rgb1, (height, width, 1))
+        new_color[mask, :] = rgb2
+        p.changeTexture(tex_id,
+                        new_color.flatten(),
+                        width,
+                        height,
+                        physicsClientId=PB_CLIENT)
+
+    def whiten_materials(self, body_id=None, link_id=None):
+        """
+        Helper method for setting all material colors to white
+
+        Args:
+            body_id (int): unique body id when you load the body. If body_id
+                is not provided, all the bodies will be whitened.
+            link_id (int): the index of the link on the body. If link_id is not
+                provided and body_id is provided, all the links of the body
+                will be whitened.
+
+        """
+        if body_id is None:
+            body_num = p.getNumBodies(physicsClientId=PB_CLIENT)
+            for body_idx in range(body_num):
+                if not self._check_body_exist(body_idx):
+                    continue
+                num_jnts = p.getNumJoints(body_idx,
+                                          physicsClientId=PB_CLIENT)
+                # start from -1 for urdf that has no joint but one link
+                start = -1 if num_jnts == 0 else 0
+                for i in range(start, num_jnts):
+                    self.set_rgba(body_idx, i, rgba=[1, 1, 1, 1])
+        else:
+            if link_id is None:
+                num_jnts = p.getNumJoints(body_id,
+                                          physicsClientId=PB_CLIENT)
+                # start from -1 for urdf that has no joint but one link
+                start = -1 if num_jnts == 0 else 0
+                for i in range(start, num_jnts):
+                    self.set_rgba(body_id, i, rgba=[1, 1, 1, 1])
+            else:
+                self.set_rgba(body_id, link_id, rgba=[1, 1, 1, 1])
+
+    def _get_rand_rgb(self, n=1):
+        """
+        Get random rgb color in range of [0, 255)
+
+        Args:
+            n (int): number of rgb color combinations to be returned
+
+        Returns:
+            One of the following
+
+            - np.ndarray: rgb color (shape: :math:`[3]`)
+            - tuple: tuple containing n groups of rgb colors
+
+        """
+
+        def _rand_rgb():
+            return np.array(np.random.uniform(size=3) * 255,
+                            dtype=np.uint8)
+
+        if n == 1:
+            return _rand_rgb()
+        else:
+            return tuple(_rand_rgb() for _ in range(n))
+
+    def _check_link_has_tex(self, body_id, link_id):
+        """
+        Check if the link has texture
+
+        Args:
+            body_id (int): body index
+            link_id (int): link index in the body
+
+        Returns:
+            bool: True if the link has texture, False otherwise
+
+        """
+        if body_id not in self.texture_dict or \
+                link_id not in self.texture_dict[body_id]:
+            return False
+        return True
+
+    def _check_body_exist(self, body_id):
+        """
+        Check if the body exist in the pybullet client
+
+        Args:
+            body_id (int): body index
+
+        Returns:
+            bool: True if the body exists, False otherwise
+
+        """
+        exist = True
+        try:
+            p.getBodyInfo(body_id, physicsClientId=PB_CLIENT)
+        except Exception:
+            exist = False
+        return exist

@@ -7,7 +7,6 @@ import time
 from control_msgs.msg import GripperCommandActionGoal
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
-from ur_msgs.msg import RobotModeDataMsg
 
 from airobot.ee_tool.ee import EndEffectorTool
 from airobot.utils.common import clamp
@@ -129,7 +128,7 @@ class Robotiq2F140Real(EndEffectorTool):
         """
         Callback for rospy subscriber to get joint information
         when using Gazebo
-        
+
         Args:
             msg (JointState): Contains the full joint state topic
                 published by Gazebo
