@@ -30,10 +30,14 @@ _C.ARM.RIGHT.HAS_ARM = _C.HAS_ARM
 
 _C.ARM.RIGHT.ARM = get_yumi_arm_cfg()
 
+_C.ARM.RIGHT.ARM.NAME = 'right'
 _C.ARM.RIGHT.ARM.JOINT_NAMES = [
     'yumi_joint_1_r', 'yumi_joint_2_r', 'yumi_joint_7_r',
     'yumi_joint_3_r', 'yumi_joint_4_r', 'yumi_joint_5_r',
     'yumi_joint_6_r'
+]
+_C.ARM.RIGHT.ARM.COMPLIANT_JOINT_NAMES = [
+    'yumi_palm_r', 'yumi_gel_r'
 ]
 _C.ARM.RIGHT.ARM.MAX_TORQUES = [300, 300, 300, 300, 300, 300, 300]
 _C.ARM.RIGHT.ARM.ROBOT_EE_FRAME = 'yumi_link_7_r'
@@ -48,10 +52,14 @@ _C.ARM.LEFT.HAS_ARM = _C.HAS_ARM
 
 _C.ARM.LEFT.ARM = get_yumi_arm_cfg()
 
+_C.ARM.LEFT.ARM.NAME = 'left'
 _C.ARM.LEFT.ARM.JOINT_NAMES = [
     'yumi_joint_1_l', 'yumi_joint_2_l', 'yumi_joint_7_l',
     'yumi_joint_3_l', 'yumi_joint_4_l', 'yumi_joint_5_l',
     'yumi_joint_6_l'
+]
+_C.ARM.LEFT.ARM.COMPLIANT_JOINT_NAMES = [
+    'yumi_palm_l', 'yumi_gel_l'
 ]
 _C.ARM.LEFT.ARM.MAX_TORQUES = [300, 300, 300, 300, 300, 300, 300]
 _C.ARM.LEFT.ARM.ROBOT_EE_FRAME = 'yumi_link_7_l'
