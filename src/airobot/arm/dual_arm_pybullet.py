@@ -3,18 +3,18 @@ from __future__ import division
 from __future__ import print_function
 
 import copy
-import pkgutil
 import threading
 import time
 
-import numpy as np
 import pybullet_data
+import pybullet as p
 from gym.utils import seeding
 
 import airobot.utils.common as arutil
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 from airobot.utils.pb_util import PB_CLIENT
+from airobot.utils.pb_util import set_step_sim
 
 
 class DualArmPybullet(ARM):
@@ -49,13 +49,24 @@ class DualArmPybullet(ARM):
             eetool_cfg['p'] = self.p
         super(DualArmPybullet, self).__init__(cfgs=cfgs,
                                               eetool_cfg=eetool_cfg)
-        self.p = PB_CLIENT
+        self.p = p
 
         self.np_random, _ = self._seed(seed)
 
+        self.robot_id = None
+        self.arm_dict = {}
+
         self._init_consts()
-        self._init_threads()
+        self.realtime_simulation(True)
         self._in_torque_mode = [False] * self.dual_arm_dof
+
+    def setup_single_arms(self, right_arm, left_arm):
+        self.arm_dict[self.cfgs.ARM.RIGHT.NAME] = right_arm
+        self.arm_dict[self.cfgs.ARM.LEFT.NAME] = left_arm
+
+        for arm in self.arm_dict.values():
+            arm.robot_id = self.robot_id
+            arm._build_jnt_id()
 
     def go_home(self, arm=None):
         """
@@ -64,13 +75,11 @@ class DualArmPybullet(ARM):
         if arm is None:
             success = self.set_jpos(self._home_position)
         else:
-            if arm != 'right' and arm != 'left':
+            if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
-                                 '("right" or "left")')
-            if arm == 'right':
-                success = self.right_arm.go_home()
-            elif arm == 'left':
-                success = self.left_arm.go_home()
+                                 '("%s" or "%s")'
+                                 % self._arm_names[0], self._arm_names[1])
+            success = self.arm_dict[arm].go_home()
         return success
 
     def reset(self):
@@ -83,7 +92,7 @@ class DualArmPybullet(ARM):
         """
         One step forward in simulation
         """
-        self.p.stepSimulation()
+        self.p.stepSimulation(physicsClientId=PB_CLIENT)
 
     def realtime_simulation(self, on=True):
         """
@@ -93,14 +102,10 @@ class DualArmPybullet(ARM):
             on (bool): run the simulation in realtime if True
                 stop the realtime simulation if False
         """
-        if on:
-            self._set_step_sim(step_mode=False)
-            if self._render:
-                self.p.setRealTimeSimulation(1)
-        else:
-            self._set_step_sim(step_mode=True)
-            if self._render:
-                self.p.setRealTimeSimulation(0)
+        self._step_sim_mode = not on
+        if self.cfgs.HAS_EETOOL:
+            self.eetool._step_sim_mode = self._step_sim_mode
+        set_step_sim(self._step_sim_mode)
 
     def set_jpos(self, position, arm=None, joint_name=None, wait=True,
                  *args, **kwargs):
@@ -112,7 +117,7 @@ class DualArmPybullet(ARM):
             arm (str): If not provided, position should be a list and all
                 actuated joints will be moved. If provided, only half the
                 joints will move, corresponding to which arm was specified.
-                Value should be "right" or "left".
+                Value should match arm names in cfg file.
             joint_name (str): If not provided, position should be a list
                 and all the actuated joints will be moved to the specified
                 positions. If provided, only the specified joint will
@@ -136,10 +141,18 @@ class DualArmPybullet(ARM):
                                  % self.dual_arm_dof)
             tgt_pos = position
             self.p.setJointMotorControlArray(self.robot_id,
+<<<<<<< HEAD
                                         self.arm_jnt_ids,
                                         self.p.POSITION_CONTROL,
                                         targetPositions=tgt_pos,
                                         forces=self._max_torques)
+=======
+                                             self.arm_jnt_ids,
+                                             self.p.POSITION_CONTROL,
+                                             targetPositions=tgt_pos,
+                                             forces=self._max_torques,
+                                             physicsClientId=PB_CLIENT)
+>>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             if not self._step_sim_mode and wait:
                 success = wait_to_reach_jnt_goal(
                     tgt_pos,
@@ -150,17 +163,13 @@ class DualArmPybullet(ARM):
                     max_error=self.cfgs.ARM.MAX_JOINT_ERROR
                 )
         else:
-            if arm != 'right' and arm != 'left':
+            if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
-                                 '("right" or "left")')
-            if arm == 'right':
-                success = self.right_arm.set_jpos(position,
+                                 '("%s" or "%s")'
+                                 % self._arm_names[0], self._arm_names[1])
+            success = self.arm_dict[arm].set_jpos(position,
                                                   joint_name=joint_name,
                                                   wait=wait)
-            elif arm == 'left':
-                success = self.left_arm.set_jpos(position,
-                                                 joint_name=joint_name,
-                                                 wait=wait)
         return success
 
     def set_jvel(self, velocity, arm=None, joint_name=None, wait=False,
@@ -173,7 +182,7 @@ class DualArmPybullet(ARM):
             arm (str): If not provided, velocity should be a list and all
                 actuated joints will be moved. If provided, only half the
                 joints will move, corresponding to which arm was specified.
-                Value should be "right" or "left".
+                Value should match arm names in cfg file.
             joint_name (str): If not provided, velocity should be a list
                 and all the actuated joints will be moved in the specified
                 velocities. If provided, only the specified joint will
@@ -197,10 +206,18 @@ class DualArmPybullet(ARM):
                                  % self.dual_arm_dof)
             tgt_vel = velocity
             self.p.setJointMotorControlArray(self.robot_id,
+<<<<<<< HEAD
                                         self.arm_jnt_ids,
                                         self.p.VELOCITY_CONTROL,
                                         targetVelocities=tgt_vel,
                                         forces=self._max_torques)
+=======
+                                             self.arm_jnt_ids,
+                                             self.p.VELOCITY_CONTROL,
+                                             targetVelocities=tgt_vel,
+                                             forces=self._max_torques,
+                                             physicsClientId=PB_CLIENT)
+>>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             if not self._step_sim_mode and wait:
                 success = wait_to_reach_jnt_goal(
                     tgt_vel,
@@ -210,17 +227,13 @@ class DualArmPybullet(ARM):
                     max_error=self.cfgs.ARM.MAX_JOINT_VEL_ERROR
                 )
         else:
-            if arm != 'right' and arm != 'left':
+            if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
-                                 '("right" or "left")')
-            if arm == 'right':
-                success = self.right_arm.set_jvel(velocity,
+                                 '("%s" or "%s")'
+                                 % self._arm_names[0], self._arm_names[1])
+            success = self.arm_dict[arm].set_jvel(velocity,
                                                   joint_name=joint_name,
                                                   wait=wait)
-            elif arm == 'left':
-                success = self.left_arm.set_jvel(velocity,
-                                                 joint_name=joint_name,
-                                                 wait=wait)
         return success
 
     def set_jtorq(self, torque, arm=None, joint_name=None, wait=False,
@@ -242,7 +255,7 @@ class DualArmPybullet(ARM):
             arm (str): If not provided, torque should be a list and all
                 actuated joints will be moved. If provided, only half the
                 joints will move, corresponding to which arm was specified.
-                Value should be "right" or "left".
+                Value should match arm names in cfg file.
             joint_name (str): specify the joint on which the torque is applied.
                 If it's not provided(None), it will apply the torques on
                 the six joints on the arm. Otherwise, only the specified joint
@@ -269,21 +282,24 @@ class DualArmPybullet(ARM):
                                  'Joint torques should contain'
                                  ' %d elements' % self.dual_arm_dof)
             self.p.setJointMotorControlArray(self.robot_id,
+<<<<<<< HEAD
                                         self.arm_jnt_ids,
                                         self.p.TORQUE_CONTROL,
                                         forces=torque)
+=======
+                                             self.arm_jnt_ids,
+                                             self.p.TORQUE_CONTROL,
+                                             forces=torque,
+                                             physicsClientId=PB_CLIENT)
+>>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
         else:
-            if arm != 'right' and arm != 'left':
+            if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
-                                 '("right" or "left")')
-            if arm == 'right':
-                success = self.right_arm.set_jtorq(torque,
+                                 '("%s" or "%s")'
+                                 % self._arm_names[0], self._arm_names[1])
+            success = self.arm_dict[arm].set_jtorq(torque,
                                                    joint_name=joint_name,
                                                    wait=wait)
-            elif arm == 'left':
-                success = self.left_arm.set_jtorq(torque,
-                                                  joint_name=joint_name,
-                                                  wait=wait)
         return success
 
     def set_ee_pose(self, pos=None, ori=None, wait=True, arm=None,
@@ -303,7 +319,7 @@ class DualArmPybullet(ARM):
             wait (bool): Set to True if command should be blocking, otherwise
                 the command can be overwritten before completion
             arm (str): Which arm to move when setting cartesian command, must
-                be either "right" or "left"
+                match arm names in cfg file
 
         Returns:
             bool: A boolean variable representing if the action is successful
@@ -312,17 +328,13 @@ class DualArmPybullet(ARM):
         if arm is None:
             raise NotImplementedError
         else:
-            if arm != 'right' and arm != 'left':
+            if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
-                                 '("right" or "left")')
-            if arm == 'right':
-                success = self.right_arm.set_ee_pose(pos=pos,
+                                 '("%s" or "%s")'
+                                 % self._arm_names[0], self._arm_names[1])
+            success = self.arm_dict[arm].set_ee_pose(pos=pos,
                                                      ori=ori,
                                                      wait=wait)
-            elif arm == 'left':
-                success = self.left_arm.set_ee_pose(pos=pos,
-                                                    ori=ori,
-                                                    wait=wait)
         return success
 
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, arm=None,
@@ -338,7 +350,7 @@ class DualArmPybullet(ARM):
                 Interpolate a point every eef_step distance
                 between the two end points
             arm (str): Which arm to move when setting cartesian command, must
-                be either "right" or "left"
+                match arm names in cfg file
 
         Returns:
             bool: A boolean variable representing if the action is successful
@@ -351,15 +363,12 @@ class DualArmPybullet(ARM):
         if arm is None:
             raise NotImplementedError
         else:
-            if arm != 'right' and arm != 'left':
+            if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
-                                 '("right" or "left")')
-            if arm == 'right':
-                success = self.right_arm.move_ee_xyz(delta_xyz=delta_xyz,
+                                 '("%s" or "%s")'
+                                 % self._arm_names[0], self._arm_names[1])
+            success = self.arm_dict[arm].move_ee_xyz(delta_xyz=delta_xyz,
                                                      eef_step=eef_step)
-            elif arm == 'left':
-                success = self.left_arm.move_ee_xyz(delta_xyz=delta_xyz,
-                                                    eef_step=eef_step)
         return success
 
     def enable_torque_control(self, joint_name=None):
@@ -380,15 +389,24 @@ class DualArmPybullet(ARM):
                                              self.arm_jnt_ids,
                                              self.p.VELOCITY_CONTROL,
                                              targetVelocities=tgt_vels,
-                                             forces=forces)
+                                             forces=forces,
+                                             physicsClientId=PB_CLIENT)
             self._in_torque_mode = [True] * self.dual_arm_dof
         else:
             jnt_id = self.jnt_to_id[joint_name]
             self.p.setJointMotorControl2(self.robot_id,
+<<<<<<< HEAD
                                     jnt_id,
                                     self.p.VELOCITY_CONTROL,
                                     targetVelocity=0,
                                     force=0.0)
+=======
+                                         jnt_id,
+                                         self.p.VELOCITY_CONTROL,
+                                         targetVelocity=0,
+                                         force=0.0,
+                                         physicsClientId=PB_CLIENT)
+>>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             arm_jnt_id = self.arm_jnt_names.index(joint_name)
             self._in_torque_mode[arm_jnt_id] = True
 
@@ -431,11 +449,18 @@ class DualArmPybullet(ARM):
         """
         if joint_name is None:
             states = self.p.getJointStates(self.robot_id,
+<<<<<<< HEAD
                                       self.arm_jnt_ids)
+=======
+                                           self.arm_jnt_ids,
+                                           physicsClientId=PB_CLIENT)
+>>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             pos = [state[0] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
-            pos = self.p.getJointState(self.robot_id, jnt_id)[0]
+            pos = self.p.getJointState(self.robot_id,
+                                       jnt_id,
+                                       physicsClientId=PB_CLIENT)[0]
         return pos
 
     def get_jvel(self, joint_name=None):
@@ -456,11 +481,18 @@ class DualArmPybullet(ARM):
         """
         if joint_name is None:
             states = self.p.getJointStates(self.robot_id,
+<<<<<<< HEAD
                                       self.arm_jnt_ids)
+=======
+                                           self.arm_jnt_ids,
+                                           physicsClientId=PB_CLIENT)
+>>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             vel = [state[1] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
-            vel = self.p.getJointState(self.robot_id, jnt_id)[1]
+            vel = self.p.getJointState(self.robot_id,
+                                       jnt_id,
+                                       physicsClientId=PB_CLIENT)[1]
         return vel
 
     def get_jtorq(self, joint_name=None):
@@ -485,12 +517,16 @@ class DualArmPybullet(ARM):
               (shape: :math:`[DOF]`)
         """
         if joint_name is None:
-            states = self.p.getJointStates(self.robot_id, self.arm_jnt_ids)
+            states = self.p.getJointStates(self.robot_id,
+                                           self.arm_jnt_ids,
+                                           physicsClientId=PB_CLIENT)
             # state[3] is appliedJointMotorTorque
             torque = [state[3] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
-            torque = self.p.getJointState(self.robot_id, jnt_id)[3]
+            torque = self.p.getJointState(self.robot_id,
+                                          jnt_id,
+                                          physicsClientId=PB_CLIENT)[3]
         return torque
 
     def get_ee_pose(self, arm=None):
@@ -499,7 +535,7 @@ class DualArmPybullet(ARM):
 
         Args:
             arm (str): Returned pose will be for specified arm, must
-                be either "right" or "left"
+                match arm names in cfg file
 
         Returns:
             4-element tuple containing
@@ -516,17 +552,19 @@ class DualArmPybullet(ARM):
         if arm is None:
             raise NotImplementedError
         else:
-            if arm != 'right' and arm != 'left':
+            if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
-                                 '("right" or "left")')
-            if arm == 'right':
-                return self.right_arm.get_ee_pose()
-            elif arm == 'left':
-                return self.left_arm.get_ee_pose()
-
+                                 '("%s" or "%s")'
+                                 % self._arm_names[0], self._arm_names[1])
+            return self.arm_dict[arm].get_ee_pose()
+            
     def get_ee_vel(self, arm=None):
         """
         Return the end effector's velocity
+
+        Args:
+            arm (str): Which arm to get velocity for, 
+                must match arm names in cfg file
 
         Returns:
             2-element tuple containing
@@ -537,15 +575,13 @@ class DualArmPybullet(ARM):
         if arm is None:
             raise NotImplementedError
         else:
-            if arm != 'right' and arm != 'left':
+            if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
-                                 '("right" or "left")')
-            if arm == 'right':
-                return self.right_arm.get_ee_vel()
-            elif arm == 'left':
-                return self.left_arm.get_ee_vel()
+                                 '("%s" or "%s")'
+                                 % self._arm_names[0], self._arm_names[1])
+            return self.arm_dict[arm].get_ee_vel()
 
-    def compute_ik(self, pos, ori=None, arm=None, *args, **kwargs):
+    def compute_ik(self, pos, ori=None, arm=None, ns=False, *args, **kwargs):
         """
         Compute the inverse kinematics solution given the
         position and orientation of the end effector
@@ -557,7 +593,7 @@ class DualArmPybullet(ARM):
                 quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
                 or rotation matrix (shape: :math:`[3, 3]`).
             arm (str): Which arm EE pose corresponds to, must
-                be either "right" or "left"
+                match arm names in cfg file
 
         Returns:
             list: solution to inverse kinematics, joint angles which achieve
@@ -566,15 +602,11 @@ class DualArmPybullet(ARM):
         if arm is None:
             raise NotImplementedError
         else:
-            if arm != 'right' and arm != 'left':
+            if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
-                                 '("right" or "left")')
-            if arm == 'right':
-                return self.right_arm.compute_ik(pos=pos,
-                                                 ori=ori)
-            if arm == 'left':
-                return self.left_arm.compute_ik(pos=pos,
-                                                ori=ori)
+                                 '("%s" or "%s")'
+                                 % self._arm_names[0], self._arm_names[1])
+            return self.arm_dict[arm].compute_ik(pos=pos, ori=ori, ns=ns)
 
     def _is_in_torque_mode(self, joint_name=None):
         if joint_name is None:
@@ -587,34 +619,26 @@ class DualArmPybullet(ARM):
         np_random, seed = seeding.np_random(seed)
         return np_random, seed
 
-    def _init_threads(self):
-        """
-        Start threads.
-        One is for realtime simulation
-        One is to constrain the gripper joints so
-        that they move simultaneously
-        """
-        # realtime simulation thread
-        self._set_step_sim(step_mode=False)
-        if not self._render:
-            self._th_sim = threading.Thread(target=self._rt_simulation)
-            self._th_sim.daemon = True
-            self._th_sim.start()
-        else:
-            self.realtime_simulation(True)
-
     def _init_consts(self):
         """
         Initialize constants
         """
+        self._r_arm_name = self.cfgs.ARM.RIGHT.ARM.NAME
+        self._l_arm_name = self.cfgs.ARM.LEFT.ARM.NAME
+        self._arm_names = [self._r_arm_name, self._l_arm_name]
+
         self._r_home_position = self.cfgs.ARM.RIGHT.ARM.HOME_POSITION
         self._l_home_position = self.cfgs.ARM.LEFT.ARM.HOME_POSITION
         self._home_position = self._r_home_position + self._l_home_position
+
         # joint damping for inverse kinematics
         self._ik_jd = 0.05
+<<<<<<< HEAD
         self._thread_sleep = 0.001
         self.psetGravity(0, 0, -9.8)
         self.psetAdditionalSearchPath(pybullet_data.getDataPath())
+=======
+>>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
 
         self.right_arm_jnt_names = self.cfgs.ARM.RIGHT.ARM.JOINT_NAMES
         self.left_arm_jnt_names = self.cfgs.ARM.LEFT.ARM.JOINT_NAMES
@@ -623,7 +647,7 @@ class DualArmPybullet(ARM):
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.dual_arm_dof = len(self.arm_jnt_names)
         self.single_arm_dof = self.dual_arm_dof / 2
-        
+
         self.rvl_joint_names = self.arm_jnt_names
         if self.cfgs.HAS_EETOOL:
             self.rvl_joint_names = self.rvl_joint_names + self.eetool.jnt_names
@@ -637,6 +661,7 @@ class DualArmPybullet(ARM):
         self._l_max_torques = self.cfgs.ARM.LEFT.ARM.MAX_TORQUES
         self._max_torques = self._r_max_torques + self._l_max_torques
 
+<<<<<<< HEAD
     def _rt_simulation(self):
         """
         Run step simulation all the time in backend
@@ -646,19 +671,18 @@ class DualArmPybullet(ARM):
                 self.pstepSimulation()
             time.sleep(self._thread_sleep)
 
+=======
+>>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
     def _build_jnt_id(self):
         """
         Build the mapping from the joint name to joint index
         """
         self.jnt_to_id = {}
-        for i in range(self.p.getNumJoints(self.robot_id)):
-            info = self.p.getJointInfo(self.robot_id, i)
+        for i in range(self.p.getNumJoints(self.robot_id,
+                                           physicsClientId=PB_CLIENT)):
+            info = self.p.getJointInfo(self.robot_id, i,
+                                       physicsClientId=PB_CLIENT)
             jnt_name = info[1].decode('UTF-8')
             self.jnt_to_id[jnt_name] = info[0]
 
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
-
-    def _set_step_sim(self, step_mode=True):
-        self._step_sim_mode = step_mode
-        if self.cfgs.HAS_EETOOL:
-            self.eetool._step_sim_mode = step_mode
