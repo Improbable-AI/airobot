@@ -67,7 +67,7 @@ robot.arm.move_ee_xyz([0.1, 0.1, 0.1])
 
 If you use AIRobot in your research, please use the following BibTeX entry.
 ```
-@misc{chen2019airobot,
+@misc{airobot2019,
   author =       {Tao Chen and Anthony Simeonov and Pulkit Agrawal},
   title =        {{AIRobot}},
   howpublished = {\url{https://github.com/Improbable-AI/airobot}},
