@@ -94,7 +94,7 @@ source devel/setup.bash
 Then, for instance, you can launch a simulated UR5e in Gazebo, and start MoveIt! with it, with the following command
 
 ```
-roslaunch ur5e_bringup ur5e_start sim:=true
+roslaunch ur5e_bringup ur5e_start.launch sim:=true
 ```
 
 Or you can launch a simulated UR5e in PyBullet with ```airobot``` with the following commands
@@ -106,7 +106,7 @@ python joint_position_control.py
 You can also connect to the real robot and control it via the ```airobot``` API functions (```<robot_ip>``` can be viewed from the PolyScope interface on the real robot's teach pendant. First bringup the connection to the robot with the following command, after connecting to the local network via ethernet cable.
 
 ```
-roslaunch ur5e_bringup ur5e_start robot_ip:=<robot_ip>
+roslaunch ur5e_bringup ur5e_start.launch robot_ip:=<robot_ip>
 ```
 Then run the following command to run the ```joint_position_control``` example (from a new terminal, either using ```tmux``` or by entering the container from a new local terminal with the same ```docker exec``` command above)
 ```
