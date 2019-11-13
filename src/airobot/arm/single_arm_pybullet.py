@@ -606,9 +606,6 @@ class SingleArmPybullet(ARM):
                 ul.append(upper)
                 jr.append(j_range)
                 rp.append(rest_pose)
-            if i == self.p.getNumJoints(self.robot_id, physicsClientId=PB_CLIENT) - 1:
-                from IPython import embed
-                embed()
 
         return ll, ul, jr, rp
 
