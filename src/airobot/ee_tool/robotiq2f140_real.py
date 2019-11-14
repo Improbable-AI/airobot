@@ -137,24 +137,6 @@ class Robotiq2F140Real(EndEffectorTool):
             if idx < len(msg.position):
                 self._gripper_data = msg.position[idx]
 
-    def _get_gripper_state(self):
-        """
-        Function to be run in background thread which creates socket
-        connection with UR and receives position data
-        """
-        buffer_size = 1024
-        state_socket = socket.socket(socket.AF_INET,
-                                     socket.SOCK_STREAM)
-        state_socket.bind((self.hostname, self.tcp_port))
-        while True:
-            time.sleep(0.005)
-            state_socket.listen(1)
-            conn = state_socket.accept()[0]
-            data = conn.recv(buffer_size)
-            if not data:
-                continue
-            self._gripper_data = int(struct.unpack('!i', data[0:4])[0])
-
     def _get_new_urscript(self):
         """
         Internal method used to create an empty URScript
