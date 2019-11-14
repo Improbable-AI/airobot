@@ -127,11 +127,10 @@ class Robotiq2F140Real(EndEffectorTool):
     def _get_current_pos_cb(self, msg):
         """
         Callback for rospy subscriber to get joint information
-        when using Gazebo
 
         Args:
             msg (JointState): Contains the full joint state topic
-                published by Gazebo
+                published
         """
         if 'finger_joint' in msg.name:
             idx = msg.name.index('finger_joint')
@@ -181,19 +180,14 @@ class Robotiq2F140Real(EndEffectorTool):
                 self.cfgs.EETOOL.GAZEBO_COMMAND_TOPIC,
                 GripperCommandActionGoal,
                 queue_size=10)
-            self.sub_position = rospy.Subscriber(
-                self.cfgs.EETOOL.JOINT_STATE_TOPIC,
-                JointState,
-                self._get_current_pos_cb
-            )
         else:
             self.pub_command = rospy.Publisher(
                 self.cfgs.EETOOL.COMMAND_TOPIC,
                 String,
                 queue_size=10)
-            self.sub_position = rospy.Subscriber(
-                self.cfgs.EETOOL.JOINT_STATE_TOPIC,
-                JointState,
-                self._get_current_pos_cb
-            )
+        self.sub_position = rospy.Subscriber(
+            self.cfgs.EETOOL.JOINT_STATE_TOPIC,
+            JointState,
+            self._get_current_pos_cb
+        )
         self._comm_initialized = True
