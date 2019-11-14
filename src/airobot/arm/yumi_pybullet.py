@@ -231,6 +231,7 @@ class CompliantYumiArm(SingleArmPybullet):
             self.comp_jnt_ids,
             self.p.POSITION_CONTROL,
             targetPositions=[0.0]*len(self.comp_jnt_names),
+            forces=[0.01]*len(self.comp_jnt_names),
             positionGains=self.comp_jnt_gains,
             physicsClientId=PB_CLIENT)
 
@@ -286,6 +287,17 @@ class YumiPybullet(DualArmPybullet):
                                          seed=seed,
                                          self_collision=self_collision,
                                          eetool_cfg=eetool_cfg)
+        # self.right_arm = SingleArmPybullet(cfgs=right_cfg,
+        #                                   render=render,
+        #                                   seed=seed,
+        #                                   self_collision=self_collision,
+        #                                   eetool_cfg=eetool_cfg)
+        # self.left_arm = SingleArmPybullet(cfgs=left_cfg,
+        #                                  render=render,
+        #                                  seed=seed,
+        #                                  self_collision=self_collision,
+        #                                  eetool_cfg=eetool_cfg)
+
         self.reset()
 
     def reset(self):
