@@ -380,7 +380,8 @@ class TextureModder:
         self.texture_files = []
         for root, dirs, files in os.walk(path):
             for name in files:
-                if name.lower().endswith(('.png', '.jpg', '.jpeg', '.tga', '.gif')):
+                if name.lower().endswith(('.png', '.jpg',
+                                          '.jpeg', '.tga', '.gif')):
                     self.texture_files.append(os.path.join(root, name))
         print('Number of texture files found: %d' % len(self.texture_files))
 
@@ -395,7 +396,8 @@ class TextureModder:
 
         """
         if len(self.texture_files) < 1:
-            raise RuntimeError('Please call `set_texture_path` first to set the '
+            raise RuntimeError('Please call `set_texture_path` '
+                               'first to set the '
                                'root path to the texture files')
         tex_file = random.choice(self.texture_files)
         self.set_texture(body_id, link_id, tex_file)

@@ -9,6 +9,7 @@ import copy
 import numbers
 import time
 
+import numpy as np
 import rospy
 from std_msgs.msg import String
 from trajectory_msgs.msg import JointTrajectory
@@ -389,8 +390,9 @@ class UR5eReal(SingleArmROS):
                     break
                 time.sleep(1)
             if not wrist_cam_attached:
-                print_red('Fail to add the wrist camera bounding box as collision'
-                          'object. Be careful when you use moveit to plan paths!'
+                print_red('Fail to add the wrist camera bounding '
+                          'box as collision object. Be careful when '
+                          'you use moveit to plan paths!'
                           'You can try again to add the camera box manually.')
 
         # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/

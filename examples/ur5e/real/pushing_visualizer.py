@@ -1,9 +1,7 @@
 # modified from PyRobot LoCoBot pushing example
 
 import argparse
-import json
 import os
-import rospkg
 import signal
 import sys
 import time
@@ -12,10 +10,11 @@ import numpy as np
 import open3d
 
 from airobot import Robot
-from pushing import filter_points
 from airobot.utils.ros_util import read_cam_ext
+from pushing import filter_points
 
 sys.path.append(os.path.dirname(__file__))
+
 
 def signal_handler(sig, frame):
     print('Exit')

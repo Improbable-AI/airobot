@@ -68,7 +68,7 @@ def main():
         k += 1
     if not success:
         return
-    
+
     ar.utils.common.print_red(
         """
         ---SWITCHING COMM MODE TO USE_URSCRIPT=TRUE---\n\n\n

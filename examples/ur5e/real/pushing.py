@@ -3,16 +3,13 @@
 from __future__ import print_function
 
 import argparse
-import json
-import os
-import rospkg
 import signal
 import sys
 import time
-import rospy
 
 import matplotlib.pyplot as plt
 import numpy as np
+import rospy
 from sklearn.cluster import DBSCAN
 
 from airobot import Robot
