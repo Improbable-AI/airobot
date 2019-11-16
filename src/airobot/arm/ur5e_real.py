@@ -57,6 +57,13 @@ class UR5eReal(SingleArmROS):
         self.is_jpos_in_good_range()
 
     def is_jpos_in_good_range(self):
+        """
+        Check if the joint angles lie in (-pi, pi]
+
+        Returns:
+            bool: whether the joint angles are in (-pi, pi]
+
+        """
         jposs = self.get_jpos()
         for i, jpos in enumerate(jposs):
             if jpos <= -np.pi or jpos > np.pi:
