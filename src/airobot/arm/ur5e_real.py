@@ -14,6 +14,7 @@ from std_msgs.msg import String
 from trajectory_msgs.msg import JointTrajectory
 from trajectory_msgs.msg import JointTrajectoryPoint
 
+import airobot as ar
 import airobot.utils.common as arutil
 from airobot.arm.single_arm_ros import SingleArmROS
 from airobot.utils.arm_util import wait_to_reach_ee_goal
@@ -26,7 +27,8 @@ from airobot.utils.ros_util import kdl_frame_to_numpy
 class UR5eReal(SingleArmROS):
     def __init__(self, cfgs,
                  moveit_planner='RRTstarkConfigDefault',
-                 eetool_cfg=None):
+                 eetool_cfg=None,
+                 have_wrist_cam=True):
         """
 
         Args:
@@ -34,10 +36,15 @@ class UR5eReal(SingleArmROS):
             moveit_planner (str): motion planning algorithm
             eetool_cfg (dict): arguments to pass in the constructor
                 of the end effector tool class
+            have_wrist_cam (bool): whether the robot has a wrist camera
+                mounted. If so, a box will be placed around the camera
+                so that moveit is aware of the wrist camera when it's
+                doing motion planning
         """
         super(UR5eReal, self).__init__(cfgs=cfgs,
                                        moveit_planner=moveit_planner,
                                        eetool_cfg=eetool_cfg)
+        self.have_wrist_cam = have_wrist_cam
         self._init_ur_consts()
 
         if not self.gazebo_sim:
@@ -47,6 +54,20 @@ class UR5eReal(SingleArmROS):
             self._set_tool_offset()
         else:
             self.set_comm_mode(use_urscript=False)
+        self.is_jpos_in_good_range()
+
+    def is_jpos_in_good_range(self):
+        jposs = self.get_jpos()
+        for i, jpos in enumerate(jposs):
+            if jpos <= -np.pi or jpos > np.pi:
+                ar.log_warn('Current joint angles are: %s\n'
+                            'Some joint angles are outside of the valid'
+                            ' range (-pi, pi]\n Please use the Teaching'
+                            ' Pendant to move the correponding joints so'
+                            ' that all the joint angles are within (-pi,'
+                            ' pi]!' % str(jposs))
+                return False
+        return True
 
     def set_comm_mode(self, use_urscript=False):
         """
@@ -336,33 +357,34 @@ class UR5eReal(SingleArmROS):
             time.sleep(1)
         if not ur_base_attached:
             print_red('Fail to add the UR base support as a collision object. '
-                      'Be careful when you use moveit to plan the path! You'
+                      'Be careful when you use moveit to plan the path! You '
                       'can try again to add the base manually.')
 
-        # add a virtual bounding box for the wrist mounted camera
-        wrist_cam_name = 'wrist_cam'
-        wrist_cam_attached = False
-        safe_camera_links = [
-            'wrist_3_link',
-            'ee_link',
-            'robotiq_arg2f_coupling',
-            'robotiq_arg2f_base_link'
-        ]
-        for _ in range(2):
-            if self.moveit_scene.add_dynamic_obj(
-                    'robotiq_arg2f_base_link',
-                    wrist_cam_name,
-                    [0.06, 0, 0.05],
-                    [0, 0, 0, 1],
-                    [0.03, 0.1, 0.03],
-                    touch_links=safe_camera_links):
-                wrist_cam_attached = True
-                break
-            time.sleep(1)
-        if not wrist_cam_attached:
-            print_red('Fail to add the wrist camera bounding box as collision'
-                      'object. Be careful when you use moveit to plan paths!'
-                      'You can try again to add the camera box manually.')
+        if self.have_wrist_cam:
+            # add a virtual bounding box for the wrist mounted camera
+            wrist_cam_name = 'wrist_cam'
+            wrist_cam_attached = False
+            safe_camera_links = [
+                'wrist_3_link',
+                'ee_link',
+                'robotiq_arg2f_coupling',
+                'robotiq_arg2f_base_link'
+            ]
+            for _ in range(2):
+                if self.moveit_scene.add_dynamic_obj(
+                        'robotiq_arg2f_base_link',
+                        wrist_cam_name,
+                        [0.06, 0, 0.05],
+                        [0, 0, 0, 1],
+                        [0.03, 0.1, 0.03],
+                        touch_links=safe_camera_links):
+                    wrist_cam_attached = True
+                    break
+                time.sleep(1)
+            if not wrist_cam_attached:
+                print_red('Fail to add the wrist camera bounding box as collision'
+                          'object. Be careful when you use moveit to plan paths!'
+                          'You can try again to add the camera box manually.')
 
         # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
         self._max_torques = [150, 150, 150, 28, 28, 28]

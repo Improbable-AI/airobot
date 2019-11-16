@@ -4,6 +4,22 @@ import airobot as ar
 from airobot import Robot
 
 
+def print_pose(robot):
+    """
+    print the robot pose information
+
+    Args:
+        robot (AIRobot): a robot instance of AIRobot
+
+    """
+    pos, quat, rot, euler = robot.arm.get_ee_pose()
+    print('End effector pose:')
+    print('Position:')
+    print(pos)
+    print('Euler angles:')
+    print(euler)
+
+
 def main():
     """
     Move the robot end effector to the desired pose
@@ -35,12 +51,7 @@ def main():
     k = 0
     while not success and k < max_iter:
         success = robot.arm.set_ee_pose(goal_pos, wait=True)
-        pos, quat, rot, euler = robot.arm.get_ee_pose()
-        print('End effector pose:')
-        print('Position:')
-        print(pos)
-        print('Euler angles:')
-        print(euler)
+        print_pose(robot)
         time.sleep(1.0)
         k += 1
     if not success:
@@ -52,12 +63,7 @@ def main():
     k = 0
     while not success and k < max_iter:
         success = robot.arm.set_ee_pose(goal_pos, goal_ori, wait=True)
-        pos, quat, rot, euler = robot.arm.get_ee_pose()
-        print('End effector pose:')
-        print('Position:')
-        print(pos)
-        print('Euler angles:')
-        print(euler)
+        print_pose(robot)
         time.sleep(1.0)
         k += 1
     if not success:
@@ -79,12 +85,7 @@ def main():
 
     goal_pos = [0.6, -0.4, 0.2]
     success = robot.arm.set_ee_pose(goal_pos, wait=True)
-    pos, quat, rot, euler = robot.arm.get_ee_pose()
-    print('End effector pose:')
-    print('Position:')
-    print(pos)
-    print('Euler angles:')
-    print(euler)
+    print_pose(robot)
 
 
 if __name__ == '__main__':
