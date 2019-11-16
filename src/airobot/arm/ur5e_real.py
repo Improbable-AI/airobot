@@ -28,7 +28,7 @@ class UR5eReal(SingleArmROS):
     def __init__(self, cfgs,
                  moveit_planner='RRTstarkConfigDefault',
                  eetool_cfg=None,
-                 have_wrist_cam=True):
+                 wrist_cam=True):
         """
 
         Args:
@@ -36,7 +36,7 @@ class UR5eReal(SingleArmROS):
             moveit_planner (str): motion planning algorithm
             eetool_cfg (dict): arguments to pass in the constructor
                 of the end effector tool class
-            have_wrist_cam (bool): whether the robot has a wrist camera
+            wrist_cam (bool): whether the robot has a wrist camera
                 mounted. If so, a box will be placed around the camera
                 so that moveit is aware of the wrist camera when it's
                 doing motion planning
@@ -44,7 +44,7 @@ class UR5eReal(SingleArmROS):
         super(UR5eReal, self).__init__(cfgs=cfgs,
                                        moveit_planner=moveit_planner,
                                        eetool_cfg=eetool_cfg)
-        self.have_wrist_cam = have_wrist_cam
+        self.has_wrist_cam = wrist_cam
         self._init_ur_consts()
 
         if not self.gazebo_sim:
@@ -360,7 +360,7 @@ class UR5eReal(SingleArmROS):
                       'Be careful when you use moveit to plan the path! You '
                       'can try again to add the base manually.')
 
-        if self.have_wrist_cam:
+        if self.has_wrist_cam:
             # add a virtual bounding box for the wrist mounted camera
             wrist_cam_name = 'wrist_cam'
             wrist_cam_attached = False
