@@ -178,6 +178,9 @@ class UR5eReal(SingleArmROS):
         velocity = copy.deepcopy(velocity)
         success = False
 
+        # TODO improve velocity control performance
+        ar.log_warn('Velocity control is not well tested!!!')
+        
         if self.gazebo_sim:
             raise NotImplementedError('cannot set_jvel in Gazebo')
 
