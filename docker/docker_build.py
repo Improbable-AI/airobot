@@ -18,6 +18,9 @@ if __name__ == '__main__':
                         help="name for new docker image",
                         default=default_image_name)
 
+    parser.add_argument('--cache', type=int, default=1,
+                        help="0 if should build without using cache")
+
     args = parser.parse_args()
 
     # copy requirements file from parent into docker folder
@@ -26,7 +29,11 @@ if __name__ == '__main__':
 
     cmd = 'DOCKER_BUILDKIT=1 docker build '
     cmd += '-t %s ' % args.image
-    cmd += '--ssh default .'
+    cmd += '--ssh default '
+    cmd += '--network=host '
+    if not args.cache:
+        cmd += '--no-cache '
+    cmd += '.'
 
     print('command = \n\n', cmd)
 
