@@ -35,7 +35,7 @@ _C.PYBULLET_RESET_POS = [0, 0, -0.1]
 # reset orientation (euler angles) for the robot in pybullet
 _C.PYBULLET_RESET_ORI = [0, 0, 0]
 
-_C.COMPLIANT_GAINS = [10, 10]
+_C.COMPLIANT_GAINS = [0.1, 0.1]
 
 
 def get_yumi_arm_cfg():
