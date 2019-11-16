@@ -22,8 +22,8 @@ RUN touch /root/.ssh/known_hosts
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 # clone private repo - airobot
-RUN --mount=type=ssh git clone -b dev git@github.com:Improbable-AI/ur5e_robotiq_2f140.git
-WORKDIR /root/tmp_code/ur5e_robotiq_2f140
+RUN --mount=type=ssh git clone -b dev git@github.com:Improbable-AI/ur5e.git
+WORKDIR /root/tmp_code/ur5e
 
 # update submodules (ur_modern_driver, industrial_msgs, and gazebo plugin for gripper)
 RUN --mount=type=ssh git submodule update --init
