@@ -12,6 +12,7 @@ class Robot:
                  robot_name,
                  pb=True,
                  use_arm=True,
+                 use_eetool=True,
                  use_base=True,
                  use_cam=True,
                  arm_cfg=None,
@@ -31,6 +32,8 @@ class Robot:
                 Otherwise, the ROS environment of the robot
                 will be created.
             use_arm (bool): whether to create the robot arm instance
+                if the robot has an arm class
+            use_eetool (bool): whether to create the robot gripper instance
                 if the robot has an arm class
             use_base (bool): whether to create the robot base instance
                 if the robot has an base class
@@ -95,6 +98,8 @@ class Robot:
             from airobot.arm import cls_name_to_path as arm_cls_name_to_path
             arm_class = load_class_from_path(cls_name,
                                              arm_cls_name_to_path[cls_name])
+            if not use_eetool:
+                cfgs.HAS_EETOOL = False
             if cfgs.HAS_EETOOL:
                 cfgs.EETOOL.CLASS = cfgs.EETOOL.CLASS + class_suffix
             arm_cfg['eetool_cfg'] = eetool_cfg
