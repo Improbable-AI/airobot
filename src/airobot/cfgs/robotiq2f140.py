@@ -19,6 +19,10 @@ _C.DEFAULT_FORCE = 50
 _C.COMMAND_TOPIC = '/ur_driver/URScript'
 _C.GAZEBO_COMMAND_TOPIC = '/gripper/gripper_cmd/goal'
 _C.JOINT_STATE_TOPIC = '/joint_states'
+# Prefix of IP address of machine on local network
+_C.IP_PREFIX = '192.168'
+# time in seconds to wait for new gripper state before exiting
+_C.UPDATE_TIMEOUT = 5.0
 
 # default maximum values for gripper state varibles
 # minimum values are all 0

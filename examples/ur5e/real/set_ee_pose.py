@@ -28,28 +28,41 @@ def main():
     """
     robot = Robot('ur5e', pb=False, use_cam=False)
     robot.arm.go_home()
+    max_iter = 5
 
     goal_pos = [0.45, 0.2, 0.3]
-    success = robot.arm.set_ee_pose(goal_pos, wait=True)
-    pos, quat, rot, euler = robot.arm.get_ee_pose()
-    print('End effector pose:')
-    print('Position:')
-    print(pos)
-    print('Euler angles:')
-    print(euler)
-    time.sleep(1.0)
+    success = False
+    k = 0
+    while not success and k < max_iter:
+        success = robot.arm.set_ee_pose(goal_pos, wait=True)
+        pos, quat, rot, euler = robot.arm.get_ee_pose()
+        print('End effector pose:')
+        print('Position:')
+        print(pos)
+        print('Euler angles:')
+        print(euler)
+        time.sleep(1.0)
+        k += 1
+    if not success:
+        return
 
     goal_pos = [0.6, -0.15, 0.2]
     goal_ori = [1.57, 0.0, 0.0]
-    success = robot.arm.set_ee_pose(goal_pos, goal_ori, wait=True)
-    pos, quat, rot, euler = robot.arm.get_ee_pose()
-    print('End effector pose:')
-    print('Position:')
-    print(pos)
-    print('Euler angles:')
-    print(euler)
-    time.sleep(1.0)
-
+    success = False
+    k = 0
+    while not success and k < max_iter:
+        success = robot.arm.set_ee_pose(goal_pos, goal_ori, wait=True)
+        pos, quat, rot, euler = robot.arm.get_ee_pose()
+        print('End effector pose:')
+        print('Position:')
+        print(pos)
+        print('Euler angles:')
+        print(euler)
+        time.sleep(1.0)
+        k += 1
+    if not success:
+        return
+    
     ar.utils.common.print_red(
         """
         ---SWITCHING COMM MODE TO USE_URSCRIPT=TRUE---\n\n\n

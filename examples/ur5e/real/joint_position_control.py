@@ -57,8 +57,10 @@ def main():
     robot.arm.eetool.activate()
     print('Opening gripper')
     robot.arm.eetool.open()
+    time.sleep(1.0)
     print('Closing gripper')
     robot.arm.eetool.close()
+    time.sleep(1.0)
 
 
 if __name__ == '__main__':
