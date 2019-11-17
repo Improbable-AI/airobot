@@ -165,7 +165,7 @@ def load_mjcf(filename, **kwargs):
 def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
               collifile=None, mesh_scale=None, rgba=None,
               specular=None, shift_pos=None, shift_ori=None,
-              base_pos=None, base_ori=None):
+              base_pos=None, base_ori=None, **kwargs):
     """
     Load a regular geometry (`sphere`, `box`, `capsule`, `cylinder`, `mesh`)
 
@@ -189,12 +189,13 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
              If shape_type is capsule or cylinder: size should be a 2-element
              list (radius, length).
 
-             If shape_type is box: size can be a float (same edge length
-             for 3 dims) or a 3-element list containing the size of 3 edges
+             If shape_type is box: size can be a float (same half edge length
+             for 3 dims) or a 3-element list containing the half size of 3 edges
 
              size doesn't take effect if shape_type is mesh.
 
-        mass (float): mass of the object in kg
+        mass (float): mass of the object in kg. If mass=0, then the object is
+            static.
 
         visualfile (str): path to the visual mesh file.
             only needed when the shape_type is mesh. If it's None, same
@@ -328,7 +329,8 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
                                 baseVisualShapeIndex=vs_id,
                                 basePosition=base_pos,
                                 baseOrientation=base_ori,
-                                physicsClientId=PB_CLIENT)
+                                physicsClientId=PB_CLIENT,
+                                **kwargs)
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1,
                                physicsClientId=PB_CLIENT)
     p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
