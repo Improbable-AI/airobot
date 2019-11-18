@@ -16,6 +16,16 @@ FNULL = open(os.devnull, 'w')
 
 
 def launch_ur5e_gazebo(args, wait_time=12):
+    """
+    Launch UR5e Gazebo simulation
+
+    Args:
+        args (str): Command line arguments
+        wait_time (float): seconds to wait
+
+    Returns:
+        subprocess: the subprocess that runs the gazebo
+    """
     print('Launching Gazebo ...')
     args = args.split()
     p = Popen(['roslaunch', 'ur5e_bringup', 'ur5e_start.launch'] + args,
@@ -25,6 +35,18 @@ def launch_ur5e_gazebo(args, wait_time=12):
 
 
 def run_test(testing_cmds, html_file=None, show_in_browser=True):
+    """
+    Run pytest
+
+    Args:
+        testing_cmds (list): list of testing commands to run
+        html_file (str): filename of the html file that shows
+            the pytest results
+        show_in_browser (bool): if True, a web browser will be
+            automatically opened to show the pytest results
+            when tests are finished
+
+    """
     if FLAGS.out_dir is not None:
         html_file = os.path.join(FLAGS.out_dir, html_file)
     for test_file in testing_cmds:
@@ -39,6 +61,13 @@ def run_test(testing_cmds, html_file=None, show_in_browser=True):
 
 
 def gen_html_anno(show_in_browser=True):
+    """
+    Generate the coverage report
+
+    Args:
+        show_in_browser (bool): if True, a web browser will be
+            automatically opened to show the coverage report
+    """
     if FLAGS.out_dir is not None:
         cov_dir = os.path.join(FLAGS.out_dir, 'coverage')
         p = Popen(['coverage', 'html', '-d', cov_dir])
@@ -49,6 +78,12 @@ def gen_html_anno(show_in_browser=True):
 
 
 def exit_gazebo(gp):
+    """
+
+    Args:
+        gp (subprocess): the gazebo subprocess
+
+    """
     gp.terminate()
     print('Exiting Gazebo...')
     gp.wait()
@@ -61,6 +96,9 @@ def exit_gazebo(gp):
 
 
 def main():
+    """
+    Run pytest on all test files and generate coverage report
+    """
     # # delete old coverage reports
     # # all the coverage reports generated below
     # # will be appended
