@@ -1,16 +1,27 @@
 # AIRobot
 
 AIRobot is a python library to interface with robots. It follows the same architecture from [PyRobot](https://pyrobot.org).
+- [Citation](#citation)
 - [Installation](#installation)
 - [Supported Robots](#supported-robots)
 - [Getting Started](#getting-started)
 - [Credits](#credits)
-- [Citation](#citation)
 - [Build API Docs](#build-api-docs)
 - [Run Tests](#run-tests)
 - [License](#license)
 - [Coding Style](#coding-style)
 
+## Citation
+
+If you use AIRobot in your research, please use the following BibTeX entry.
+```
+@misc{airobot2019,
+  author =       {Tao Chen and Anthony Simeonov and Pulkit Agrawal},
+  title =        {{AIRobot}},
+  howpublished = {\url{https://github.com/Improbable-AI/airobot}},
+  year =         {2019}
+}
+```
 
 ## Installation
 
@@ -56,24 +67,13 @@ robot.arm.move_ee_xyz([0.1, 0.1, 0.1])
 ```
 
 ## Credits
-**AIRobot** is maintained by the Improbable AI team at MIT. It follows the same architecture in [PyRobot](https://pyrobot.org). Contributors include:
+**AIRobot** is maintained by the Improbable AI team at MIT. It follows a similar architecture in [PyRobot](https://pyrobot.org). Contributors include:
 * [Tao Chen](https://taochenshh.github.io/)
 * Anthony Simeonov
 * [Pulkit Agrawal](http://people.csail.mit.edu/pulkitag/)
 
 **AIRobot** is currently under development and used internally by Prof. Pulkit Agrawal's lab only. Please do not distribute the code publicly without permission from Prof. Pulkit Agrawal.
 
-## Citation
-
-If you use AIRobot in your research, please use the following BibTeX entry.
-```
-@misc{airobot2019,
-  author =       {Tao Chen and Anthony Simeonov and Pulkit Agrawal},
-  title =        {{AIRobot}},
-  howpublished = {\url{https://github.com/Improbable-AI/airobot}},
-  year =         {2019}
-}
-```
 
 ## Build API Docs
 
@@ -88,7 +88,7 @@ Then you can use any web browser to open the API doc (**`docs/build/html/index.h
 
 ## Run tests
 
-[pytest](https://docs.pytest.org/en/latest/) is used for unit tests.
+[pytest](https://docs.pytest.org/en/latest/) is used for unit tests. TODO: more test cases need to be added.
 ```bash
 cd airobot/tests
 ./run_pytest.sh
