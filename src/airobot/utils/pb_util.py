@@ -50,6 +50,55 @@ def load_pb(render=False):
         p.setRealTimeSimulation(1, physicsClientId=PB_CLIENT)
 
 
+def get_body_state(body_id):
+    """
+    Get the body state
+
+    Args:
+        body_id (int): body index
+
+    Returns:
+        4-element tuple containing
+
+        - np.ndarray: x, y, z position of the body (shape: :math:`[3,]`)
+        - np.ndarray: quaternion representation ([qx, qy, qz, qw]) of the
+          body orientation (shape: :math:`[4,]`)
+        - np.ndarray: linear velocity of the body (shape: :math:`[3,]`)
+        - np.ndarray: angular velocity of the body (shape: :math:`[3,]`)
+
+    """
+    pos, quat = p.getBasePositionAndOrientation(body_id,
+                                                physicsClientId=PB_CLIENT)
+    pos = np.array(pos)
+    quat = np.array(quat)
+    linear_vel, angular_vel = p.getBaseVelocity(body_id,
+                                                physicsClientId=PB_CLIENT)
+    linear_vel = np.array(linear_vel)
+    angular_vel = np.array(angular_vel)
+
+    return pos, quat, linear_vel, angular_vel
+
+
+def remove_body(body_id):
+    """
+    Delete body from the simulation
+
+    Args:
+        body_id (int): body index
+
+    Returns:
+        bool: whether the body is removed
+
+    """
+    p.removeBody(body_id, physicsClientId=PB_CLIENT)
+    success = False
+    try:
+        p.getBodyInfo(body_id, physicsClientId=PB_CLIENT)
+    except Exception as e:
+        success = True
+    return success
+
+
 def step_rt_simulation():
     """
     Run step simulation all the time in backend
