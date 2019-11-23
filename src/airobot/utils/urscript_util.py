@@ -52,7 +52,7 @@ class URScript(object):
     def _add_line_to_program(self, new_line):
         """
         Add new line to program inside myProg()
-        
+
         Args:
             new_line (str): Line to add to myProg() urscript program
         """
@@ -77,7 +77,7 @@ class URScript(object):
         """
         Add a sleep command to urscript program, sleep for a
         specified amount of time
-        
+
         Args:
             value (float): Amount of time in seconds for program
                 to sleep
@@ -89,7 +89,7 @@ class URScript(object):
         """
         Add a open socket command to urscript program with specified
         host, port, and name
-        
+
         Args:
             socket_host (str): Host address
             socket_port (int): Port to open
@@ -104,7 +104,7 @@ class URScript(object):
     def socket_close(self, socket_name):
         """
         Add a close socket command to urscript program.
-        
+
         Args:
             socket_name (str): Name of socket to close (must be same as
                 name of socket that was opened previously)
@@ -116,7 +116,7 @@ class URScript(object):
         """
         Add a command to the program with communicates over a socket
         connection to get the value of a variable
-        
+
         Args:
             var (str): Name of the variable to obtain the value of
             socket_name (str): Which socket connection to use for
@@ -131,7 +131,7 @@ class URScript(object):
         """
         Add a command to the program with communicates over a socket
         connection to set the value of a variable
-        
+
         Args:
             var (str): Name of the variable to obtain the value of
             value (int): Value to set the variable to

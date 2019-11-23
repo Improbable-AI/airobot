@@ -79,6 +79,32 @@ def get_body_state(body_id):
     return pos, quat, linear_vel, angular_vel
 
 
+def reset_body(body_id, base_pos, base_quat=None, lin_vel=None, ang_vel=None):
+    """
+    Reset body to the specified pose and specified initial velocity
+
+    Args:
+        body_id (int): body index
+        base_pos (list or np.ndarray): position [x,y,z] of the body base
+        base_ori (list or np.ndarray): quaternion [qx, qy, qz, qw]
+            of the body base
+        lin_vel (list or np.ndarray): initial linear velocity if provided
+        ang_vel (list or np.ndarray): initial angular velocity if provided
+
+    Returns:
+
+    """
+    if base_quat is None:
+        base_quat = [0., 0., 0., 1.]
+    p.resetBasePositionAndOrientation(body_id, base_pos, base_quat,
+                                      physicsClientId=PB_CLIENT)
+    if lin_vel is not None or ang_vel is not None:
+        p.resetBaseVelocity(body_id,
+                            linearVelocity=lin_vel,
+                            angularVelocity=ang_vel,
+                            physicsClientId=PB_CLIENT)
+
+
 def remove_body(body_id):
     """
     Delete body from the simulation
@@ -94,7 +120,7 @@ def remove_body(body_id):
     success = False
     try:
         p.getBodyInfo(body_id, physicsClientId=PB_CLIENT)
-    except Exception as e:
+    except Exception:
         success = True
     return success
 
@@ -239,7 +265,8 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
              list (radius, length).
 
              If shape_type is box: size can be a float (same half edge length
-             for 3 dims) or a 3-element list containing the half size of 3 edges
+             for 3 dims) or a 3-element list containing the
+             half size of 3 edges
 
              size doesn't take effect if shape_type is mesh.
 

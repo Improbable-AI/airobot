@@ -5,7 +5,11 @@ import numpy as np
 import airobot as ar
 from airobot import Robot
 from airobot.utils.common import euler2quat
-from airobot.utils.pb_util import load_geom, load_urdf, get_body_state, remove_body
+from airobot.utils.pb_util import get_body_state
+from airobot.utils.pb_util import load_geom
+from airobot.utils.pb_util import load_urdf
+from airobot.utils.pb_util import remove_body
+from airobot.utils.pb_util import reset_body
 
 
 def main():
@@ -33,12 +37,22 @@ def main():
                         rgba=[0.5, 0.2, 1, 1])
     pos, quat, lin_vel, ang_vel = get_body_state(cylinder_id)
     ar.log_info('Cylinder:')
-    ar.log_info('         position: %s' % np.array2string(pos, precision=2))
-    ar.log_info('         quaternion: %s' % np.array2string(quat, precision=2))
-    ar.log_info('         linear vel: %s' % np.array2string(lin_vel, precision=2))
-    ar.log_info('         angular vel: %s' % np.array2string(ang_vel, precision=2))
+    ar.log_info('         position: %s' % np.array2string(pos,
+                                                          precision=2))
+    ar.log_info('         quaternion: %s' % np.array2string(quat,
+                                                            precision=2))
+    ar.log_info('         linear vel: %s' % np.array2string(lin_vel,
+                                                            precision=2))
+    ar.log_info('         angular vel: %s' % np.array2string(ang_vel,
+                                                             precision=2))
     ar.log_info('Removing sphere')
     res = remove_body(sphere_id)
+    time.sleep(2)
+    ar.log_info('Reset duck')
+    reset_body(duck_id, base_pos=[0.9, -0.4, 1.0],
+               base_quat=[0, 0, 0, 1],
+               lin_vel=[0, 2, 0],
+               ang_vel=[0, 0, 2])
     time.sleep(10)
 
 
