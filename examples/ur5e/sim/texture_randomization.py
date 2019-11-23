@@ -40,12 +40,12 @@ def main():
     while True:
         start = time.time()
         # modder.randomize('rgb')
-        modder.randomize('gradient')
+        # modder.randomize('gradient')
         # modder.randomize('noise')
         # modder.randomize('texture', exclude={robot.arm.robot_id: []})
         # modder.randomize('texture',
         #                  exclude={robot.arm.robot_id: [3, 4, 5, 6]})
-        # modder.randomize('all')
+        modder.randomize('all')
         print('Time cost (s): ', time.time() - start)
         time.sleep(1)
 
