@@ -532,7 +532,7 @@
                 <mesh filename="meshes/robotiq_2f140/visual/robotiq_arg2f_140_outer_finger.stl"/>
             </geometry>
             <material name="">
-                <color rgba="1 0.1 0.1 1"/>
+                <color rgba="0.1 0.1 0.1 1"/>
             </material>
         </visual>
         <collision>
