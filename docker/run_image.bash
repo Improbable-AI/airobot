@@ -1,5 +1,6 @@
-IMAGE=anthonysimeonov/airobot-dev:latest
+# IMAGE=anthonysimeonov/airobot-dev:latest
 # IMAGE=airobot-dev
+IMAGE=airobot-cuda-dev:latest
 
 XAUTH=/tmp/.docker.xauth
 if [ ! -f $XAUTH ]

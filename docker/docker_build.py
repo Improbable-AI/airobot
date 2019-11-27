@@ -26,7 +26,7 @@ def execute_build(args):
     cmd = 'DOCKER_BUILDKIT=1 docker build '
     cmd += '--ssh default '
     cmd += '--network=host '
-    if not args.cache:
+    if args.no_cache:
         cmd += '--no-cache '
     cmd += '-t %s -f %s .' % (args.image, args.docker_file)
 
@@ -49,16 +49,14 @@ if __name__ == '__main__':
                         default=default_image_name,
                         help='name for new docker image')
 
-    parser.add_argument('-c', '--cache', type=int,
-                        default=1,
+    parser.add_argument('--no_cache', action='store_true',
                         help='0 if should build without using cache')
 
     parser.add_argument('-f', '--docker_file', type=str,
                         default='ur5e_2f140.dockerfile',
                         help='which Dockerfile to build from')
 
-    parser.add_argument('-d', '--dry_run', type=int,
-                        default=0,
+    parser.add_argument('-d', '--dry_run', action='store_true',
                         help='1 if we should only print the build command '
                              'without executing')
 
