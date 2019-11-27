@@ -48,6 +48,9 @@ sudo systemctl restart docker
 ```
 
 ## Building
+
+You can pull the pre-built image from dockerhub **or** build the image locally
+
 ### Pull the image from dockerhub
 ```
 docker pull anthonysimeonov/airobot-dev:latest
