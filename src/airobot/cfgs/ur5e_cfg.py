@@ -39,10 +39,10 @@ _C.ARM.URSCRIPT_TOPIC = '/ur_driver/URScript'
 # inverse kinematics position tolerance (m)
 _C.ARM.IK_POSITION_TOLERANCE = 0.01
 # inverse kinematics orientation tolerance (rad)
-_C.ARM.IK_ORIENTATION_TOLERANCE = 0.1
+_C.ARM.IK_ORIENTATION_TOLERANCE = 0.05
 _C.ARM.HOME_POSITION = [0, -1.66, -1.92, -1.12, 1.57, 0]
-_C.ARM.MAX_JOINT_ERROR = 0.01
-_C.ARM.MAX_JOINT_VEL_ERROR = 0.1
+_C.ARM.MAX_JOINT_ERROR = 0.002
+_C.ARM.MAX_JOINT_VEL_ERROR = 0.05
 _C.ARM.MAX_EE_POS_ERROR = 0.01
 # real part of the quaternion difference should be
 # greater than 1-error

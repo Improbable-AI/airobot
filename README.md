@@ -44,7 +44,7 @@ If you only want to use the robots in the PyBullet simulation environment, then 
 ```bash
 git clone https://github.com/Improbable-AI/airobot.git
 cd airobot
-pip install .
+pip install -e .
 ```
 
 ## Supported Robots

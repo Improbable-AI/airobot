@@ -1,9 +1,8 @@
 import threading
 import time
 
-import pybullet as p
-
 import airobot.utils.common as arutil
+import pybullet as p
 from airobot.ee_tool.ee import EndEffectorTool
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 from airobot.utils.pb_util import PB_CLIENT
@@ -27,8 +26,9 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         self.jnt_names = [
             'finger_joint', 'left_inner_knuckle_joint',
             'left_inner_finger_joint', 'right_outer_knuckle_joint',
-            'right_inner_knuckle_joint', 'right_inner_finger_joint'
+            'right_inner_knuckle_joint', 'right_inner_finger_joint',
         ]
+
         self._step_sim_mode = False
         self.max_torque = 10.0
         self.gripper_close_angle = self.cfgs.EETOOL.CLOSE_ANGLE
@@ -51,9 +51,20 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         self.gripper_jnt_ids = [
             self.jnt_to_id[jnt] for jnt in self.jnt_names
         ]
+        p.changeDynamics(self.robot_id,
+                         self.jnt_to_id['left_inner_finger_pad_joint'],
+                         lateralFriction=2.0,
+                         spinningFriction=1.0,
+                         rollingFriction=1.0)
+        p.changeDynamics(self.robot_id,
+                         self.jnt_to_id['right_inner_finger_pad_joint'],
+                         lateralFriction=2.0,
+                         spinningFriction=1.0,
+                         rollingFriction=1.0)
         # if the gripper has been activated once,
         # the following code is used to prevent starting
         # a new thread after the arm reset if a thread has been started
+
         if not self._mthread_started:
             self._mthread_started = True
             # gripper thread
@@ -63,7 +74,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         else:
             return
 
-    def open(self):
+    def open(self, wait=True):
         """
         Open the gripper
 
@@ -72,10 +83,11 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
-        success = self.set_pos(self.gripper_open_angle)
+        success = self.set_pos(self.gripper_open_angle,
+                               wait=wait)
         return success
 
-    def close(self):
+    def close(self, wait=True):
         """
         Close the gripper
 
@@ -84,7 +96,8 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
-        success = self.set_pos(self.gripper_close_angle)
+        success = self.set_pos(self.gripper_close_angle,
+                               wait=wait)
         return success
 
     def set_pos(self, pos, wait=True):
@@ -195,10 +208,12 @@ class Robotiq2F140Pybullet(EndEffectorTool):
                 max_torques = [max_torq] * (len(self.jnt_names) - 1)
                 gripper_pos = self.get_pos()
                 gripper_poss = self._mimic_gripper(gripper_pos)[1:]
+                gripper_vels = [0.0] * len(max_torques)
                 self.p.setJointMotorControlArray(self.robot_id,
                                                  self.gripper_jnt_ids[1:],
                                                  self.p.POSITION_CONTROL,
                                                  targetPositions=gripper_poss,
+                                                 targetVelocities=gripper_vels,
                                                  forces=max_torques,
                                                  physicsClientId=PB_CLIENT)
             time.sleep(0.05)
