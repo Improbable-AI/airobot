@@ -77,7 +77,7 @@ In the first terminal, from within this directory (```/path/to/airobot/docker/``
 then setup ```airobot``` from within the container
 ```
 cd /home/improbable/airobot/
-python setup.py install
+pip install -e .
 ```
 
 #### Termainal 2

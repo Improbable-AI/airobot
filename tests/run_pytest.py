@@ -95,7 +95,7 @@ def exit_gazebo(gp):
     print('Gazebo exit successfully!')
 
 
-def main():
+def main(argv):
     """
     Run pytest on all test files and generate coverage report
     """
