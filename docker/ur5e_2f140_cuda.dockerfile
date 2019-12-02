@@ -2,7 +2,6 @@
 
 ### first stage ###
 # Building from nvidia-opengl for visualization capability
-# FROM nvidia/opengl:1.0-glvnd-runtime-ubuntu16.04 as intermediate
 FROM ubuntu:xenial as intermediate
 
 RUN apt-get update -q \
@@ -30,7 +29,6 @@ WORKDIR /root/tmp_code/ur5e
 RUN --mount=type=ssh git submodule update --init
 
 ### second stage ###
-# FROM nvidia/opengl:1.0-glvnd-runtime-ubuntu16.04
 FROM nvidia/cudagl:10.1-runtime-ubuntu16.04
 
 RUN apt-get update -q \
@@ -197,27 +195,31 @@ RUN git clone https://github.com/IntelRealSense/realsense-ros.git && \
     cd .. && \
     git clone https://github.com/pal-robotics/aruco_ros.git 
 
-RUN pip install --upgrade pip
+# install pytorch and cuDNN
 RUN pip install torch torchvision
-RUN pip install tensorflow-gpu
 
-# copy over ur5e_robotiq_2f140 repositoriy from cloning private repo    
+COPY cudnn/*.deb /opt/
+RUN dpkg -i /opt/libcudnn7_7.6.5.32-1+cuda10.1_amd64.deb && \
+    dpkg -i /opt/libcudnn7-dev_7.6.5.32-1+cuda10.1_amd64.deb && \
+    rm -f /opt/libcudnn*.deb
+
+# copy over ur5e repositoriy from cloning private repo    
 COPY --from=intermediate /root/tmp_code ${CATKIN_WS}/src/
 
 # build
 WORKDIR ${CATKIN_WS}
 RUN catkin build
 
-ENV HOME=/home/improbable
-RUN mkdir ${HOME}
+ENV IMPROB /improbable
+RUN mkdir ${IMPROB}
 
 # copy local requirements file for pip install python deps
-ARG CACHEBUST=1
-COPY ./requirements.txt ${HOME}
-WORKDIR ${HOME}
+COPY ./requirements.txt ${IMPROB}
+WORKDIR ${IMPROB}
 RUN pip install -r requirements.txt
 
-WORKDIR ${HOME} 
+RUN echo "source /root/catkin_ws/devel/setup.bash" >> /root/.bashrc
+WORKDIR /
 
 # Exposing the ports
 EXPOSE 11311
@@ -231,5 +233,5 @@ ENV NVIDIA_DRIVER_CAPABILITIES \
 # setup entrypoint
 COPY ./entrypoint.sh /
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["bash"]

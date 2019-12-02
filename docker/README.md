@@ -1,8 +1,14 @@
 - [Dependency Installation](#dependencies)
+- [Pulling](#pulling)
 - [Building](#building)
 - [Usage](#usage)
 
 ### Dependencies
+System dependencies:
+- Linux OS (tested on Ubuntu 16.04 and 18.04)
+- Nvidia GPU
+- Nvidia driver version >= 418.39
+
 #### Local Docker engine setup
 Install [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) (you may want to configure your user permissions so you don't have to use sudo with every docker command -- see [here](https://docs.docker.com/install/linux/linux-postinstall/))
 ```
@@ -47,19 +53,25 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
+## Pulling 
+### Pulling the images from dockerhub
+The image is set up with CUDA 10.1, cuDNN 7.6, and PyTorch 1.3 installed (```airobot-cuda-dev```)
+```
+docker pull anthonysimeonov/airobot-cuda-dev:latest
+```
+
+
 ## Building
 
-You can pull the pre-built image from dockerhub **or** build the image locally
-
-### Pull the image from dockerhub
-```
-docker pull anthonysimeonov/airobot-dev:latest
-```
-
 ### Building the image locally
-From within this directory (```/path/to/airobot/docker/```), run the following command to build the image (this will take quite a bit of time if you have not done it locally before)
+From within this directory (```/path/to/airobot/docker/```), run the following command to build the image. This will take quite a bit of time if you have not done it locally before. Please see the ```docker_build.py``` script for additional arguments that can be passed to the build command (i.e. image name, which file to use, dry run, etc.)
 ```
 python docker_build.py
+```
+
+If you want to use a different dockerfile than the specified default, run
+```
+python docker_build.py -f /path/to/dockerfile.dockerfile
 ```
 
 (if you are building the image locally you will need to set up your machine with public keys linked to your github account for cloning private repositories required during building)

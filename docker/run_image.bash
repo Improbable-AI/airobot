@@ -1,6 +1,4 @@
-# IMAGE=anthonysimeonov/airobot-dev:latest
-# IMAGE=airobot-dev
-IMAGE=airobot-cuda-dev:latest
+IMAGE=anthonysimeonov/airobot-cuda-dev:latest
 
 XAUTH=/tmp/.docker.xauth
 if [ ! -f $XAUTH ]
@@ -24,5 +22,4 @@ docker run -it \
     --volume="$PWD/../:/home/improbable/airobot/" \
     --runtime=nvidia \
     --net=host \
-    ${IMAGE} \
-    bash
+    ${IMAGE}

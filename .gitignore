@@ -108,3 +108,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# local cudnn resources (large deb file)
+docker/cudnn    

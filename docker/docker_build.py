@@ -41,7 +41,7 @@ def execute_build(args):
 
 if __name__ == '__main__':
 
-    default_image_name = "airobot-dev"
+    default_image_name = "airobot-cuda-dev"
 
     parser = argparse.ArgumentParser()
 
@@ -53,7 +53,7 @@ if __name__ == '__main__':
                         help='0 if should build without using cache')
 
     parser.add_argument('-f', '--docker_file', type=str,
-                        default='ur5e_2f140.dockerfile',
+                        default='ur5e_2f140_cuda.dockerfile',
                         help='which Dockerfile to build from')
 
     parser.add_argument('-d', '--dry_run', action='store_true',
