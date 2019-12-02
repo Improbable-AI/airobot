@@ -50,6 +50,47 @@ def load_pb(render=False):
         p.setRealTimeSimulation(1, physicsClientId=PB_CLIENT)
 
 
+def step_rt_simulation():
+    """
+    Run step simulation all the time in backend.
+    This is only needed to run realtime simulation
+    in DIRECT mode, ie, when `render=False`.
+    """
+    global STEP_SIM_MODE, PB_CLIENT
+    while True:
+        if not STEP_SIM_MODE:
+            p.stepSimulation(physicsClientId=PB_CLIENT)
+        time.sleep(0.001)
+
+
+def set_step_sim(step_mode=True):
+    """
+    Turn on/off the realtime simulation mode
+
+    Args:
+        step_mode (bool): run the simulation in step mode if
+            it is True. Otherwise, the simulation will be
+            in realtime
+    """
+    global STEP_SIM_MODE
+    STEP_SIM_MODE = step_mode
+    if RENDER:
+        if step_mode:
+            p.setRealTimeSimulation(0, physicsClientId=PB_CLIENT)
+        else:
+            p.setRealTimeSimulation(1, physicsClientId=PB_CLIENT)
+
+
+def step_simulation():
+    """
+    One step forward in simulation.
+    This is useful when you turn off
+    the realtime simulation by
+    calling `set_step_sim(False)`
+    """
+    p.stepSimulation(physicsClientId=PB_CLIENT)
+
+
 def get_body_state(body_id):
     """
     Get the body state
@@ -123,35 +164,6 @@ def remove_body(body_id):
     except Exception:
         success = True
     return success
-
-
-def step_rt_simulation():
-    """
-    Run step simulation all the time in backend
-    """
-    global STEP_SIM_MODE, PB_CLIENT
-    while True:
-        if not STEP_SIM_MODE:
-            p.stepSimulation(physicsClientId=PB_CLIENT)
-        time.sleep(0.001)
-
-
-def set_step_sim(step_mode=True):
-    """
-    Turn on/off the realtime simulation mode
-
-    Args:
-        step_mode (bool): run the simulation in step mode if
-            it is True. Otherwise, the simulation will be
-            in realtime
-    """
-    global STEP_SIM_MODE
-    STEP_SIM_MODE = step_mode
-    if RENDER:
-        if step_mode:
-            p.setRealTimeSimulation(0, physicsClientId=PB_CLIENT)
-        else:
-            p.setRealTimeSimulation(1, physicsClientId=PB_CLIENT)
 
 
 def load_urdf(filename, base_pos=None, base_ori=None, scaling=1.0, **kwargs):

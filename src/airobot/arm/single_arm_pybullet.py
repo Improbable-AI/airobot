@@ -63,12 +63,6 @@ class SingleArmPybullet(ARM):
         """
         raise NotImplementedError
 
-    def step_simulation(self):
-        """
-        One step forward in simulation
-        """
-        self.p.stepSimulation(physicsClientId=PB_CLIENT)
-
     def realtime_simulation(self, on=True):
         """
         Turn on/off the realtime simulation mode
