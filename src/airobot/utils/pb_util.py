@@ -12,7 +12,7 @@ import pybullet_data
 
 from airobot.utils.common import clamp
 
-PB_CLIENT = None
+PB_CLIENT = 0
 STEP_SIM_MODE = True
 RENDER = False
 GRAVITY_CONST = -9.8

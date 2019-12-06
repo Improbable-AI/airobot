@@ -1,9 +1,12 @@
-import time
+from copy import deepcopy
 
+import matplotlib.pyplot as plt
 import numpy as np
 from gym import spaces
+from yacs.config import CfgNode as CN
 
 from airobot import Robot
+from airobot.sensor.camera.rgbdcam_pybullet import RGBDCameraPybullet
 from airobot.utils.common import ang_in_mpi_ppi
 from airobot.utils.common import clamp
 from airobot.utils.common import euler2quat
@@ -23,16 +26,21 @@ class URRobotGym:
         self._action_bound = 1.0
         self._ee_pos_scale = 0.02
         self._ee_ori_scale = np.pi / 36.0
+
+        self.cams = []
+        for i in range(2):
+            self.cams.append(RGBDCameraPybullet(cfgs=self._camera_cfgs()))
+        self._setup_cameras()
+        self.reset()
+
         self._action_high = np.array([self._action_bound] * 5)
         self.action_space = spaces.Box(low=-self._action_high,
                                        high=self._action_high,
                                        dtype=np.float32)
-        state_low = np.full(len(self._get_obs()), -float('inf'))
-        state_high = np.full(len(self._get_obs()), float('inf'))
-        self.observation_space = spaces.Box(state_low,
-                                            state_high,
-                                            dtype=np.float32)
-        self.reset()
+        ob = self._get_obs()
+        self.observation_space = spaces.Box(low=0,
+                                            high=255,
+                                            shape=ob.shape, dtype=np.uint8)
 
     def reset(self):
         self.robot.arm.reset()
@@ -51,13 +59,27 @@ class URRobotGym:
 
     def step(self, action):
         self.apply_action(action)
-        state = self._get_obs()
+        ob = self._get_obs()
         done = False
         info = dict()
         reward = -1
-        return state, reward, done, info
+        return ob, reward, done, info
 
     def _get_obs(self):
+        """
+
+        Returns:
+            np.ndarray: observations from two cameras.
+            The two images are concatenated together.
+            The returned observation shape is [2H, W, 3].
+        """
+        rgbs = []
+        for cam in self.cams:
+            rgb, _ = cam.get_images(get_rgb=True, get_depth=False)
+            rgbs.append(deepcopy(rgb))
+        return np.concatenate(rgbs, axis=0)
+
+    def get_robot_state(self):
         jpos = self.robot.arm.get_jpos()
         jvel = self.robot.arm.get_jvel()
         state = jpos + jvel
@@ -84,6 +106,30 @@ class URRobotGym:
             self.robot.arm.set_jpos(jnt_pos)
             self.robot.arm.eetool.set_pos(gripper_ang)
             step_simulation()
+
+    def _camera_cfgs(self):
+        _C = CN()
+        _C.ZNEAR = 0.01
+        _C.ZFAR = 10
+        _C.WIDTH = 640
+        _C.HEIGHT = 480
+        _C.FOV = 60
+        _ROOT_C = CN()
+        _ROOT_C.CAM = CN()
+        _ROOT_C.CAM.SIM = _C
+        return _ROOT_C.clone()
+
+    def _setup_cameras(self):
+        self.cams[0].setup_camera(focus_pt=[0.5, 0., 1.0],
+                                  dist=2,
+                                  yaw=-90,
+                                  pitch=-45,
+                                  roll=0)
+        self.cams[1].setup_camera(focus_pt=[0.5, 0., 1.0],
+                                  dist=2,
+                                  yaw=90,
+                                  pitch=-45,
+                                  roll=0)
 
     def _scale_gripper_angle(self, command):
         """
@@ -120,13 +166,22 @@ class URRobotGym:
 
 
 def main():
-    env = URRobotGym(render=True)
-    for i in range(10):
-        env.step([1, 0, 0, 0, -1])
-        time.sleep(0.1)
-    for i in range(10):
-        env.step([0, 1, 0, 0, -1])
-        time.sleep(0.1)
+    env = URRobotGym(render=False)
+    ob = env.reset()
+    image = plt.imshow(ob, interpolation='none',
+                       animated=True, label="cam")
+    ax = plt.gca()
+    for j in range(2):
+        for i in range(10):
+            ob, reward, done, info = env.step([1, 0, 0, 0, -1])
+            image.set_data(ob)
+            ax.plot([0])
+            plt.pause(0.05)
+        for i in range(10):
+            ob, reward, done, info = env.step([-1, 0, 0, 0, -1])
+            image.set_data(ob)
+            ax.plot([0])
+            plt.pause(0.05)
 
 
 if __name__ == '__main__':

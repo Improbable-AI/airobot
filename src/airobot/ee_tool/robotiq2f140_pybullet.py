@@ -125,6 +125,9 @@ class Robotiq2F140Pybullet(EndEffectorTool):
                                      targetPosition=tgt_pos,
                                      force=self.max_torque,
                                      physicsClientId=PB_CLIENT)
+        if self._step_sim_mode:
+            self._set_rest_joints(tgt_pos)
+
         success = False
         if not self._step_sim_mode and wait:
             success = wait_to_reach_jnt_goal(
@@ -204,20 +207,24 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         follow the motion of the first joint of the gripper
         """
         while True:
-            if self._is_activated:
-                max_torq = self.max_torque
-                max_torques = [max_torq] * (len(self.jnt_names) - 1)
-                gripper_pos = self.get_pos()
-                gripper_poss = self._mimic_gripper(gripper_pos)[1:]
-                gripper_vels = [0.0] * len(max_torques)
-                self.p.setJointMotorControlArray(self.robot_id,
-                                                 self.gripper_jnt_ids[1:],
-                                                 self.p.POSITION_CONTROL,
-                                                 targetPositions=gripper_poss,
-                                                 targetVelocities=gripper_vels,
-                                                 forces=max_torques,
-                                                 physicsClientId=PB_CLIENT)
-            time.sleep(0.05)
+            if self._is_activated and not self._step_sim_mode:
+                self._set_rest_joints()
+            time.sleep(0.005)
+
+    def _set_rest_joints(self, gripper_pos=None):
+        max_torq = self.max_torque
+        max_torques = [max_torq] * (len(self.jnt_names) - 1)
+        if gripper_pos is None:
+            gripper_pos = self.get_pos()
+        gripper_poss = self._mimic_gripper(gripper_pos)[1:]
+        gripper_vels = [0.0] * len(max_torques)
+        self.p.setJointMotorControlArray(self.robot_id,
+                                         self.gripper_jnt_ids[1:],
+                                         self.p.POSITION_CONTROL,
+                                         targetPositions=gripper_poss,
+                                         targetVelocities=gripper_vels,
+                                         forces=max_torques,
+                                         physicsClientId=PB_CLIENT)
 
     def deactivate(self):
         self._is_activated = False

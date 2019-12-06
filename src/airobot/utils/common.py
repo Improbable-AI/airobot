@@ -12,6 +12,21 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 
+def ang_in_mpi_ppi(angle):
+    """
+    Convert the angle to the range [-pi, pi)
+
+    Args:
+        angle (float): angle in radians
+
+    Returns:
+        float: equivalent angle in [-pi, pi)
+    """
+
+    angle = (angle + np.pi) % (2 * np.pi) - np.pi
+    return angle
+
+
 def clamp(n, minn, maxn):
     """
     Clamp the input value to be in [minn, maxn]
@@ -107,6 +122,63 @@ def quat_multiply(quat1, quat2):
     r2 = R.from_quat(quat2)
     r = r1 * r2
     return r.as_quat()
+
+
+def rotvec2rot(vec):
+    """
+    A rotation vector is a 3 dimensional vector which is
+    co-directional to the axis of rotation and whose
+    norm gives the angle of rotation (in radians)
+
+    Args:
+        vec (list or np.ndarray): a rotational vector. Its norm
+            represents the angle of rotation.
+
+    Returns:
+        np.ndarray: rotation matrix (shape: :math:`[3, 3]`)
+    """
+    r = R.from_rotvec(vec)
+    return r.as_dcm()
+
+
+def rotvec2quat(vec):
+    """
+    A rotation vector is a 3 dimensional vector which is
+    co-directional to the axis of rotation and whose
+    norm gives the angle of rotation (in radians)
+
+    Args:
+        vec (list or np.ndarray): a rotational vector. Its norm
+            represents the angle of rotation.
+
+    Returns:
+        np.ndarray: quaternion [x,y,z,w] (shape: :math:`[4,]`)
+    """
+    r = R.from_rotvec(vec)
+    return r.as_quat()
+
+
+def rotvec2euler(vec, axes='xyz'):
+    """
+    A rotation vector is a 3 dimensional vector which is
+    co-directional to the axis of rotation and whose
+    norm gives the angle of rotation (in radians)
+
+    Args:
+        vec (list or np.ndarray): a rotational vector. Its norm
+            represents the angle of rotation.
+        axes (str): Specifies sequence of axes for rotations.
+            3 characters belonging to the set {'X', 'Y', 'Z'}
+            for intrinsic rotations (rotation about the axes of a
+            coordinate system XYZ attached to a moving body),
+            or {'x', 'y', 'z'} for extrinsic rotations (rotation about
+            the axes of the fixed coordinate system).
+
+    Returns:
+        np.ndarray: euler angles (shape: :math:`[3,]`)
+    """
+    r = R.from_rotvec(vec)
+    return r.as_euler(axes)
 
 
 def euler2rot(euler, axes='xyz'):
