@@ -60,6 +60,8 @@ class UR5ePybullet(SingleArmPybullet):
                                         plane_pos,
                                         plane_ori,
                                         physicsClientId=PB_CLIENT)
+        self.p.changeVisualShape(self.plane_id, -1, rgbaColor=[0.53, 0.89, 0.93, 1],
+                                 physicsClientId=PB_CLIENT)
 
         self.robot_base_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         self.robot_base_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)

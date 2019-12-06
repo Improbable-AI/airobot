@@ -11,9 +11,10 @@ from gym.utils import seeding
 import airobot.utils.common as arutil
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
+from airobot.utils.common import ang_in_mpi_ppi
 from airobot.utils.pb_util import PB_CLIENT
 from airobot.utils.pb_util import set_step_sim
-from airobot.utils.common import ang_in_mpi_ppi
+
 
 class SingleArmPybullet(ARM):
     """
@@ -138,8 +139,6 @@ class SingleArmPybullet(ARM):
                                                  self.p.POSITION_CONTROL,
                                                  targetPositions=tgt_pos,
                                                  forces=self._max_torques,
-                                                 positionGains=[0.3] * len(self.arm_jnt_ids),
-                                                 velocityGains=[1] * len(self.arm_jnt_ids),
                                                  physicsClientId=PB_CLIENT)
         else:
             if joint_name not in self.arm_jnt_names_set:
@@ -160,8 +159,6 @@ class SingleArmPybullet(ARM):
                                              self.p.POSITION_CONTROL,
                                              targetPosition=tgt_pos,
                                              force=max_torque,
-                                             positionGain=0.3,
-                                             velocityGain=1,
                                              physicsClientId=PB_CLIENT)
         if not self._step_sim_mode and wait and not ignore_physics:
             success = wait_to_reach_jnt_goal(
