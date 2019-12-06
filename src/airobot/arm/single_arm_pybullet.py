@@ -22,7 +22,8 @@ class SingleArmPybullet(ARM):
 
     """
 
-    def __init__(self, cfgs, render=False, seed=None, self_collision=False,
+    def __init__(self, cfgs, render=False, seed=None,
+                 rt_simulation=True, self_collision=False,
                  eetool_cfg=None):
         """
         Constructor for the pybullet simulation environment
@@ -32,6 +33,7 @@ class SingleArmPybullet(ARM):
             cfgs (YACS CfgNode): configurations for the arm
             render (bool): whether to render the environment using GUI
             seed (int): random seed
+            rt_simulation (bool): turn on realtime simulation or not
             self_collision (bool): enable self_collision or
                                    not whiling loading URDF
             eetool_cfg (dict): arguments to pass in the constructor
@@ -43,25 +45,38 @@ class SingleArmPybullet(ARM):
         super(SingleArmPybullet, self).__init__(cfgs=cfgs,
                                                 eetool_cfg=eetool_cfg)
         self.p = p
-
+        self.robot_id = None
         self.np_random, _ = self._seed(seed)
 
         self._init_consts()
-        self.realtime_simulation(True)
+        self.realtime_simulation(rt_simulation)
         self._in_torque_mode = [False] * self.arm_dof
 
-    def go_home(self):
+    @property
+    def joint_names(self):
+        """
+        Return the joint names in urdf
+
+        Returns:
+            list: joint names
+        """
+        return list(self.jnt_to_id.keys())
+
+    def go_home(self, ignore_physics=False):
         """
         Move the robot to a pre-defined home pose
         """
-        success = self.set_jpos(self._home_position)
+        success = self.set_jpos(self._home_position,
+                                ignore_physics=ignore_physics)
         return success
 
     def reset(self):
         """
         Reset the simulation environment.
         """
-        raise NotImplementedError
+        self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,
+                                        [0, 0, 0], [0, 0, 0, 1],
+                                        physicsClientId=PB_CLIENT)
 
     def realtime_simulation(self, on=True):
         """
@@ -76,7 +91,8 @@ class SingleArmPybullet(ARM):
             self.eetool._step_sim_mode = self._step_sim_mode
         set_step_sim(self._step_sim_mode)
 
-    def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
+    def set_jpos(self, position, joint_name=None,
+                 wait=True, ignore_physics=False, *args, **kwargs):
         """
         Move the arm to the specified joint position(s).
 
@@ -88,6 +104,10 @@ class SingleArmPybullet(ARM):
                 be moved to the desired joint position
             wait (bool): whether to block the code and wait
                 for the action to complete
+            ignore_physics (bool): hard reset the joints to the target joint
+                positions. It's best only to do this at the start,
+                while not running the simulation. It will overrides
+                all physics simulation.
 
         Returns:
             bool: A boolean variable representing if the action is successful
@@ -101,12 +121,24 @@ class SingleArmPybullet(ARM):
                                  'elements if the joint_name'
                                  ' is not provided' % self.arm_dof)
             tgt_pos = position
-            self.p.setJointMotorControlArray(self.robot_id,
-                                             self.arm_jnt_ids,
-                                             self.p.POSITION_CONTROL,
-                                             targetPositions=tgt_pos,
-                                             forces=self._max_torques,
-                                             physicsClientId=PB_CLIENT)
+            if ignore_physics:
+                # we need to set the joints to velocity control mode
+                # so that the reset takes effect. Otherwise, the joints
+                # will just go back to the original positions
+                self.set_jvel([0.] * self.arm_dof)
+                for idx, jnt in enumerate(self.arm_jnt_names):
+                    self.reset_joint_state(
+                        jnt,
+                        tgt_pos[idx]
+                    )
+                success = True
+            else:
+                self.p.setJointMotorControlArray(self.robot_id,
+                                                 self.arm_jnt_ids,
+                                                 self.p.POSITION_CONTROL,
+                                                 targetPositions=tgt_pos,
+                                                 forces=self._max_torques,
+                                                 physicsClientId=PB_CLIENT)
         else:
             if joint_name not in self.arm_jnt_names_set:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -116,13 +148,18 @@ class SingleArmPybullet(ARM):
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 max_torque = self._max_torques[arm_jnt_idx]
                 jnt_id = self.jnt_to_id[joint_name]
-            self.p.setJointMotorControl2(self.robot_id,
-                                         jnt_id,
-                                         self.p.POSITION_CONTROL,
-                                         targetPosition=tgt_pos,
-                                         force=max_torque,
-                                         physicsClientId=PB_CLIENT)
-        if not self._step_sim_mode and wait:
+            if ignore_physics:
+                self.set_jvel(0., joint_name)
+                self.reset_joint_state(joint_name, tgt_pos)
+                success = True
+            else:
+                self.p.setJointMotorControl2(self.robot_id,
+                                             jnt_id,
+                                             self.p.POSITION_CONTROL,
+                                             targetPosition=tgt_pos,
+                                             force=max_torque,
+                                             physicsClientId=PB_CLIENT)
+        if not self._step_sim_mode and wait and not ignore_physics:
             success = wait_to_reach_jnt_goal(
                 tgt_pos,
                 get_func=self.get_jpos,
@@ -180,14 +217,17 @@ class SingleArmPybullet(ARM):
                                          targetVelocity=tgt_vel,
                                          force=max_torque,
                                          physicsClientId=PB_CLIENT)
-        if not self._step_sim_mode and wait:
-            success = wait_to_reach_jnt_goal(
-                tgt_vel,
-                get_func=self.get_jvel,
-                joint_name=joint_name,
-                timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
-                max_error=self.cfgs.ARM.MAX_JOINT_VEL_ERROR
-            )
+        if not self._step_sim_mode:
+            if wait:
+                success = wait_to_reach_jnt_goal(
+                    tgt_vel,
+                    get_func=self.get_jvel,
+                    joint_name=joint_name,
+                    timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
+                    max_error=self.cfgs.ARM.MAX_JOINT_VEL_ERROR
+                )
+            else:
+                success = True
         return success
 
     def set_jtorq(self, torque, joint_name=None, wait=False, *args, **kwargs):
@@ -524,6 +564,24 @@ class SingleArmPybullet(ARM):
         jnt_poss = list(jnt_poss)
         return jnt_poss[:self.arm_dof]
 
+    def reset_joint_state(self, jnt_name, jpos, jvel=0):
+        """
+        Reset the state of the joint. It's best only to do
+        this at the start, while not running the simulation.
+        It will overrides all physics simulation.
+
+        Args:
+            jnt_name (str): joint name
+            jpos (float): target joint position
+            jvel (float): optional, target joint velocity
+
+        """
+        p.resetJointState(self.robot_id,
+                          self.jnt_to_id[jnt_name],
+                          targetValue=jpos,
+                          targetVelocity=jvel,
+                          physicsClientId=PB_CLIENT)
+
     def _is_in_torque_mode(self, joint_name=None):
         if joint_name is None:
             return all(self._in_torque_mode)
@@ -541,7 +599,7 @@ class SingleArmPybullet(ARM):
         """
         self._home_position = self.cfgs.ARM.HOME_POSITION
         # joint damping for inverse kinematics
-        self._ik_jd = 0.05
+        self._ik_jd = 0.0005
         self.arm_jnt_names = self.cfgs.ARM.JOINT_NAMES
 
         self.arm_jnt_names_set = set(self.arm_jnt_names)

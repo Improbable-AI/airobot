@@ -1,8 +1,9 @@
 import threading
 import time
 
-import airobot.utils.common as arutil
 import pybullet as p
+
+import airobot.utils.common as arutil
 from airobot.ee_tool.ee import EndEffectorTool
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 from airobot.utils.pb_util import PB_CLIENT
@@ -30,7 +31,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         ]
 
         self._step_sim_mode = False
-        self.max_torque = 10.0
+        self.max_torque = 5.0
         self.gripper_close_angle = self.cfgs.EETOOL.CLOSE_ANGLE
         self.gripper_open_angle = self.cfgs.EETOOL.OPEN_ANGLE
         self.jnt_names_set = set(self.jnt_names)

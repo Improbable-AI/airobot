@@ -1,11 +1,13 @@
 import time
 
-import airobot as ar
 import numpy as np
+
+import airobot as ar
 from airobot import Robot
 from airobot.utils.common import euler2quat
 from airobot.utils.pb_util import get_body_state
-from airobot.utils.pb_util import load_geom, load_urdf
+from airobot.utils.pb_util import load_geom
+from airobot.utils.pb_util import load_urdf
 
 
 def main():

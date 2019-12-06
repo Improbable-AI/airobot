@@ -13,7 +13,7 @@ def main():
     focus_pt = [0, 0, 1]  # ([x, y, z])
     robot.cam.setup_camera(focus_pt=focus_pt,
                            dist=3,
-                           yaw=0,
+                           yaw=90,
                            pitch=0,
                            roll=0)
     robot.arm.go_home()

@@ -25,9 +25,9 @@ def main():
                                    pitch=0,
                                    roll=0)
 
-            rgba, depth = robot.cam.get_images(get_rgb=True,
-                                               get_depth=True)
-            image.set_data(rgba)
+            rgb, depth = robot.cam.get_images(get_rgb=True,
+                                              get_depth=True)
+            image.set_data(rgb)
             ax.plot([0])
             plt.pause(0.01)
 

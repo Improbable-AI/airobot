@@ -21,6 +21,7 @@ class UR5ePybullet(SingleArmPybullet):
                  cfgs,
                  render=False,
                  seed=None,
+                 rt_simulation=True,
                  self_collision=False,
                  eetool_cfg=None):
         """
@@ -31,6 +32,7 @@ class UR5ePybullet(SingleArmPybullet):
             cfgs (YACS CfgNode): configurations for the arm
             render (bool): whether to render the environment using GUI
             seed (int): random seed
+            rt_simulation (bool): turn on realtime simulation or not
             self_collision (bool): enable self_collision or
                                    not whiling loading URDF
             eetool_cfg (dict): arguments to pass in the constructor
@@ -39,6 +41,7 @@ class UR5ePybullet(SingleArmPybullet):
         super(UR5ePybullet, self).__init__(cfgs=cfgs,
                                            render=render,
                                            seed=seed,
+                                           rt_simulation=rt_simulation,
                                            self_collision=self_collision,
                                            eetool_cfg=eetool_cfg)
         self.reset()
@@ -58,18 +61,19 @@ class UR5ePybullet(SingleArmPybullet):
                                         plane_ori,
                                         physicsClientId=PB_CLIENT)
 
-        ur_pos = self.cfgs.ARM.PYBULLET_RESET_POS
-        ur_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
+        self.robot_base_pos = self.cfgs.ARM.PYBULLET_RESET_POS
+        self.robot_base_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
         if self.self_collision:
             colli_flag = self.p.URDF_USE_SELF_COLLISION
             self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                            ur_pos,
-                                            ur_ori,
+                                            self.robot_base_pos,
+                                            self.robot_base_ori,
                                             flags=colli_flag,
                                             physicsClientId=PB_CLIENT)
         else:
             self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                            ur_pos, ur_ori,
+                                            self.robot_base_pos,
+                                            self.robot_base_ori,
                                             physicsClientId=PB_CLIENT)
         self._build_jnt_id()
         self.set_visual_shape()
