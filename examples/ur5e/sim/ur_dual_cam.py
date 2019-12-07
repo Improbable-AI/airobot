@@ -15,6 +15,7 @@ from airobot.utils.common import rotvec2quat
 from airobot.utils.pb_util import load_geom
 from airobot.utils.pb_util import load_urdf
 from airobot.utils.pb_util import step_simulation
+import airobot as ar
 
 
 class URRobotGym:
@@ -22,8 +23,7 @@ class URRobotGym:
         self._action_repeat = action_repeat
         self.robot = Robot('ur5e', arm_cfg={'render': render,
                                             'rt_simulation': False})
-        self.ee_ori = [-np.sqrt(2) / 2, np.sqrt(2) / 2, 0, 0]
-        self._action_bound = 1.0
+
         self._ee_pos_scale = 0.02
         self._ee_ori_scale = np.pi / 36.0
 
@@ -33,6 +33,7 @@ class URRobotGym:
         self._setup_cameras()
         self.reset()
 
+        self._action_bound = 1.0
         self._action_high = np.array([self._action_bound] * 5)
         self.action_space = spaces.Box(low=-self._action_high,
                                        high=self._action_high,
@@ -40,7 +41,8 @@ class URRobotGym:
         ob = self._get_obs()
         self.observation_space = spaces.Box(low=0,
                                             high=255,
-                                            shape=ob.shape, dtype=np.uint8)
+                                            shape=ob.shape,
+                                            dtype=np.uint8)
 
     def reset(self):
         self.robot.arm.reset()
@@ -168,6 +170,13 @@ class URRobotGym:
 def main():
     env = URRobotGym(render=False)
     ob = env.reset()
+    ar.log_info('\nThe action is a 5-dim vector A. \n'
+                'The range of each element is [-1, 1].\n'
+                'A[0] is dx, A[1] is dy, A[2] is dz;\n'
+                'A[3] is the delta of the gripper orientation;\n'
+                'A[4] is the gripper opening angle, \n'
+                '-1 means opening the gripper, \n'
+                '1 means closing the gripper.\n')
     image = plt.imshow(ob, interpolation='none',
                        animated=True, label="cam")
     ax = plt.gca()
