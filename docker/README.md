@@ -1,7 +1,7 @@
 - [Dependency Installation](#dependencies)
-- [Pulling](#pulling)
-- [Building](#building)
+- [Pull the Pre-Built Image](#pulling-the-pre-built-images)
 - [Usage](#usage)
+- [Build the Image Locally](#build-the-image-locally)
 
 ### Dependencies
 System dependencies:
@@ -53,36 +53,12 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-## Pulling 
-### Pulling the images from dockerhub
+## Pulling the Pre-Built Images
 The image is set up with CUDA 10.1, cuDNN 7.6, and PyTorch 1.3 installed (```airobot-cuda-dev```)
 ```
 docker pull anthonysimeonov/airobot-cuda-dev:latest
 ```
 
-
-## Building
-
-### Building the image locally
-Download and unzip the .deb files required for cuDNN 7.6 into the ```/airobot/docker/cudnn``` directory. From within this directory (```/path/to/airobot/docker```), execute the following commands.
-
-```
-wget -O cudnn.tar.gz https://www.dropbox.com/s/1fmni4jd3mnisaf/cudnn.tar.gz?dl=1
-tar -xvzf cudnn.tar.gz
-rm cudnn.tar.gz
-```
-
-From within this directory (```/path/to/airobot/docker/```), run the following command to build the image. This will take quite a bit of time if you have not done it locally before. Please see the ```docker_build.py``` script for additional arguments that can be passed to the build command (i.e. image name, which file to use, dry run, etc.)
-```
-python docker_build.py
-```
-
-If you want to use a different dockerfile than the specified default, run
-```
-python docker_build.py -f /path/to/dockerfile.dockerfile
-```
-
-(if you are building the image locally you will need to set up your machine with public keys linked to your github account for cloning private repositories required during building)
 
 ## Usage
 ### Running the container
@@ -120,6 +96,8 @@ cd /root/catkin_ws/
 source devel/setup.bash
 ```
 
+### Run the simulated UR robot in Gazebo
+
 Then, for instance, you can launch a simulated UR5e in Gazebo, and start MoveIt! with it, with the following command
 
 ```
@@ -132,7 +110,9 @@ cd /home/improbable/airobot/examples/ur5e/sim/
 python joint_position_control.py
 ```
 
-You can also connect to the real robot and control it via the ```airobot``` API functions (```<robot_ip>``` can be viewed from the PolyScope interface on the real robot's teach pendant. First bringup the connection to the robot with the following command, after connecting to the local network via ethernet cable.
+### Run the real UR robot
+
+You can also connect to the real robot and control it via the ```airobot``` API functions (```<robot_ip>``` can be viewed from the PolyScope interface on the real robot's teach pendant. First bringup the connection to the robot with the following command, after connecting to the local network via ethernet cable (more instructions avaiable [here](https://github.com/Improbable-AI/ur5e)).
 
 ```
 roslaunch ur5e_bringup ur5e_start.launch robot_ip:=<robot_ip>
@@ -142,3 +122,24 @@ Then run the following command to run the ```joint_position_control``` example (
 cd /home/improbable/airobot/examples/ur5e/real/
 python joint_position_control.py
 ```
+
+## Build the Image Locally
+Download and unzip the .deb files required for cuDNN 7.6 into the ```/airobot/docker/cudnn``` directory. From within this directory (```/path/to/airobot/docker```), execute the following commands.
+
+```
+wget -O cudnn.tar.gz https://www.dropbox.com/s/1fmni4jd3mnisaf/cudnn.tar.gz?dl=1
+tar -xvzf cudnn.tar.gz
+rm cudnn.tar.gz
+```
+
+From within this directory (```/path/to/airobot/docker/```), run the following command to build the image. This will take quite a bit of time if you have not done it locally before. Please see the ```docker_build.py``` script for additional arguments that can be passed to the build command (i.e. image name, which file to use, dry run, etc.)
+```
+python docker_build.py
+```
+
+If you want to use a different dockerfile than the specified default, run
+```
+python docker_build.py -f /path/to/dockerfile.dockerfile
+```
+
+(if you are building the image locally you will need to set up your machine with public keys linked to your github account for cloning private repositories required during building)
