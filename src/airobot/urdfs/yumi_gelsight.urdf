@@ -692,7 +692,7 @@
     <contact>
       <lateral_friction value="1"/>
       <!-- <rolling_friction value="1"/> -->
-      <spinning_friction value="1"/>
+      <!-- <spinning_friction value="1"/> -->
     </contact>
   </link>
   <!-- Left tip -->
@@ -851,6 +851,7 @@
     </collision>   
     <contact>
       <lateral_friction value="1"/>
+      <!-- <spinning_friction value ="1"/> -->
     </contact> 
   </link>
   <!-- Left tip -->
@@ -863,6 +864,7 @@
   <link name="yumi_tip_l">
     <contact>
       <lateral_friction value="1"/>
+      <!-- <spinning_friction value="1"/> -->
     </contact>
   </link>  
   <!-- Table top -->
