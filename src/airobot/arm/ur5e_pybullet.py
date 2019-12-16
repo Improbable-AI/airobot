@@ -60,11 +60,13 @@ class UR5ePybullet(SingleArmPybullet):
                                         plane_pos,
                                         plane_ori,
                                         physicsClientId=PB_CLIENT)
-        self.p.changeVisualShape(self.plane_id, -1, rgbaColor=[0.53, 0.89, 0.93, 1],
+        self.p.changeVisualShape(self.plane_id, -1,
+                                 rgbaColor=[0.53, 0.89, 0.93, 1],
                                  physicsClientId=PB_CLIENT)
 
         self.robot_base_pos = self.cfgs.ARM.PYBULLET_RESET_POS
-        self.robot_base_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
+        robot_base_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
+        self.robot_base_ori = arutil.euler2quat(robot_base_ori)
         if self.self_collision:
             colli_flag = self.p.URDF_USE_SELF_COLLISION
             self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,

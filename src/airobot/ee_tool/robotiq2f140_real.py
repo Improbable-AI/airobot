@@ -1,11 +1,11 @@
-import rospy
-import threading
-import struct
 import socket
+import struct
+import threading
 import time
-import numpy as np
 from subprocess import check_output
 
+import numpy as np
+import rospy
 from control_msgs.msg import GripperCommandActionGoal
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
@@ -81,7 +81,9 @@ class Robotiq2F140Real(EndEffectorTool):
             urscript.sleep(0.1)
 
             self.pub_command.publish(urscript())
-        rospy.sleep(0.2)
+        time.sleep(3)
+        if not self.gazebo_sim:
+            self._get_current_pos_urscript()
 
     def set_pos(self, pos):
         """
@@ -205,7 +207,7 @@ class Robotiq2F140Real(EndEffectorTool):
         tcp_msg += ' sync()\n'
         tcp_msg += ' textmsg("value = ",rq_pos)\n'
         tcp_msg += ' socket_open("%s",%d,"desktop_socket")\n' % \
-            (self._local_ip_addr, tcp_port)
+                   (self._local_ip_addr, tcp_port)
         tcp_msg += ' socket_send_int(rq_pos,"desktop_socket")\n'
         tcp_msg += ' sync()\n'
         tcp_msg += ' socket_close("desktop_socket")\n'

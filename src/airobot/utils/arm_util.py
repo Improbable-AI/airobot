@@ -2,6 +2,7 @@ import numbers
 import time
 
 import numpy as np
+
 import airobot as ar
 import airobot.utils.common as arutil
 
@@ -54,7 +55,8 @@ def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
         if get_func_derv is not None:
             vel_threshold = 0.006
             jnt_vel = get_func_derv(joint_name)
-            if np.max(np.abs(jnt_vel)) <= vel_threshold and vel_stop_time is None:
+            if np.max(np.abs(jnt_vel)) <= vel_threshold \
+                    and vel_stop_time is None:
                 vel_stop_time = time.time()
             elif np.max(np.abs(jnt_vel)) > vel_threshold:
                 vel_stop_time = None

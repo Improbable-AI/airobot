@@ -21,7 +21,7 @@ def execute_build(args):
 
     # copy requirements file from parent into docker folder
     cwd = os.getcwd()
-    shutil.copy(cwd+'/../requirements.txt', cwd)
+    shutil.copy(cwd + '/../requirements.txt', cwd)
 
     cmd = 'DOCKER_BUILDKIT=1 docker build '
     cmd += '--ssh default '
@@ -40,7 +40,6 @@ def execute_build(args):
 
 
 if __name__ == '__main__':
-
     default_image_name = "airobot-cuda-dev"
 
     parser = argparse.ArgumentParser()

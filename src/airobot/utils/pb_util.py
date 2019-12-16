@@ -13,6 +13,7 @@ import pybullet_data
 from airobot.utils.common import clamp
 
 PB_CLIENT = 0
+PB_LOADED = False
 STEP_SIM_MODE = True
 RENDER = False
 GRAVITY_CONST = -9.8
@@ -25,8 +26,10 @@ def load_pb(render=False):
     Args:
         render (bool): if GUI should be used for rendering or not
     """
-    global PB_CLIENT, RENDER, GRAVITY_CONST
+    global PB_CLIENT, PB_LOADED, RENDER, GRAVITY_CONST
     RENDER = render
+    if PB_LOADED:
+        return
     if render:
         PB_CLIENT = p.connect(p.GUI)
     else:
@@ -39,6 +42,7 @@ def load_pb(render=False):
         else:
             p.loadPlugin("eglRendererPlugin",
                          physicsClientId=PB_CLIENT)
+    PB_LOADED = True
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.setGravity(0, 0, GRAVITY_CONST,
                  physicsClientId=PB_CLIENT)

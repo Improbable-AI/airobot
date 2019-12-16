@@ -251,7 +251,7 @@ class RGBDCameraReal(Camera):
                 cmin = max(0, c - s)
                 cmax = min(self.cam_width, c + s + 1)
                 depth_im_list.append(ktype_func(depth_im[rmin:rmax,
-                                                         cmin:cmax]))
+                                                cmin:cmax]))
             depth_im = np.array(depth_im_list)
 
         depth = depth_im.reshape(-1) * self.depth_scale

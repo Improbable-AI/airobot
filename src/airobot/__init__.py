@@ -112,7 +112,7 @@ class Robot:
             self.base = base_class(cfgs, **base_cfg)
         if cfgs.HAS_CAMERA and use_cam:
             cls_name = cfgs.CAM.CLASS + class_suffix
-            from airobot.sensor.camera import cls_name_to_path\
+            from airobot.sensor.camera import cls_name_to_path \
                 as cam_cls_name_to_path
             camera_class = load_class_from_path(cls_name,
                                                 cam_cls_name_to_path[cls_name])

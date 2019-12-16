@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 with open(os.path.join(dir_path, 'src', 'airobot', 'version.py')) as fp:
-    exec (fp.read())
+    exec(fp.read())
 
 
 def read_requirements_file(filename):

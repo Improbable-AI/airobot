@@ -5,6 +5,7 @@ import numpy as np
 from gym import spaces
 from yacs.config import CfgNode as CN
 
+import airobot as ar
 from airobot import Robot
 from airobot.sensor.camera.rgbdcam_pybullet import RGBDCameraPybullet
 from airobot.utils.common import ang_in_mpi_ppi
@@ -15,7 +16,6 @@ from airobot.utils.common import rotvec2quat
 from airobot.utils.pb_util import load_geom
 from airobot.utils.pb_util import load_urdf
 from airobot.utils.pb_util import step_simulation
-import airobot as ar
 
 
 class URRobotGym:

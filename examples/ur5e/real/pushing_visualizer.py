@@ -8,10 +8,10 @@ import time
 
 import numpy as np
 import open3d
+from pushing import filter_points
 
 from airobot import Robot
 from airobot.utils.ros_util import read_cam_ext
-from pushing import filter_points
 
 sys.path.append(os.path.dirname(__file__))
 
