@@ -23,6 +23,7 @@ RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 # clone private repo - airobot
 RUN --mount=type=ssh git clone -b dev git@github.com:Improbable-AI/ur5e.git
+RUN --mount=type=ssh git clone -b qa git@github.com:Improbable-AI/camera_calibration.git
 WORKDIR /root/tmp_code/ur5e
 
 # update submodules (ur_modern_driver, industrial_msgs, and gazebo plugin for gripper)
@@ -172,8 +173,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # keys and installs for realsense SDK
-RUN export http_proxy="http://<proxy>:<port>"
-
 RUN apt-key adv --keyserver keys.gnupg.net --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE && \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key && \
     add-apt-repository "deb http://realsense-hw-public.s3.amazonaws.com/Debian/apt-repo xenial main" -u

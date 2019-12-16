@@ -23,6 +23,7 @@ RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 # clone private repo - airobot
 RUN --mount=type=ssh git clone -b dev git@github.com:Improbable-AI/ur5e.git
+RUN --mount=type=ssh git clone -b qa git@github.com:Improbable-AI/camera_calibration.git
 WORKDIR /root/tmp_code/ur5e
 
 # update submodules (ur_modern_driver, industrial_msgs, and gazebo plugin for gripper)

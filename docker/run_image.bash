@@ -23,3 +23,4 @@ docker run -it \
     --runtime=nvidia \
     --net=host \
     ${IMAGE}
+
