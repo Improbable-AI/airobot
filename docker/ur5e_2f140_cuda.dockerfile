@@ -108,6 +108,8 @@ RUN apt-get update && apt-get install -y  \
   ros-kinetic-control-msgs && \
   rm -rf /var/lib/apt/lists/*
 
+RUN pip install --upgrade pip==9.0.3
+
 RUN apt-get update && apt-get install -y  \
   gazebo7 \
   ros-kinetic-qt-build \
@@ -202,10 +204,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-mark hold libcudnn7 && \
     rm -rf /var/lib/apt/lists/*
 
+
+
+
+ENV CUDNN_VERSION 7.6.5.32
+LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcudnn7=$CUDNN_VERSION-1+cuda10.1 \
+&& \
+    apt-mark hold libcudnn7 && \
+    rm -rf /var/lib/apt/lists/*
+
+
 # install pytorch and cuDNN
 RUN pip install torch torchvision
 
-# copy over ur5e repositoriy from cloning private repo
+# copy over ur5e repositoriy from cloning private repo    
+
 COPY --from=intermediate /root/tmp_code ${CATKIN_WS}/src/
 
 # build

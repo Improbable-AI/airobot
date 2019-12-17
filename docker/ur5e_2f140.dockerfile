@@ -108,6 +108,8 @@ RUN apt-get update && apt-get install -y  \
   ros-kinetic-control-msgs && \
   rm -rf /var/lib/apt/lists/*
 
+RUN pip install --upgrade pip==9.0.3
+
 RUN apt-get update && apt-get install -y  \
   gazebo7 \
   ros-kinetic-qt-build \
