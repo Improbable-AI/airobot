@@ -896,7 +896,7 @@
       <!-- <contact_coefficients mu="0" kd="0" kp="1.0"/> -->
     </collision>
     <contact>
-      <lateral_friction value="0.15"/>
+      <lateral_friction value="0.2"/>         
     </contact>    
   </link>
   <!-- Table base -->
