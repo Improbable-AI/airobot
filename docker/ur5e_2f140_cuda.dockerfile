@@ -54,7 +54,7 @@ RUN apt-get update -q \
 
 RUN apt-get update
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends libboost-all-dev    
+RUN DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends libboost-all-dev
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -93,7 +93,7 @@ ENV ROS_DISTRO kinetic
 RUN apt-get update && apt-get install -y  \
   ros-kinetic-ros-core=1.3.2-0* \
   && rm -rf /var/lib/apt/lists/*
-  
+
 RUN apt-get update && apt-get install -y  \
   git-core \
   python-argparse \
@@ -152,10 +152,10 @@ RUN mv /bin/sh /bin/sh-old && \
 ENV CATKIN_WS=/root/catkin_ws
 RUN source /opt/ros/kinetic/setup.bash
 RUN mkdir -p $CATKIN_WS/src
-WORKDIR ${CATKIN_WS} 
+WORKDIR ${CATKIN_WS}
 RUN catkin init
 RUN catkin config --extend /opt/ros/$ROS_DISTRO \
-    --cmake-args -DCMAKE_BUILD_TYPE=Release -DCATKIN_ENABLE_TESTING=False 
+    --cmake-args -DCMAKE_BUILD_TYPE=Release -DCATKIN_ENABLE_TESTING=False
 WORKDIR $CATKIN_WS/src
 
 RUN apt-get update && \
@@ -192,17 +192,20 @@ RUN git clone https://github.com/IntelRealSense/realsense-ros.git && \
     cd realsense-ros/ && \
     git checkout `git tag | sort -V | grep -P "^\d+\.\d+\.\d+" | tail -1` && \
     cd .. && \
-    git clone https://github.com/pal-robotics/aruco_ros.git 
+    git clone https://github.com/pal-robotics/aruco_ros.git
+
+ENV CUDNN_VERSION 7.6.5.32
+LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcudnn7=$CUDNN_VERSION-1+cuda10.1 && \
+    apt-mark hold libcudnn7 && \
+    rm -rf /var/lib/apt/lists/*
 
 # install pytorch and cuDNN
 RUN pip install torch torchvision
 
-COPY cudnn/*.deb /opt/
-RUN dpkg -i /opt/libcudnn7_7.6.5.32-1+cuda10.1_amd64.deb && \
-    dpkg -i /opt/libcudnn7-dev_7.6.5.32-1+cuda10.1_amd64.deb && \
-    rm -f /opt/libcudnn*.deb
-
-# copy over ur5e repositoriy from cloning private repo    
+# copy over ur5e repositoriy from cloning private repo
 COPY --from=intermediate /root/tmp_code ${CATKIN_WS}/src/
 
 # build
