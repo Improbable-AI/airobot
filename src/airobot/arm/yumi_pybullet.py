@@ -231,7 +231,7 @@ class CompliantYumiArm(SingleArmPybullet):
             self.comp_jnt_ids,
             self.p.POSITION_CONTROL,
             targetPositions=[0.0]*len(self.comp_jnt_names),
-            forces=[5]*len(self.comp_jnt_names),
+            forces=[self.max_force_comp]*len(self.comp_jnt_names),
             positionGains=self.comp_jnt_gains,
             physicsClientId=PB_CLIENT)
 
@@ -248,6 +248,7 @@ class CompliantYumiArm(SingleArmPybullet):
         self.comp_jnt_gains = self.cfgs.ARM.COMPLIANT_GAINS
         self.comp_jnt_ids = [self.jnt_to_id[jnt]
                              for jnt in self.comp_jnt_names]
+        self.max_force_comp = self.cfgs.ARM.COMPLIANT_MAX_FORCE
 
 
 class YumiPybullet(DualArmPybullet):
