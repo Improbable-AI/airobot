@@ -658,29 +658,23 @@ class SingleArmPybullet(ARM):
         Build the mapping from the joint name to joint index
         """
         self.jnt_to_id = {}
-<<<<<<< HEAD
-        self.jnt_names = []
-=======
         self.full_dof_inds = []
         full_dof_ind = 0
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
         for i in range(self.p.getNumJoints(self.robot_id,
                                            physicsClientId=PB_CLIENT)):
             info = self.p.getJointInfo(self.robot_id, i,
                                        physicsClientId=PB_CLIENT)
             jnt_name = info[1].decode('UTF-8')
             self.jnt_to_id[jnt_name] = info[0]
-<<<<<<< HEAD
             if info[2] != self.p.JOINT_FIXED:
                 self.jnt_names.append(jnt_name)
-        self._ik_jds = [self._ik_jd] * len(self.jnt_names)
-=======
             # info[3] > -1 for joints that are not fixed
             if info[3] > -1:
                 if jnt_name in self.arm_jnt_names:
                     self.full_dof_inds.append(full_dof_ind)
                 full_dof_ind += 1
 
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
+        self._ik_jds = [self._ik_jd] * len(self.jnt_names)
+
         self.ee_link_id = self.jnt_to_id[self.ee_link_jnt]
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]

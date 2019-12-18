@@ -141,18 +141,11 @@ class DualArmPybullet(ARM):
                                  % self.dual_arm_dof)
             tgt_pos = position
             self.p.setJointMotorControlArray(self.robot_id,
-<<<<<<< HEAD
-                                        self.arm_jnt_ids,
-                                        self.p.POSITION_CONTROL,
-                                        targetPositions=tgt_pos,
-                                        forces=self._max_torques)
-=======
                                              self.arm_jnt_ids,
                                              self.p.POSITION_CONTROL,
                                              targetPositions=tgt_pos,
                                              forces=self._max_torques,
                                              physicsClientId=PB_CLIENT)
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             if not self._step_sim_mode and wait:
                 success = wait_to_reach_jnt_goal(
                     tgt_pos,
@@ -206,18 +199,11 @@ class DualArmPybullet(ARM):
                                  % self.dual_arm_dof)
             tgt_vel = velocity
             self.p.setJointMotorControlArray(self.robot_id,
-<<<<<<< HEAD
-                                        self.arm_jnt_ids,
-                                        self.p.VELOCITY_CONTROL,
-                                        targetVelocities=tgt_vel,
-                                        forces=self._max_torques)
-=======
                                              self.arm_jnt_ids,
                                              self.p.VELOCITY_CONTROL,
                                              targetVelocities=tgt_vel,
                                              forces=self._max_torques,
                                              physicsClientId=PB_CLIENT)
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             if not self._step_sim_mode and wait:
                 success = wait_to_reach_jnt_goal(
                     tgt_vel,
@@ -282,16 +268,10 @@ class DualArmPybullet(ARM):
                                  'Joint torques should contain'
                                  ' %d elements' % self.dual_arm_dof)
             self.p.setJointMotorControlArray(self.robot_id,
-<<<<<<< HEAD
-                                        self.arm_jnt_ids,
-                                        self.p.TORQUE_CONTROL,
-                                        forces=torque)
-=======
                                              self.arm_jnt_ids,
                                              self.p.TORQUE_CONTROL,
                                              forces=torque,
                                              physicsClientId=PB_CLIENT)
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
         else:
             if arm not in self.arm_dict.keys():
                 raise ValueError('Valid arm name must be specified'
@@ -395,18 +375,11 @@ class DualArmPybullet(ARM):
         else:
             jnt_id = self.jnt_to_id[joint_name]
             self.p.setJointMotorControl2(self.robot_id,
-<<<<<<< HEAD
-                                    jnt_id,
-                                    self.p.VELOCITY_CONTROL,
-                                    targetVelocity=0,
-                                    force=0.0)
-=======
                                          jnt_id,
                                          self.p.VELOCITY_CONTROL,
                                          targetVelocity=0,
                                          force=0.0,
                                          physicsClientId=PB_CLIENT)
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             arm_jnt_id = self.arm_jnt_names.index(joint_name)
             self._in_torque_mode[arm_jnt_id] = True
 
@@ -449,12 +422,8 @@ class DualArmPybullet(ARM):
         """
         if joint_name is None:
             states = self.p.getJointStates(self.robot_id,
-<<<<<<< HEAD
-                                      self.arm_jnt_ids)
-=======
                                            self.arm_jnt_ids,
                                            physicsClientId=PB_CLIENT)
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             pos = [state[0] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
@@ -481,12 +450,8 @@ class DualArmPybullet(ARM):
         """
         if joint_name is None:
             states = self.p.getJointStates(self.robot_id,
-<<<<<<< HEAD
-                                      self.arm_jnt_ids)
-=======
                                            self.arm_jnt_ids,
                                            physicsClientId=PB_CLIENT)
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
             vel = [state[1] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
@@ -633,12 +598,6 @@ class DualArmPybullet(ARM):
 
         # joint damping for inverse kinematics
         self._ik_jd = 0.05
-<<<<<<< HEAD
-        self._thread_sleep = 0.001
-        self.psetGravity(0, 0, -9.8)
-        self.psetAdditionalSearchPath(pybullet_data.getDataPath())
-=======
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
 
         self.right_arm_jnt_names = self.cfgs.ARM.RIGHT.ARM.JOINT_NAMES
         self.left_arm_jnt_names = self.cfgs.ARM.LEFT.ARM.JOINT_NAMES
@@ -661,7 +620,6 @@ class DualArmPybullet(ARM):
         self._l_max_torques = self.cfgs.ARM.LEFT.ARM.MAX_TORQUES
         self._max_torques = self._r_max_torques + self._l_max_torques
 
-<<<<<<< HEAD
     def _rt_simulation(self):
         """
         Run step simulation all the time in backend
@@ -671,8 +629,6 @@ class DualArmPybullet(ARM):
                 self.pstepSimulation()
             time.sleep(self._thread_sleep)
 
-=======
->>>>>>> refactored for single arm and double arm base classes, and added nullspace option to single arm compute_ik. needs debugging
     def _build_jnt_id(self):
         """
         Build the mapping from the joint name to joint index
