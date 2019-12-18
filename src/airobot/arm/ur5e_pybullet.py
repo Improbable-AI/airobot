@@ -9,6 +9,7 @@ from __future__ import print_function
 import airobot.utils.common as arutil
 from airobot.arm.single_arm_pybullet import SingleArmPybullet
 from airobot.utils.pb_util import PB_CLIENT
+from airobot.utils.pb_util import load_geom
 
 
 class UR5ePybullet(SingleArmPybullet):
@@ -54,15 +55,10 @@ class UR5ePybullet(SingleArmPybullet):
         self.p.resetSimulation(physicsClientId=PB_CLIENT)
         self.p.configureDebugVisualizer(self.p.COV_ENABLE_RENDERING, 0,
                                         physicsClientId=PB_CLIENT)
-        plane_pos = [0, 0, 0]
-        plane_ori = arutil.euler2quat([0, 0, 0])
-        self.plane_id = self.p.loadURDF("plane.urdf",
-                                        plane_pos,
-                                        plane_ori,
-                                        physicsClientId=PB_CLIENT)
-        self.p.changeVisualShape(self.plane_id, -1,
-                                 rgbaColor=[0.53, 0.89, 0.93, 1],
-                                 physicsClientId=PB_CLIENT)
+        self.floor_id = load_geom('box', size=[10, 10, 0.01], mass=0,
+                                  base_pos=[0, 0, 0],
+                                  rgba=[0.95, 0.50, 0.07, 1],
+                                  specular=[1, 1, 1, 1])
 
         self.robot_base_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         robot_base_ori = self.cfgs.ARM.PYBULLET_RESET_ORI
