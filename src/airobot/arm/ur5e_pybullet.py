@@ -65,7 +65,7 @@ class UR5ePybullet(SingleArmPybullet):
                                  physicsClientId=PB_CLIENT)
 
         self.robot_base_pos = self.cfgs.ARM.PYBULLET_RESET_POS
-        robot_base_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
+        robot_base_ori = self.cfgs.ARM.PYBULLET_RESET_ORI
         self.robot_base_ori = arutil.euler2quat(robot_base_ori)
         if self.self_collision:
             colli_flag = self.p.URDF_USE_SELF_COLLISION

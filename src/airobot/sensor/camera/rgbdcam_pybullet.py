@@ -1,11 +1,11 @@
 import numpy as np
 import pybullet as p
 
-from airobot.sensor.camera.camera import Camera
+from airobot.sensor.camera.rgbdcam import RGBDCamera
 from airobot.utils.pb_util import PB_CLIENT
 
 
-class RGBDCameraPybullet(Camera):
+class RGBDCameraPybullet(RGBDCamera):
     def __init__(self, cfgs):
         """
         Args:
@@ -15,8 +15,13 @@ class RGBDCameraPybullet(Camera):
         self.p = p
         self.view_matrix = None
         self.proj_matrix = None
+        self.depth_scale = 1
+        self.depth_min = self.cfgs.CAM.SIM.ZNEAR
+        self.depth_max = self.cfgs.CAM.SIM.ZFAR
 
-    def setup_camera(self, focus_pt=None, dist=3, yaw=0, pitch=0, roll=0):
+    def setup_camera(self, focus_pt=None, dist=3,
+                     yaw=0, pitch=0, roll=0,
+                     height=None, width=None):
         """
         Setup the camera view matrix and projection matrix. Must be called
         first before images are renderred
@@ -29,6 +34,10 @@ class RGBDCameraPybullet(Camera):
                 left/right around up-axis (z-axis).
             pitch (float): pitch in degrees, up/down.
             roll (float): roll in degrees around forward vector
+            height (float): height of image. If None, it will use
+                the default height from the config file
+            width (float): width of image. If None, it will use
+                the default width from the config file
         """
         if focus_pt is None:
             focus_pt = [0, 0, 0]
@@ -42,9 +51,9 @@ class RGBDCameraPybullet(Camera):
                                                  upAxisIndex=2,
                                                  physicsClientId=PB_CLIENT)
         self.view_matrix = vm
-        height = self.cfgs.CAM.SIM.HEIGHT
-        width = self.cfgs.CAM.SIM.WIDTH
-        aspect = width / float(height)
+        self.cam_height = height if height else self.cfgs.CAM.SIM.HEIGHT
+        self.cam_width = width if width else self.cfgs.CAM.SIM.WIDTH
+        aspect = self.cam_width / float(self.cam_height)
         znear = self.cfgs.CAM.SIM.ZNEAR
         zfar = self.cfgs.CAM.SIM.ZFAR
         fov = self.cfgs.CAM.SIM.FOV
@@ -54,6 +63,28 @@ class RGBDCameraPybullet(Camera):
                                           zfar,
                                           physicsClientId=PB_CLIENT)
         self.proj_matrix = pm
+        rot = np.array([[1, 0, 0, 0],
+                        [0, -1, 0, 0],
+                        [0, 0, -1, 0],
+                        [0, 0, 0, 1]])
+        view_matrix = np.array(self.view_matrix).reshape(4, 4).T
+        self.cam_ext_mat = np.dot(np.linalg.inv(view_matrix), rot)
+
+        vfov = np.deg2rad(fov)
+        tan_half_vfov = np.tan(vfov / 2.0)
+        tan_half_hfov = tan_half_vfov * self.cam_width / float(self.cam_height)
+        fx = self.cam_width / 2.0 / tan_half_hfov  # focal length in pixel space
+        fy = self.cam_height / 2.0 / tan_half_vfov
+        self.cam_int_mat = np.array([[fx, 0, self.cam_width / 2.0],
+                                     [0, fy, self.cam_height / 2.0],
+                                     [0, 0, 1]])
+        self._init_pers_mat()
+
+    def get_cam_ext(self):
+        return self.cam_ext_mat
+
+    def get_cam_int(self):
+        return self.cam_int_mat
 
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
@@ -72,10 +103,8 @@ class RGBDCameraPybullet(Camera):
 
         if self.view_matrix is None:
             raise ValueError('Please call setup_camera() first!')
-        height = self.cfgs.CAM.SIM.HEIGHT
-        width = self.cfgs.CAM.SIM.WIDTH
-        images = p.getCameraImage(width=width,
-                                  height=height,
+        images = p.getCameraImage(width=self.cam_width,
+                                  height=self.cam_height,
                                   viewMatrix=self.view_matrix,
                                   projectionMatrix=self.proj_matrix,
                                   shadow=True,
@@ -86,9 +115,11 @@ class RGBDCameraPybullet(Camera):
         depth = None
         if get_rgb:
             rgb = np.reshape(images[2],
-                             (height, width, 4))[:, :, :3]  # 0 to 255
+                             (self.cam_height,
+                              self.cam_width, 4))[:, :, :3]  # 0 to 255
         if get_depth:
-            depth_buffer = np.reshape(images[3], [height, width])
+            depth_buffer = np.reshape(images[3], [self.cam_height,
+                                                  self.cam_width])
             znear = self.cfgs.CAM.SIM.ZNEAR
             zfar = self.cfgs.CAM.SIM.ZFAR
             depth = zfar * znear / (zfar - (zfar - znear) * depth_buffer)

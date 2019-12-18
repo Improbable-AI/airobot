@@ -24,7 +24,6 @@ def main():
                                    yaw=0,
                                    pitch=pitch,
                                    roll=0)
-
             rgb, depth = robot.cam.get_images(get_rgb=True,
                                               get_depth=True)
             image.set_data(rgb)
