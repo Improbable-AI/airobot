@@ -124,14 +124,6 @@ python joint_position_control.py
 ```
 
 ## Build the Image Locally
-Download and unzip the .deb files required for cuDNN 7.6 into the ```/airobot/docker/cudnn``` directory. From within this directory (```/path/to/airobot/docker```), execute the following commands.
-
-```
-wget -O cudnn.tar.gz https://www.dropbox.com/s/1fmni4jd3mnisaf/cudnn.tar.gz?dl=1
-tar -xvzf cudnn.tar.gz
-rm cudnn.tar.gz
-```
-
 From within this directory (```/path/to/airobot/docker/```), run the following command to build the image. This will take quite a bit of time if you have not done it locally before. Please see the ```docker_build.py``` script for additional arguments that can be passed to the build command (i.e. image name, which file to use, dry run, etc.)
 ```
 python docker_build.py
