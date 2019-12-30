@@ -3,7 +3,7 @@
 If you haven't installed it, you can follow the instructions [here](https://github.com/Improbable-AI/ur5e_robotiq_2f140)
 
 ```bash
-roslaunch ur5e_bringup ur5e_start robot_ip:=<robot_ip>
+roslaunch ur5e_bringup ur5e_start.launch robot_ip:=<robot_ip>
 ```
 
 ## Launch the realsense camera driver if needed
