@@ -29,5 +29,5 @@ sphinxcontrib-napoleon>=0.7
 recommonmark>=0.6.0
 opencv-python>=4.1.1.26
 more_itertools==5.0.0;python_version <= '2.7'
-open3d>=0.8.0
+open3d==0.8.0
 
