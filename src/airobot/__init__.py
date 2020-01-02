@@ -94,7 +94,10 @@ class Robot:
 
         class_suffix = 'Pybullet' if pb else 'Real'
         if cfgs.HAS_ARM and use_arm:
-            cls_name = cfgs.ARM.CLASS + class_suffix
+            if cfgs.ARM.CLASS == 'ARM':
+                cls_name = cfgs.ARM.CLASS
+            else:
+                cls_name = cfgs.ARM.CLASS + class_suffix
             from airobot.arm import cls_name_to_path as arm_cls_name_to_path
             arm_class = load_class_from_path(cls_name,
                                              arm_cls_name_to_path[cls_name])
