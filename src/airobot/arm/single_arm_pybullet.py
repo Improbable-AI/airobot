@@ -606,8 +606,6 @@ class SingleArmPybullet(ARM):
 
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.arm_dof = len(self.arm_jnt_names)
-        self.rvl_joint_names = self.arm_jnt_names + self.eetool.jnt_names
-        self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
         self.ee_link_jnt = self.cfgs.ARM.ROBOT_EE_FRAME_JOINT
 
         self._max_torques = self.cfgs.ARM.MAX_TORQUES
@@ -617,12 +615,15 @@ class SingleArmPybullet(ARM):
         Build the mapping from the joint name to joint index
         """
         self.jnt_to_id = {}
+        self.jnt_names = []
         for i in range(self.p.getNumJoints(self.robot_id,
                                            physicsClientId=PB_CLIENT)):
             info = self.p.getJointInfo(self.robot_id, i,
                                        physicsClientId=PB_CLIENT)
             jnt_name = info[1].decode('UTF-8')
             self.jnt_to_id[jnt_name] = info[0]
-
+            if info[2] != self.p.JOINT_FIXED:
+                self.jnt_names.append(jnt_name)
+        self._ik_jds = [self._ik_jd] * len(self.jnt_names)
         self.ee_link_id = self.jnt_to_id[self.ee_link_jnt]
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]

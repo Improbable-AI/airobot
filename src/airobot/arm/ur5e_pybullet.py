@@ -51,7 +51,8 @@ class UR5ePybullet(SingleArmPybullet):
         """
         Reset the simulation environment.
         """
-        self.eetool.deactivate()
+        if hasattr(self, 'eetool'):
+            self.eetool.deactivate()
         self.p.resetSimulation(physicsClientId=PB_CLIENT)
         self.p.configureDebugVisualizer(self.p.COV_ENABLE_RENDERING, 0,
                                         physicsClientId=PB_CLIENT)
@@ -79,12 +80,13 @@ class UR5ePybullet(SingleArmPybullet):
         self.set_visual_shape()
         self.p.configureDebugVisualizer(self.p.COV_ENABLE_RENDERING, 1,
                                         physicsClientId=PB_CLIENT)
-        self.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
-        self.eetool.activate()
-        if self.self_collision:
-            # weird behavior occurs on the gripper
-            # when self-collision is enforced
-            self.eetool.disable_gripper_self_collision()
+        if hasattr(self, 'eetool'):
+            self.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
+            self.eetool.activate()
+            if self.self_collision:
+                # weird behavior occurs on the gripper
+                # when self-collision is enforced
+                self.eetool.disable_gripper_self_collision()
 
     def set_visual_shape(self):
         """
