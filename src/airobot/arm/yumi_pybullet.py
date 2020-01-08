@@ -29,7 +29,8 @@ class CompliantYumiArm(SingleArmPybullet):
                  render=False,
                  seed=None,
                  self_collision=False,
-                 eetool_cfg=None):
+                 eetool_cfg=None,
+                 rt_simulation=True):
         """
         Constructor
 
@@ -46,7 +47,8 @@ class CompliantYumiArm(SingleArmPybullet):
                                                render=render,
                                                seed=seed,
                                                self_collision=self_collision,
-                                               eetool_cfg=eetool_cfg)
+                                               eetool_cfg=eetool_cfg,
+                                               rt_simulation=rt_simulation)
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
@@ -258,7 +260,7 @@ class YumiPybullet(DualArmPybullet):
     """
 
     def __init__(self, cfgs, render=False, seed=None, self_collision=False,
-                 eetool_cfg=None):
+                 eetool_cfg=None, rt_simulation=True):
         """
         Constructor
 
@@ -275,19 +277,22 @@ class YumiPybullet(DualArmPybullet):
                                            render=render,
                                            seed=seed,
                                            self_collision=self_collision,
-                                           eetool_cfg=eetool_cfg)
+                                           eetool_cfg=eetool_cfg,
+                                           rt_simulation=rt_simulation)
         right_cfg = cfgs.ARM.RIGHT
         left_cfg = cfgs.ARM.LEFT
         self.right_arm = CompliantYumiArm(cfgs=right_cfg,
                                           render=render,
                                           seed=seed,
                                           self_collision=self_collision,
-                                          eetool_cfg=eetool_cfg)
+                                          eetool_cfg=eetool_cfg,
+                                          rt_simulation=rt_simulation)
         self.left_arm = CompliantYumiArm(cfgs=left_cfg,
                                          render=render,
                                          seed=seed,
                                          self_collision=self_collision,
-                                         eetool_cfg=eetool_cfg)
+                                         eetool_cfg=eetool_cfg,
+                                         rt_simulation=rt_simulation)
         # self.right_arm = SingleArmPybullet(cfgs=right_cfg,
         #                                   render=render,
         #                                   seed=seed,
@@ -300,6 +305,7 @@ class YumiPybullet(DualArmPybullet):
         #                                  eetool_cfg=eetool_cfg)
 
         self.reset()
+        print("\n\nfinished construction\n\n")
 
     def reset(self):
         """
