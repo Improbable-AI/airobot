@@ -67,7 +67,7 @@ class Robot:
         root_node = 'airobot.'
         cfgs = None
         for tr in robot_pool:
-            if tr in robot_name:
+            if tr == robot_name:
                 mod = importlib.import_module(root_node + 'cfgs.' +
                                               '{:s}_cfg'.format(tr))
                 cfg_func = getattr(mod, 'get_cfg')

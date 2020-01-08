@@ -1,0 +1,25 @@
+ <?xml version="1.0" ?>
+ <robot name="stick_ee_tool">
+    <link name="base_link">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0762"/>
+            <mass value="0.01"/>
+            <inertia ixx="1.111e-3" ixy="0.0" ixz="0.0" iyy="1.111e-3" iyz="0.0"
+                     izz="2.559e-4"/>
+        </inertial>    
+        <visual>
+            <geometry>
+                <mesh filename="../meshes/custom_ee_tools/stick/visual/ur5e_ee_stick.stl" scale="0.0005 0.0005 0.001"/>
+            </geometry>
+            <material name="StickMaterial">
+                <color rgba="0.0 0.0 0.8 1.0"/>
+            </material>
+        </visual>        
+        <collision>
+            <geometry>
+                <mesh filename="../meshes/custom_ee_tools/stick/collision/ur5e_ee_stick.stl" scale="0.0005 0.0005 0.001"/>
+            </geometry>
+            <origin rpy="0 0 0" xyz="-0.01 0 0"/>
+        </collision>
+    </link>
+</robot>

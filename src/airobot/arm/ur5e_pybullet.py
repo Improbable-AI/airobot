@@ -116,6 +116,6 @@ class UR5ePybullet(SingleArmPybullet):
         self.p.changeVisualShape(self.robot_id,
                                  self.jnt_to_id['wrist_3_joint'],
                                  rgbaColor=color1)
-        self.p.changeVisualShape(self.robot_id,
-                                 self.jnt_to_id['ur5_ee_link-gripper_base'],
-                                 rgbaColor=color1)
+        # self.p.changeVisualShape(self.robot_id,
+        #                          self.jnt_to_id['ur5_ee_link-gripper_base'],
+        #                          rgbaColor=color1)
