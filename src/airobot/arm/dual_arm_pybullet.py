@@ -25,7 +25,7 @@ class DualArmPybullet(ARM):
     """
 
     def __init__(self, cfgs, render=False, seed=None, self_collision=False,
-                 eetool_cfg=None):
+                 eetool_cfg=None, rt_simulation=True):
         """
         Constructor for the pybullet simulation environment
         of a dual arm robot
@@ -57,7 +57,7 @@ class DualArmPybullet(ARM):
         self.arm_dict = {}
 
         self._init_consts()
-        self.realtime_simulation(True)
+        self.realtime_simulation(rt_simulation)
         self._in_torque_mode = [False] * self.dual_arm_dof
 
     def setup_single_arms(self, right_arm, left_arm):
