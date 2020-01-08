@@ -21,8 +21,8 @@ from airobot.utils.pb_util import step_simulation
 class URRobotGym:
     def __init__(self, action_repeat=10, render=True):
         self._action_repeat = action_repeat
-        self.robot = Robot('ur5e', arm_cfg={'render': render,
-                                            'rt_simulation': False})
+        self.robot = Robot('ur5e_2f140', arm_cfg={'render': render,
+                                                  'rt_simulation': False})
 
         self._ee_pos_scale = 0.02
         self._ee_ori_scale = np.pi / 36.0

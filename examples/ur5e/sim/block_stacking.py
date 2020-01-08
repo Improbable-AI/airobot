@@ -15,7 +15,7 @@ def main():
     This function shows an example of block stacking
     """
     np.set_printoptions(precision=4, suppress=True)
-    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot = Robot('ur5e_2f140', arm_cfg={'render': True})
     success = robot.arm.go_home()
     if not success:
         ar.log_warn('Robot go_home failed!!!')

@@ -239,7 +239,7 @@ def main():
     args = parser.parse_args()
 
     np.set_printoptions(precision=4, suppress=True)
-    bot = Robot('ur5e', pb=False, use_cam=True)
+    bot = Robot('ur5e_2f140', pb=False, use_cam=True)
 
     cam_pos, cam_ori = read_cam_ext('ur5e')
     bot.cam.set_cam_ext(cam_pos, cam_ori)
