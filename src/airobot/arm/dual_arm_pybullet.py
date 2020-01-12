@@ -620,15 +620,6 @@ class DualArmPybullet(ARM):
         self._l_max_torques = self.cfgs.ARM.LEFT.ARM.MAX_TORQUES
         self._max_torques = self._r_max_torques + self._l_max_torques
 
-    def _rt_simulation(self):
-        """
-        Run step simulation all the time in backend
-        """
-        while True:
-            if not self._step_sim_mode:
-                self.pstepSimulation()
-            time.sleep(self._thread_sleep)
-
     def _build_jnt_id(self):
         """
         Build the mapping from the joint name to joint index
