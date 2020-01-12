@@ -658,6 +658,7 @@ class SingleArmPybullet(ARM):
         Build the mapping from the joint name to joint index
         """
         self.jnt_to_id = {}
+        self.jnt_names = []
         self.full_dof_inds = []
         full_dof_ind = 0
         for i in range(self.p.getNumJoints(self.robot_id,
