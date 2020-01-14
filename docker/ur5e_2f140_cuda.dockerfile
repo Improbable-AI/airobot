@@ -40,14 +40,14 @@ RUN mv /bin/sh /bin/sh-old && \
   ln -s /bin/bash /bin/sh
 
 # install basic system stuff
-COPY ./install_basic.sh /tmp/install_basic.sh
+COPY ./install_scripts/install_basic.sh /tmp/install_basic.sh
 RUN chmod +x /tmp/install_basic.sh
 RUN /tmp/install_basic.sh
 
 # install ROS stuff
 ENV ROS_DISTRO kinetic
 
-COPY ./install_ros.sh /tmp/install_ros.sh
+COPY ./install_scripts/install_ros.sh /tmp/install_ros.sh
 RUN chmod +x /tmp/install_ros.sh
 RUN /tmp/install_ros.sh
 
@@ -71,7 +71,7 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 
 # install realsense camera deps
-COPY ./install_realsense.sh /tmp/install_realsense.sh
+COPY ./install_scripts/install_realsense.sh /tmp/install_realsense.sh
 RUN chmod +x /tmp/install_realsense.sh
 RUN /tmp/install_realsense.sh
 
@@ -88,7 +88,7 @@ RUN git clone https://github.com/IntelRealSense/realsense-ros.git && \
 ENV CUDNN_VERSION 7.6.5.32
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
-COPY ./install_pytorch.sh /tmp/install_pytorch.sh
+COPY ./install_scripts/install_pytorch.sh /tmp/install_pytorch.sh
 RUN chmod +x /tmp/install_pytorch.sh
 RUN /tmp/install_pytorch.sh
 
