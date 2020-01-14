@@ -14,7 +14,10 @@ _C.HAS_CAMERA = True
 _C.HAS_EETOOL = False
 
 _C.ROBOT_DESCRIPTION = '/robot_description'
-_C.PYBULLET_URDF = 'yumi_gelsight.urdf'
+# _C.PYBULLET_URDF = 'yumi_gelsight.urdf'
+# _C.PYBULLET_URDF = 'yumi_gelslim_palm.urdf'
+_C.PYBULLET_URDF = 'yumi_grippers.urdf'
+
 
 # prefix of the class name of the ARM
 # if it's for pybullet simulation, the name will
