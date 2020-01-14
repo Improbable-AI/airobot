@@ -19,6 +19,7 @@ docker run -it \
     --env="XAUTHORITY=$XAUTH" \
     --volume="$XAUTH:$XAUTH" \
     --volume="$PWD/../:/home/improbable/airobot/" \
+    --privileged \
     --runtime=nvidia \
     --net=host \
     ${IMAGE}

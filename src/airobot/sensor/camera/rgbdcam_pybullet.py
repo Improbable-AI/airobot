@@ -73,7 +73,8 @@ class RGBDCameraPybullet(RGBDCamera):
         vfov = np.deg2rad(fov)
         tan_half_vfov = np.tan(vfov / 2.0)
         tan_half_hfov = tan_half_vfov * self.cam_width / float(self.cam_height)
-        fx = self.cam_width / 2.0 / tan_half_hfov  # focal length in pixel space
+        # focal length in pixel space
+        fx = self.cam_width / 2.0 / tan_half_hfov
         fy = self.cam_height / 2.0 / tan_half_vfov
         self.cam_int_mat = np.array([[fx, 0, self.cam_width / 2.0],
                                      [0, fy, self.cam_height / 2.0],

@@ -27,7 +27,7 @@ class RGBDCamera(Camera):
         self.cam_int_mat_inv = np.linalg.inv(self.cam_int_mat)
 
         img_pixs = np.mgrid[0: self.cam_height,
-                   0: self.cam_width].reshape(2, -1)
+                            0: self.cam_width].reshape(2, -1)
         img_pixs[[0, 1], :] = img_pixs[[1, 0], :]
         self.uv_one = np.concatenate((img_pixs,
                                       np.ones((1, img_pixs.shape[1]))))

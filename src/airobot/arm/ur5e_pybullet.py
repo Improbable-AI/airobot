@@ -58,7 +58,7 @@ class UR5ePybullet(SingleArmPybullet):
                                         physicsClientId=PB_CLIENT)
         self.floor_id = load_geom('box', size=[10, 10, 0.01], mass=0,
                                   base_pos=[0, 0, 0],
-                                  rgba=[0.95, 0.50, 0.07, 1],
+                                  rgba=[0.7, 0.77, 0.7, 1],
                                   specular=[1, 1, 1, 1])
 
         self.robot_base_pos = self.cfgs.ARM.PYBULLET_RESET_POS
@@ -116,6 +116,3 @@ class UR5ePybullet(SingleArmPybullet):
         self.p.changeVisualShape(self.robot_id,
                                  self.jnt_to_id['wrist_3_joint'],
                                  rgbaColor=color1)
-        # self.p.changeVisualShape(self.robot_id,
-        #                          self.jnt_to_id['ur5_ee_link-gripper_base'],
-        #                          rgbaColor=color1)

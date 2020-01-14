@@ -87,7 +87,8 @@ def exit_gazebo(gp):
     gp.terminate()
     print('Exiting Gazebo...')
     gp.wait()
-    # # `rosnode cleanup` will give error: ERROR: Unable to communicate with master!
+    # # `rosnode cleanup` will give error:
+    # # ERROR: Unable to communicate with master!
     # # if the gazebo is already shutdown correctly
     # # so this error is expected!
     p = Popen(['rosnode', 'cleanup'])
