@@ -99,7 +99,7 @@ MIT license
 
 ## Coding Style
 
-The python code uses [Flake8](https://pypi.org/project/flake8/) style.
+AIRobot uses [Google style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) for formatting docstrings. We use [Flake8](https://pypi.org/project/flake8/) to perform additional formatting and semantic checking of code.
 
 
 
