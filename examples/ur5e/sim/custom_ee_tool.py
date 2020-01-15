@@ -1,10 +1,11 @@
-import time
 import os
+import time
+
+import pybullet as p
 
 from airobot import Robot
 from airobot.utils.common import euler2quat
 from airobot.utils.pb_util import PB_CLIENT
-import pybullet as p
 
 
 def main():

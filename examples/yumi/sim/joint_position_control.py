@@ -25,11 +25,13 @@ def main():
     time.sleep(3)
 
     robot.arm.left_arm.eetool.set_pos(0.005)
+    print('EE_tool position:')
     print(robot.arm.left_arm.eetool.get_pos())
     time.sleep(3)
 
     robot.arm.left_arm.eetool.close()
     time.sleep(3)
+    print('EE_tool position:')
     print(robot.arm.left_arm.eetool.get_pos())
 
 

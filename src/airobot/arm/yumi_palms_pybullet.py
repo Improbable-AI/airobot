@@ -6,14 +6,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import pybullet as p
 import copy
 
+import pybullet as p
+
 import airobot.utils.common as arutil
-from airobot.utils.pb_util import PB_CLIENT
-from airobot.utils.arm_util import wait_to_reach_jnt_goal
-from airobot.arm.single_arm_pybullet import SingleArmPybullet
 from airobot.arm.dual_arm_pybullet import DualArmPybullet
+from airobot.arm.single_arm_pybullet import SingleArmPybullet
+from airobot.utils.arm_util import wait_to_reach_jnt_goal
+from airobot.utils.pb_util import PB_CLIENT
 
 
 class CompliantYumiArm(SingleArmPybullet):
@@ -231,8 +232,8 @@ class CompliantYumiArm(SingleArmPybullet):
             self.robot_id,
             self.comp_jnt_ids,
             self.p.POSITION_CONTROL,
-            targetPositions=[0.0]*len(self.comp_jnt_names),
-            forces=[self.max_force_comp]*len(self.comp_jnt_names),
+            targetPositions=[0.0] * len(self.comp_jnt_names),
+            forces=[self.max_force_comp] * len(self.comp_jnt_names),
             positionGains=self.comp_jnt_gains,
             physicsClientId=PB_CLIENT)
 

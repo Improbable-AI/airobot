@@ -9,9 +9,9 @@ from __future__ import print_function
 import pybullet as p
 
 import airobot.utils.common as arutil
-from airobot.utils.pb_util import PB_CLIENT
-from airobot.arm.single_arm_pybullet import SingleArmPybullet
 from airobot.arm.dual_arm_pybullet import DualArmPybullet
+from airobot.arm.single_arm_pybullet import SingleArmPybullet
+from airobot.utils.pb_util import PB_CLIENT
 
 
 class YumiPybullet(DualArmPybullet):
@@ -90,4 +90,3 @@ class YumiPybullet(DualArmPybullet):
                 arm.eetool.activate()
                 if arm.self_collision:
                     arm.eetool.disable_gripper_self_collision()
-

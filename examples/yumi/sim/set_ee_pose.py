@@ -13,11 +13,11 @@ def main():
     robot.arm.set_ee_pose(tgt_pos, arm='right')
 
     # sleep statement is not necessary
-    time.sleep(1)
+    time.sleep(3)
     tgt_pos = [0.3, -0.15, 0.25]
     tgt_euler = [-0.5, 0.0, 0.0]
     robot.arm.set_ee_pose(tgt_pos, tgt_euler, arm='right')
-    time.sleep(1)
+    time.sleep(3)
     pos, quat, rot, euler = robot.arm.get_ee_pose(arm='right')
     print('End effector pose:')
     print('Position:')

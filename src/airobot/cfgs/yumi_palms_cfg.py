@@ -1,9 +1,9 @@
+from yacs.config import CfgNode as CN
+
 from airobot.cfgs.default_configs import get_cfg_defaults
 from airobot.cfgs.pybullet_camera import get_sim_cam_cfg
 from airobot.cfgs.realsense_camera import get_realsense_cam_cfg
-from airobot.cfgs.robotiq2f140 import get_robotiq2f140_cfg
 from airobot.cfgs.yumi_arm import get_yumi_arm_cfg
-from yacs.config import CfgNode as CN
 
 _C = get_cfg_defaults()
 # whether the robot has an arm or not
@@ -15,7 +15,6 @@ _C.HAS_EETOOL = False
 
 _C.ROBOT_DESCRIPTION = '/robot_description'
 _C.PYBULLET_URDF = 'yumi_gelslim_palm.urdf'
-
 
 # prefix of the class name of the ARM
 # if it's for pybullet simulation, the name will

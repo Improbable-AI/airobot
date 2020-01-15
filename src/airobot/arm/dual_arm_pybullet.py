@@ -3,14 +3,10 @@ from __future__ import division
 from __future__ import print_function
 
 import copy
-import threading
-import time
 
-import pybullet_data
 import pybullet as p
 from gym.utils import seeding
 
-import airobot.utils.common as arutil
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 from airobot.utils.pb_util import PB_CLIENT
@@ -42,10 +38,6 @@ class DualArmPybullet(ARM):
 
         self._render = render
         self.self_collision = self_collision
-        # if eetool_cfg is None:
-        #     eetool_cfg = {'p': self.p}
-        # else:
-        #     eetool_cfg['p'] = self.p
         super(DualArmPybullet, self).__init__(cfgs=cfgs,
                                               eetool_cfg=eetool_cfg)
         self.p = p
@@ -521,13 +513,13 @@ class DualArmPybullet(ARM):
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             return self.arm_dict[arm].get_ee_pose()
-            
+
     def get_ee_vel(self, arm=None):
         """
         Return the end effector's velocity
 
         Args:
-            arm (str): Which arm to get velocity for, 
+            arm (str): Which arm to get velocity for,
                 must match arm names in cfg file
 
         Returns:
