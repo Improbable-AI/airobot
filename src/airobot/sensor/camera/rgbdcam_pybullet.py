@@ -43,6 +43,7 @@ class RGBDCameraPybullet(RGBDCamera):
             focus_pt = [0, 0, 0]
         if len(focus_pt) != 3:
             raise ValueError('Length of focus_pt should be 3 ([x, y, z]).')
+        print("PB_CLIENT: " + str(PB_CLIENT))
         vm = p.computeViewMatrixFromYawPitchRoll(focus_pt,
                                                  dist,
                                                  yaw,
@@ -104,6 +105,7 @@ class RGBDCameraPybullet(RGBDCamera):
 
         if self.view_matrix is None:
             raise ValueError('Please call setup_camera() first!')
+
         images = p.getCameraImage(width=self.cam_width,
                                   height=self.cam_height,
                                   viewMatrix=self.view_matrix,

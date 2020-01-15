@@ -1,5 +1,6 @@
 import time
 
+import airobot as ar
 from airobot import Robot
 
 
@@ -19,11 +20,11 @@ def main():
     robot.arm.set_ee_pose(tgt_pos, tgt_euler)
     time.sleep(1)
     pos, quat, rot, euler = robot.arm.get_ee_pose()
-    print('End effector pose:')
-    print('Position:')
-    print(pos)
-    print('Euler angles:')
-    print(euler)
+    ar.log_info('End effector pose:')
+    ar.log_info('Position:')
+    ar.log_info(pos)
+    ar.log_info('Euler angles:')
+    ar.log_info(euler)
 
 
 if __name__ == '__main__':

@@ -18,17 +18,14 @@ from airobot.utils.pb_util import set_step_sim
 
 class SingleArmPybullet(ARM):
     """
-    Class for the pybullet simulation environment
-    of a UR5e robot with a robotiq 2f140 gripper.
-
+    Base class for a single arm simulated in pybullet
     """
 
     def __init__(self, cfgs, render=False, seed=None,
                  rt_simulation=True, self_collision=False,
                  eetool_cfg=None):
         """
-        Constructor for the pybullet simulation environment
-        of a UR5e robot with a robotiq 2f140 gripper
+        Constructor for pybullet simulation of a single arm manipulator
 
         Args:
             cfgs (YACS CfgNode): configurations for the arm
@@ -52,16 +49,6 @@ class SingleArmPybullet(ARM):
         self._init_consts()
         self.realtime_simulation(rt_simulation)
         self._in_torque_mode = [False] * self.arm_dof
-
-    @property
-    def joint_names(self):
-        """
-        Return the joint names in urdf
-
-        Returns:
-            list: joint names
-        """
-        return list(self.jnt_to_id.keys())
 
     def go_home(self, ignore_physics=False):
         """
@@ -532,7 +519,7 @@ class SingleArmPybullet(ARM):
         rot_vel = info[7]
         return np.array(trans_vel), np.array(rot_vel)
 
-    def compute_ik(self, pos, ori=None, *args, **kwargs):
+    def compute_ik(self, pos, ori=None, ns=False, *args, **kwargs):
         """
         Compute the inverse kinematics solution given the
         position and orientation of the end effector
@@ -543,6 +530,8 @@ class SingleArmPybullet(ARM):
                 ([roll, pitch, yaw], shape: :math:`[3,]`), or
                 quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
                 or rotation matrix (shape: :math:`[3, 3]`).
+            ns (bool): whether to use the nullspace options in pybullet,
+                True if nullspace should be used. Defaults to False.
 
         Returns:
             list: solution to inverse kinematics, joint angles which achieve
@@ -550,6 +539,13 @@ class SingleArmPybullet(ARM):
         """
         ex_args = {'jointDamping': self._ik_jds,
                    'physicsClientId': PB_CLIENT}
+        if ns:
+            ll, ul, jr, rp = self._get_joint_ranges()
+            ex_args['lowerLimits'] = ll
+            ex_args['upperLimits'] = ul
+            ex_args['jointRanges'] = jr
+            ex_args['restPoses'] = rp
+
         if ori is not None:
             ori = arutil.to_quat(ori)
             jnt_poss = self.p.calculateInverseKinematics(self.robot_id,
@@ -564,7 +560,45 @@ class SingleArmPybullet(ARM):
                                                          **ex_args)
         jnt_poss = map(ang_in_mpi_ppi, jnt_poss)
         jnt_poss = list(jnt_poss)
-        return jnt_poss[:self.arm_dof]
+        arm_jnt_poss = [jnt_poss[i] for i in self.full_dof_inds]
+        return arm_jnt_poss
+
+    def _get_joint_ranges(self):
+        """
+        Return a default set of values for the arguments to IK
+        with nullspace turned on. Returns joint ranges from the
+        URDF and the current value of each joint angle for the
+        rest poses
+
+        Returns:
+            4-element tuple containing:
+
+            - list: list of lower limits for each joint (shape: :math:`[DOF]`)
+            - list: list of upper limits for each joint (shape: :math:`[DOF]`)
+            - list: list of joint ranges for each joint (shape: :math:`[DOF]`)
+            - list: list of rest poses (shape: :math:`[DOF]`)
+        """
+        ll, ul, jr, rp = [], [], [], []
+
+        for i in range(self.p.getNumJoints(self.robot_id,
+                                           physicsClientId=PB_CLIENT)):
+            info = self.p.getJointInfo(self.robot_id, i,
+                                       physicsClientId=PB_CLIENT)
+            if info[3] > -1:
+                lower, upper = info[8:10]
+                j_range = upper - lower
+
+                rest_pose = self.p.getJointState(
+                    self.robot_id,
+                    i,
+                    physicsClientId=PB_CLIENT)[0]
+
+                ll.append(lower)
+                ul.append(upper)
+                jr.append(j_range)
+                rp.append(rest_pose)
+
+        return ll, ul, jr, rp
 
     def reset_joint_state(self, jnt_name, jpos, jvel=0):
         """
@@ -616,6 +650,8 @@ class SingleArmPybullet(ARM):
         """
         self.jnt_to_id = {}
         self.jnt_names = []
+        self.full_dof_inds = []
+        full_dof_ind = 0
         for i in range(self.p.getNumJoints(self.robot_id,
                                            physicsClientId=PB_CLIENT)):
             info = self.p.getJointInfo(self.robot_id, i,
@@ -624,6 +660,12 @@ class SingleArmPybullet(ARM):
             self.jnt_to_id[jnt_name] = info[0]
             if info[2] != self.p.JOINT_FIXED:
                 self.jnt_names.append(jnt_name)
+            # info[3] > -1 for joints that are not fixed
+            if info[3] > -1:
+                if jnt_name in self.arm_jnt_names:
+                    # keep track of arm joints vs. gripper joints for IK
+                    self.full_dof_inds.append(full_dof_ind)
+                full_dof_ind += 1
         self._ik_jds = [self._ik_jd] * len(self.jnt_names)
         self.ee_link_id = self.jnt_to_id[self.ee_link_jnt]
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]

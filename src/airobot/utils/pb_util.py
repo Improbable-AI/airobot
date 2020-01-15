@@ -448,7 +448,7 @@ class TextureModder:
             body_id (int): body index
             link_id (int): link index in the body
             texture_file (str): path to the texture files (image, supported
-                format: `jpg`, `png`, `jpeg`, `tga`, or `gif`etc.)
+                format: `jpg`, `png`, `jpeg`, `tga`, or `gif` etc.)
 
         """
         img = cv2.imread(texture_file)
