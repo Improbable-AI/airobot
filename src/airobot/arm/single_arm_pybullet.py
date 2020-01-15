@@ -339,7 +339,7 @@ class SingleArmPybullet(ARM):
             way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
         success = False
         for jnt_poss in way_jnt_positions:
-            success = self.set_jpos(jnt_poss)
+            success = self.set_jpos(jnt_poss, **kwargs)
         return success
 
     def enable_torque_control(self, joint_name=None):

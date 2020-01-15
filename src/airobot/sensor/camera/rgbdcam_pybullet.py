@@ -88,8 +88,7 @@ class RGBDCameraPybullet(RGBDCamera):
     def get_cam_int(self):
         return self.cam_int_mat
 
-    def get_images(self, get_rgb=True, get_depth=True, 
-                   get_seg=False, **kwargs):
+    def get_images(self, get_rgb=True, get_depth=True, shadow=False, **kwargs):
         """
         Return rgb/depth images
 
@@ -106,27 +105,18 @@ class RGBDCameraPybullet(RGBDCamera):
 
         if self.view_matrix is None:
             raise ValueError('Please call setup_camera() first!')
-        if not get_seg:
-            images = p.getCameraImage(width=self.cam_width,
-                                      height=self.cam_height,
-                                      viewMatrix=self.view_matrix,
-                                      projectionMatrix=self.proj_matrix,
-                                      shadow=True,
-                                      flags=p.ER_NO_SEGMENTATION_MASK,
-                                      renderer=p.ER_BULLET_HARDWARE_OPENGL,
-                                      physicsClientId=PB_CLIENT)
-        else:
-            images = p.getCameraImage(width=self.cam_width,
-                                      height=self.cam_height,
-                                      viewMatrix=self.view_matrix,
-                                      projectionMatrix=self.proj_matrix,
-                                      shadow=True,
-                                      flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
-                                      renderer=p.ER_BULLET_HARDWARE_OPENGL,
-                                      physicsClientId=PB_CLIENT)            
+
+        images = p.getCameraImage(width=self.cam_width,
+                                  height=self.cam_height,
+                                  viewMatrix=self.view_matrix,
+                                  projectionMatrix=self.proj_matrix,
+                                  shadow=shadow,
+                                  flags=p.ER_NO_SEGMENTATION_MASK,
+                                  renderer=p.ER_BULLET_HARDWARE_OPENGL,
+                                  physicsClientId=PB_CLIENT,
+                                  **kwargs)
         rgb = None
         depth = None
-        seg = None
         if get_rgb:
             rgb = np.reshape(images[2],
                              (self.cam_height,
@@ -137,9 +127,4 @@ class RGBDCameraPybullet(RGBDCamera):
             znear = self.cfgs.CAM.SIM.ZNEAR
             zfar = self.cfgs.CAM.SIM.ZFAR
             depth = zfar * znear / (zfar - (zfar - znear) * depth_buffer)
-        if get_seg:
-            seg = np.reshape(images[4], [self.cam_height,
-                                         self.cam_width])
-            return rgb, depth, seg
-        else:
-            return rgb, depth
+        return rgb, depth

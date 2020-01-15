@@ -50,6 +50,7 @@ pip install -e .
 ## Supported Robots
 * [UR5e](https://www.universal-robots.com/products/ur5-robot/) with ROS
 * [UR5e](https://www.universal-robots.com/products/ur5-robot/) in PyBullet
+* [ABB YuMi](https://new.abb.com/products/robotics/industrial-robots/irb-14000-yumi) in PyBullet
 
 If you want to use [Sawyer](https://www.rethinkrobotics.com/sawyer) or [LoCoBot](https://locobot-website.netlify.com/), you can use [PyRobot](https://pyrobot.org).
 
