@@ -549,10 +549,13 @@
   </gazebo>
   <!-- <xacro:yumi_transmission name="${name}" hardware_interface="${hardware_interface}"/> -->
   <!-- Yumi palm -->
-  <joint name="yumi_palm_r" type="fixed">
+  <joint name="yumi_palm_r" type="prismatic">
     <parent link="yumi_link_7_r"/>
     <child link="yumi_palm_r"/>
     <origin rpy="0 0.0 0.0" xyz="0 0 0.00692"/>
+    <limit lower="0.0" upper="0.0075"/>
+    <dynamics damping="0.001"/>
+    <axis xyz="0 1 0 "/>    
   </joint>
   <link name="yumi_palm_r">
     <inertial>
@@ -619,10 +622,13 @@
     </visual>
   </link>
   <!-- Yumi gel -->
-  <joint name="yumi_gel_r" type="fixed">
+  <joint name="yumi_gel_r" type="prismatic">
     <parent link="yumi_palm_body_r"/>
     <child link="yumi_gel_r"/>
     <origin rpy="0 0.0 0.0" xyz="0 0 0"/>
+    <limit lower="0" upper="0.00025"/>
+    <dynamics damping="0"/>
+    <axis xyz="0 1 0 "/>    
   </joint>
   <link name="yumi_gel_r">
     <inertial>
@@ -637,6 +643,16 @@
       </geometry>
       <material name="White"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_gel.stl"/>
+      </geometry>
+      <material name="White"/>
+    </collision>    
+    <contact>
+      <lateral_friction value="1"/>
+    </contact>    
   </link>
   <!-- Left tip -->
   <joint name="yumi_tip_r" type="fixed">
@@ -645,12 +661,19 @@
     <!-- <origin xyz="0 -0.071399 0.12844421" rpy="0 0.0 0.0"/> -->
     <origin rpy="0 0.0 0.0" xyz="0 -0.071399 0.14344421"/>
   </joint>
-  <link name="yumi_tip_r"/>
+  <link name="yumi_tip_r">
+    <contact>
+      <lateral_friction value="1"/>
+    </contact>  
+  </link>
   <!-- Yumi palm -->
-  <joint name="yumi_palm_l" type="fixed">
+  <joint name="yumi_palm_l" type="prismatic">
     <parent link="yumi_link_7_l"/>
     <child link="yumi_palm_l"/>
     <origin rpy="0 0.0 0.0" xyz="0 0 0.00692"/>
+    <limit lower="0.0" upper="0.0075"/>
+    <dynamics damping="0.001"/>
+    <axis xyz="0 1 0 "/>    
   </joint>
   <link name="yumi_palm_l">
     <inertial>
@@ -717,10 +740,13 @@
     </visual>
   </link>
   <!-- Yumi gel -->
-  <joint name="yumi_gel_l" type="fixed">
+  <joint name="yumi_gel_l" type="prismatic">
     <parent link="yumi_palm_body_l"/>
     <child link="yumi_gel_l"/>
     <origin rpy="0 0.0 0.0" xyz="0 0 0"/>
+    <limit lower="0" upper="0.0025"/>
+    <dynamics damping="0"/>
+    <axis xyz="0 1 0 "/>    
   </joint>
   <link name="yumi_gel_l">
     <inertial>
@@ -735,6 +761,16 @@
       </geometry>
       <material name="White"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/mpalm/mpalms_gel.stl"/>
+      </geometry>
+      <material name="White"/>
+    </collision>   
+    <contact>
+      <lateral_friction value="1"/>
+    </contact>    
   </link>
   <!-- Left tip -->
   <joint name="yumi_tip_l" type="fixed">
@@ -743,7 +779,11 @@
     <!-- <origin xyz="0 -0.071399 0.12844421" rpy="0 0.0 0.0"/> -->
     <origin rpy="0 0.0 0.0" xyz="0 -0.071399 0.14344421"/>
   </joint>
-  <link name="yumi_tip_l"/>
+  <link name="yumi_tip_l">
+    <contact>
+      <lateral_friction value="1"/>
+    </contact>
+  </link>
   <!-- Table top -->
   <joint name="yumi_body_to_table_top" type="fixed">
     <parent link="yumi_body"/>
@@ -758,6 +798,15 @@
       </geometry>
       <material name="Grey"/>
     </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="meshes/table/table_top.stl"/>
+      </geometry>
+    </collision>
+    <contact>
+      <lateral_friction value="0.2"/>         
+    </contact>    
   </link>
   <!-- Table base -->
   <!-- <joint name="yumi_body_to_table_base" type="fixed">

@@ -1,7 +1,7 @@
 from airobot.cfgs.default_configs import get_cfg_defaults
 from airobot.cfgs.pybullet_camera import get_sim_cam_cfg
 from airobot.cfgs.realsense_camera import get_realsense_cam_cfg
-from airobot.cfgs.robotiq2f140 import get_robotiq2f140_cfg
+from airobot.cfgs.yumi_parallel_jaw import get_yumi_parallel_jaw_cfg
 from airobot.cfgs.yumi_arm import get_yumi_arm_cfg
 from yacs.config import CfgNode as CN
 
@@ -26,7 +26,7 @@ _C.ARM = get_yumi_arm_cfg()
 _C.ARM.CLASS = 'Yumi'
 
 _C.ARM.RIGHT = CN()
-_C.ARM.RIGHT.HAS_EETOOL = _C.HAS_EETOOL
+_C.ARM.RIGHT.HAS_EETOOL = True
 _C.ARM.RIGHT.HAS_CAMERA = _C.HAS_CAMERA
 _C.ARM.RIGHT.HAS_ARM = _C.HAS_ARM
 
@@ -46,7 +46,7 @@ _C.ARM.RIGHT.ARM.HOME_POSITION = [
     0.413, -1.325, -1.040, -0.053, -0.484, 0.841, -1.546]
 
 _C.ARM.LEFT = CN()
-_C.ARM.LEFT.HAS_EETOOL = _C.HAS_EETOOL
+_C.ARM.LEFT.HAS_EETOOL = True
 _C.ARM.LEFT.HAS_CAMERA = _C.HAS_CAMERA
 _C.ARM.LEFT.HAS_ARM = _C.HAS_ARM
 
@@ -69,8 +69,13 @@ _C.CAM.SIM = get_sim_cam_cfg()
 _C.CAM.REAL = get_realsense_cam_cfg()
 _C.CAM.CLASS = 'RGBDCamera'
 
-_C.EETOOL = get_robotiq2f140_cfg()
-_C.EETOOL.CLASS = 'Robotiq2F140'
+_C.ARM.RIGHT.EETOOL = get_yumi_parallel_jaw_cfg()
+_C.ARM.RIGHT.EETOOL.CLASS = 'YumiParallelJawPybullet'
+_C.ARM.RIGHT.EETOOL.JOINT_NAMES = ['gripper_r_joint', 'gripper_r_joint_m']
+
+_C.ARM.LEFT.EETOOL = get_yumi_parallel_jaw_cfg()
+_C.ARM.LEFT.EETOOL.CLASS = 'YumiParallelJawPybullet'
+_C.ARM.LEFT.EETOOL.JOINT_NAMES = ['gripper_l_joint', 'gripper_l_joint_m']
 
 
 def get_cfg():

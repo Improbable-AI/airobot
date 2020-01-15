@@ -8,7 +8,6 @@ from __future__ import print_function
 
 import pybullet as p
 import copy
-import threading
 
 import airobot.utils.common as arutil
 from airobot.utils.pb_util import PB_CLIENT
@@ -273,12 +272,12 @@ class YumiPalmsPybullet(DualArmPybullet):
             eetool_cfg (dict): arguments to pass in the constructor
                 of the end effector tool class
         """
-        super(YumiPybullet, self).__init__(cfgs=cfgs,
-                                           render=render,
-                                           seed=seed,
-                                           self_collision=self_collision,
-                                           eetool_cfg=eetool_cfg,
-                                           rt_simulation=rt_simulation)
+        super(YumiPalmsPybullet, self).__init__(cfgs=cfgs,
+                                                render=render,
+                                                seed=seed,
+                                                self_collision=self_collision,
+                                                eetool_cfg=eetool_cfg,
+                                                rt_simulation=rt_simulation)
         right_cfg = cfgs.ARM.RIGHT
         left_cfg = cfgs.ARM.LEFT
         self.right_arm = CompliantYumiArm(cfgs=right_cfg,
@@ -293,25 +292,13 @@ class YumiPalmsPybullet(DualArmPybullet):
                                          self_collision=self_collision,
                                          eetool_cfg=eetool_cfg,
                                          rt_simulation=rt_simulation)
-        # self.right_arm = SingleArmPybullet(cfgs=right_cfg,
-        #                                   render=render,
-        #                                   seed=seed,
-        #                                   self_collision=self_collision,
-        #                                   eetool_cfg=eetool_cfg)
-        # self.left_arm = SingleArmPybullet(cfgs=left_cfg,
-        #                                  render=render,
-        #                                  seed=seed,
-        #                                  self_collision=self_collision,
-        #                                  eetool_cfg=eetool_cfg)
-
         self.reset()
-        print("\n\nfinished construction\n\n")
 
     def reset(self):
         """
         Reset the simulation environment.
         """
-        p.resetSimulation()
+        p.resetSimulation(physicsClientId=PB_CLIENT)
 
         # plane_pos = [0, 0, 0]
         # plane_ori = arutil.euler2quat([0, 0, 0])
@@ -332,14 +319,6 @@ class YumiPalmsPybullet(DualArmPybullet):
 
         self.setup_single_arms(right_arm=self.right_arm,
                                left_arm=self.left_arm)
-
-        if self.cfgs.HAS_EETOOL:
-            self.eetool.activate(self.robot_id, self.jnt_to_id)
-        if self.self_collision:
-            # weird behavior occurs on the gripper
-            # when self-collision is enforced
-            if self.cfgs.HAS_EETOOL:
-                self.eetool.disable_gripper_self_collision()
 
     def setup_single_arms(self, right_arm, left_arm):
         """

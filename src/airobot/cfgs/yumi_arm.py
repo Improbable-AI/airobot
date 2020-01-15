@@ -7,6 +7,7 @@ _C.ROSTOPIC_JOINT_STATES = '/joint_states'
 
 # base frame for the arm
 _C.ROBOT_BASE_FRAME = 'yumi_body'
+_C.CLASS = 'Yumi'
 
 _C.JOINT_SPEED_TOPIC = '/joint_speed'
 

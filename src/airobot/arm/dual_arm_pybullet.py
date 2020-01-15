@@ -42,11 +42,10 @@ class DualArmPybullet(ARM):
 
         self._render = render
         self.self_collision = self_collision
-        self.p = p
-        if eetool_cfg is None:
-            eetool_cfg = {'p': self.p}
-        else:
-            eetool_cfg['p'] = self.p
+        # if eetool_cfg is None:
+        #     eetool_cfg = {'p': self.p}
+        # else:
+        #     eetool_cfg['p'] = self.p
         super(DualArmPybullet, self).__init__(cfgs=cfgs,
                                               eetool_cfg=eetool_cfg)
         self.p = p
@@ -61,8 +60,8 @@ class DualArmPybullet(ARM):
         self._in_torque_mode = [False] * self.dual_arm_dof
 
     def setup_single_arms(self, right_arm, left_arm):
-        self.arm_dict[self.cfgs.ARM.RIGHT.NAME] = right_arm
-        self.arm_dict[self.cfgs.ARM.LEFT.NAME] = left_arm
+        self.arm_dict[self.cfgs.ARM.RIGHT.ARM.NAME] = right_arm
+        self.arm_dict[self.cfgs.ARM.LEFT.ARM.NAME] = left_arm
 
         for arm in self.arm_dict.values():
             arm.robot_id = self.robot_id
@@ -605,7 +604,7 @@ class DualArmPybullet(ARM):
 
         self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.dual_arm_dof = len(self.arm_jnt_names)
-        self.single_arm_dof = self.dual_arm_dof / 2
+        self.single_arm_dof = int(self.dual_arm_dof / 2)
 
         self.rvl_joint_names = self.arm_jnt_names
         if self.cfgs.HAS_EETOOL:

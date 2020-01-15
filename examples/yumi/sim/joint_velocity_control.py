@@ -25,7 +25,7 @@ def main():
     Move all the joints of the robot in a sine-wave fashion
     """
 
-    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot = Robot('yumi_grippers', arm_cfg={'render': True})
     robot.arm.go_home()
 
     A = 0.2
@@ -33,8 +33,9 @@ def main():
     start_time = time.time()
     while True:
         elapsed_time = time.time() - start_time
-        vels = [sin_wave(elapsed_time, f, A)] * robot.arm.arm_dof
-        robot.arm.set_jvel(vels)
+        vels = [sin_wave(elapsed_time, f, A)] * robot.arm.single_arm_dof
+        robot.arm.right_arm.set_jvel(vels)
+        robot.arm.set_jvel(vels, arm='left')
         time.sleep(0.01)
 
 

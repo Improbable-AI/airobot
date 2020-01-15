@@ -570,7 +570,8 @@ class SingleArmPybullet(ARM):
                                                          **ex_args)
         jnt_poss = map(ang_in_mpi_ppi, jnt_poss)
         jnt_poss = list(jnt_poss)
-        return jnt_poss
+        inds = (self.full_dof_inds[0], self.full_dof_inds[-1]+1)
+        return jnt_poss[inds[0]:inds[1]]
 
     def _get_joint_ranges(self):
         """

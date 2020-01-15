@@ -25,9 +25,6 @@ _C.PYBULLET_URDF = 'yumi_gelslim_palm.urdf'
 _C.ARM = get_yumi_arm_cfg()
 _C.ARM.CLASS = 'YumiPalms'
 
-_C.ARM.COMPLIANT_GAINS = [5, 5]
-_C.ARM.COMPLIANT_MAX_FORCE = 20
-
 _C.ARM.RIGHT = CN()
 _C.ARM.RIGHT.HAS_EETOOL = _C.HAS_EETOOL
 _C.ARM.RIGHT.HAS_CAMERA = _C.HAS_CAMERA
@@ -44,6 +41,9 @@ _C.ARM.RIGHT.ARM.JOINT_NAMES = [
 _C.ARM.RIGHT.ARM.COMPLIANT_JOINT_NAMES = [
     'yumi_palm_r', 'yumi_gel_r'
 ]
+_C.ARM.RIGHT.ARM.COMPLIANT_GAINS = [5, 5]
+_C.ARM.RIGHT.ARM.COMPLIANT_MAX_FORCE = 20
+
 _C.ARM.RIGHT.ARM.MAX_TORQUES = [300, 300, 300, 300, 300, 300, 300]
 _C.ARM.RIGHT.ARM.ROBOT_EE_FRAME = 'yumi_link_7_r'
 _C.ARM.RIGHT.ARM.ROBOT_EE_FRAME_JOINT = 'yumi_joint_6_r'
@@ -66,6 +66,9 @@ _C.ARM.LEFT.ARM.JOINT_NAMES = [
 _C.ARM.LEFT.ARM.COMPLIANT_JOINT_NAMES = [
     'yumi_palm_l', 'yumi_gel_l'
 ]
+_C.ARM.LEFT.ARM.COMPLIANT_GAINS = [5, 5]
+_C.ARM.LEFT.ARM.COMPLIANT_MAX_FORCE = 20
+
 _C.ARM.LEFT.ARM.MAX_TORQUES = [300, 300, 300, 300, 300, 300, 300]
 _C.ARM.LEFT.ARM.ROBOT_EE_FRAME = 'yumi_link_7_l'
 _C.ARM.LEFT.ARM.ROBOT_EE_FRAME_JOINT = 'yumi_joint_6_l'
@@ -75,9 +78,6 @@ _C.ARM.LEFT.ARM.HOME_POSITION = [
 _C.CAM.SIM = get_sim_cam_cfg()
 _C.CAM.REAL = get_realsense_cam_cfg()
 _C.CAM.CLASS = 'RGBDCamera'
-
-_C.EETOOL = get_robotiq2f140_cfg()
-_C.EETOOL.CLASS = 'Robotiq2F140'
 
 
 def get_cfg():

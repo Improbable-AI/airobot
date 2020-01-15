@@ -10,7 +10,6 @@ import pybullet as p
 
 import airobot.utils.common as arutil
 from airobot.utils.pb_util import PB_CLIENT
-from airobot.utils.arm_util import wait_to_reach_jnt_goal
 from airobot.arm.single_arm_pybullet import SingleArmPybullet
 from airobot.arm.dual_arm_pybullet import DualArmPybullet
 
@@ -61,7 +60,7 @@ class YumiPybullet(DualArmPybullet):
         """
         Reset the simulation environment.
         """
-        p.resetSimulation()
+        p.resetSimulation(physicsClientId=PB_CLIENT)
 
         # plane_pos = [0, 0, 0]
         # plane_ori = arutil.euler2quat([0, 0, 0])
@@ -73,20 +72,22 @@ class YumiPybullet(DualArmPybullet):
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
                                        yumi_pos,
                                        yumi_ori,
-                                       flags=p.URDF_USE_SELF_COLLISION)
+                                       flags=p.URDF_USE_SELF_COLLISION,
+                                       physicsClientId=PB_CLIENT)
         else:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       yumi_pos, yumi_ori)
+                                       yumi_pos, yumi_ori,
+                                       physicsClientId=PB_CLIENT)
 
         self._build_jnt_id()
 
         self.setup_single_arms(right_arm=self.right_arm,
                                left_arm=self.left_arm)
 
-        if self.cfgs.HAS_EETOOL:
-            self.eetool.activate(self.robot_id, self.jnt_to_id)
-        if self.self_collision:
-            # weird behavior occurs on the gripper
-            # when self-collision is enforced
-            if self.cfgs.HAS_EETOOL:
-                self.eetool.disable_gripper_self_collision()
+        for arm in self.arm_dict.values():
+            if hasattr(arm, 'eetool'):
+                arm.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
+                arm.eetool.activate()
+                if arm.self_collision:
+                    arm.eetool.disable_gripper_self_collision()
+

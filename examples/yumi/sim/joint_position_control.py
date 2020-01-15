@@ -11,13 +11,26 @@ def main():
     robot = Robot('yumi_grippers', arm_cfg={'render': True})
     robot.arm.go_home()
 
-    from IPython import embed
-    embed()
-    # robot.arm.set_jpos([-0.8, -1.2, -2.2, -1.5, 2.0, 0])
-    # # sleep statement is not necessary
-    # time.sleep(3)
-    # robot.arm.set_jpos(0.5, 'shoulder_pan_joint')
-    # time.sleep(3)
+    robot.arm.right_arm.set_jpos(
+        [0.5, -1.0, -1.0, -0.0, -0.2, 1.0, -1.57])
+
+    # sleep statement is not necessary
+    time.sleep(3)
+    robot.arm.right_arm.set_jpos(0.5, 'yumi_joint_3_r')
+    time.sleep(3)
+
+    robot.arm.left_arm.eetool.activate()
+
+    robot.arm.left_arm.eetool.open()
+    time.sleep(3)
+
+    robot.arm.left_arm.eetool.set_pos(0.005)
+    print(robot.arm.left_arm.eetool.get_pos())
+    time.sleep(3)
+
+    robot.arm.left_arm.eetool.close()
+    time.sleep(3)
+    print(robot.arm.left_arm.eetool.get_pos())
 
 
 if __name__ == '__main__':
