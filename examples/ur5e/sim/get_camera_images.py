@@ -18,7 +18,7 @@ def main():
                            roll=0)
     robot.arm.go_home()
     rgb, depth = robot.cam.get_images(get_rgb=True,
-                                      get_depth=True)
+                                      get_depth=True,)
     plt.figure()
     plt.imshow(rgb)
     plt.figure()
