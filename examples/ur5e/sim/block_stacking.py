@@ -30,20 +30,21 @@ def main():
     obj_pos = get_body_state(box_id1)[0]
     move_dir = obj_pos - robot.arm.get_ee_pose()[0]
     move_dir[2] = 0
-    robot.arm.move_ee_xyz(move_dir)
+    eef_step = 0.025
+    robot.arm.move_ee_xyz(move_dir, eef_step=eef_step)
     move_dir = np.zeros(3)
     move_dir[2] = obj_pos[2] - robot.arm.get_ee_pose()[0][2]
-    robot.arm.move_ee_xyz(move_dir)
+    robot.arm.move_ee_xyz(move_dir, eef_step=eef_step)
     robot.arm.eetool.close(wait=False)
-    robot.arm.move_ee_xyz([0, 0, 0.3])
+    robot.arm.move_ee_xyz([0, 0, 0.3], eef_step=eef_step)
 
     obj_pos = get_body_state(box_id2)[0]
     move_dir = obj_pos - robot.arm.get_ee_pose()[0]
     move_dir[2] = 0
-    robot.arm.move_ee_xyz(move_dir)
+    robot.arm.move_ee_xyz(move_dir, eef_step=eef_step)
     move_dir = obj_pos - robot.arm.get_ee_pose()[0]
     move_dir[2] += box_size * 2
-    robot.arm.move_ee_xyz(move_dir)
+    robot.arm.move_ee_xyz(move_dir, eef_step=eef_step)
     robot.arm.eetool.open()
     time.sleep(10)
 
