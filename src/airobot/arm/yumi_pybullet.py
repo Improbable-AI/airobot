@@ -1,6 +1,6 @@
 """
-Pybullet simulation environment of a UR5e
-robot with a robotiq 2f140 gripper
+Pybullet simulation environment of an ABB Yumi
+robot
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -20,8 +20,9 @@ class YumiPybullet(DualArmPybullet):
     separate functionality for both arms
     """
 
-    def __init__(self, cfgs, render=False, seed=None, self_collision=False,
-                 eetool_cfg=None, rt_simulation=True):
+    def __init__(self, cfgs, render=False, seed=None, 
+                 rt_simulation=True, self_collision=False,
+                 eetool_cfg=None):
         """
         Constructor
 
@@ -29,6 +30,7 @@ class YumiPybullet(DualArmPybullet):
             cfgs (YACS CfgNode): configurations for the arm
             render (bool): whether to render the environment using GUI
             seed (int): random seed
+            rt_simulation (bool): turn on realtime simulation or not
             self_collision (bool): enable self_collision or
                                    not whiling loading URDF
             eetool_cfg (dict): arguments to pass in the constructor
@@ -61,10 +63,6 @@ class YumiPybullet(DualArmPybullet):
         Reset the simulation environment.
         """
         p.resetSimulation(physicsClientId=PB_CLIENT)
-
-        # plane_pos = [0, 0, 0]
-        # plane_ori = arutil.euler2quat([0, 0, 0])
-        # self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
         yumi_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         yumi_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)

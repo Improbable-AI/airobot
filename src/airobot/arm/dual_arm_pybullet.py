@@ -20,8 +20,9 @@ class DualArmPybullet(ARM):
 
     """
 
-    def __init__(self, cfgs, render=False, seed=None, self_collision=False,
-                 eetool_cfg=None, rt_simulation=True):
+    def __init__(self, cfgs, render=False, seed=None,
+                 rt_simulation=True, self_collision=False,
+                 eetool_cfg=None):
         """
         Constructor for the pybullet simulation environment
         of a dual arm robot
@@ -30,6 +31,7 @@ class DualArmPybullet(ARM):
             cfgs (YACS CfgNode): configurations for the arm
             render (bool): whether to render the environment using GUI
             seed (int): random seed
+            rt_simulation (bool): turn on realtime simulation or not
             self_collision (bool): enable self_collision or
                                    not whiling loading URDF
             eetool_cfg (dict): arguments to pass in the constructor
@@ -52,6 +54,14 @@ class DualArmPybullet(ARM):
         self._in_torque_mode = [False] * self.dual_arm_dof
 
     def setup_single_arms(self, right_arm, left_arm):
+        """
+        Function to setup the single arm instances, and
+        maintain an internal dictionary interface to them
+
+        Args:
+            right_arm (SingleArmPybullet): Right arm instance
+            left_arm (SingleArmPybullet): Left arm instance
+        """
         self.arm_dict[self.cfgs.ARM.RIGHT.ARM.NAME] = right_arm
         self.arm_dict[self.cfgs.ARM.LEFT.ARM.NAME] = left_arm
 
@@ -550,6 +560,8 @@ class DualArmPybullet(ARM):
                 or rotation matrix (shape: :math:`[3, 3]`).
             arm (str): Which arm EE pose corresponds to, must
                 match arm names in cfg file
+            ns (bool): whether to use the nullspace options in pybullet,
+                True if nullspace should be used. Defaults to False.                
 
         Returns:
             list: solution to inverse kinematics, joint angles which achieve
@@ -598,12 +610,6 @@ class DualArmPybullet(ARM):
         self.dual_arm_dof = len(self.arm_jnt_names)
         self.single_arm_dof = int(self.dual_arm_dof / 2)
 
-        self.rvl_joint_names = self.arm_jnt_names
-        if self.cfgs.HAS_EETOOL:
-            self.rvl_joint_names = self.rvl_joint_names + self.eetool.jnt_names
-
-        self._ik_jds = [self._ik_jd] * len(self.rvl_joint_names)
-
         self.r_ee_link_jnt = self.cfgs.ARM.RIGHT.ARM.ROBOT_EE_FRAME_JOINT
         self.l_ee_link_jnt = self.cfgs.ARM.LEFT.ARM.ROBOT_EE_FRAME_JOINT
 
@@ -616,11 +622,14 @@ class DualArmPybullet(ARM):
         Build the mapping from the joint name to joint index
         """
         self.jnt_to_id = {}
+        self.jnt_names = []
         for i in range(self.p.getNumJoints(self.robot_id,
                                            physicsClientId=PB_CLIENT)):
             info = self.p.getJointInfo(self.robot_id, i,
                                        physicsClientId=PB_CLIENT)
             jnt_name = info[1].decode('UTF-8')
             self.jnt_to_id[jnt_name] = info[0]
-
+            if info[2] != self.p.JOINT_FIXED:
+                self.jnt_names.append(jnt_name)
+        self._ik_jds = [self._ik_jd] * len(self.jnt_names)
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]

@@ -1,6 +1,6 @@
 """
-Pybullet simulation environment of a UR5e
-robot with a robotiq 2f140 gripper
+Pybullet simulation environment of an ABB Yumi
+robot with Gelslim palms and a compliant wrist
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -24,13 +24,9 @@ class CompliantYumiArm(SingleArmPybullet):
     specified to behave like springs
     """
 
-    def __init__(self,
-                 cfgs,
-                 render=False,
-                 seed=None,
-                 self_collision=False,
-                 eetool_cfg=None,
-                 rt_simulation=True):
+    def __init__(self, cfgs, render=False, seed=None,
+                 rt_simulation=True, self_collision=False,
+                 eetool_cfg=None):
         """
         Constructor
 
@@ -38,6 +34,7 @@ class CompliantYumiArm(SingleArmPybullet):
             cfgs (YACS CfgNode): configurations for the arm
             render (bool): whether to render the environment using GUI
             seed (int): random seed
+            rt_simulation (bool): turn on realtime simulation or not
             self_collision (bool): enable self_collision or
                                    not whiling loading URDF
             eetool_cfg (dict): arguments to pass in the constructor
@@ -242,7 +239,7 @@ class CompliantYumiArm(SingleArmPybullet):
         Initialize additional constants relevant to compliant joints
         """
         self.comp_jnt_names = self.cfgs.ARM.COMPLIANT_JOINT_NAMES
-        self.rvl_joint_names = self.arm_jnt_names + self.comp_jnt_names
+        self.ik_joint_names = self.arm_jnt_names + self.comp_jnt_names
 
         self.comp_jnt_names_set = set(self.comp_jnt_names)
         self.comp_dof = len(self.comp_jnt_names)
@@ -256,11 +253,14 @@ class CompliantYumiArm(SingleArmPybullet):
 class YumiPalmsPybullet(DualArmPybullet):
     """
     Class for pybullet simulation of ABB Yumi robot with
-    separate functionality for both arms
+    separate functionality for both arms, with two Gelslim
+    Palms attached as end effectors instead of parallel jaw
+    grippers
     """
 
-    def __init__(self, cfgs, render=False, seed=None, self_collision=False,
-                 eetool_cfg=None, rt_simulation=True):
+    def __init__(self, cfgs, render=False, seed=None, 
+                 rt_simulation=True, self_collision=False,
+                 eetool_cfg=None):
         """
         Constructor
 
@@ -268,6 +268,7 @@ class YumiPalmsPybullet(DualArmPybullet):
             cfgs (YACS CfgNode): configurations for the arm
             render (bool): whether to render the environment using GUI
             seed (int): random seed
+            rt_simulation (bool): turn on realtime simulation or not
             self_collision (bool): enable self_collision or
                                    not whiling loading URDF
             eetool_cfg (dict): arguments to pass in the constructor
@@ -300,10 +301,6 @@ class YumiPalmsPybullet(DualArmPybullet):
         Reset the simulation environment.
         """
         p.resetSimulation(physicsClientId=PB_CLIENT)
-
-        # plane_pos = [0, 0, 0]
-        # plane_ori = arutil.euler2quat([0, 0, 0])
-        # self.plane_id = p.loadURDF("plane.urdf", plane_pos, plane_ori)
 
         yumi_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         yumi_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
@@ -338,4 +335,4 @@ class YumiPalmsPybullet(DualArmPybullet):
             arm.robot_id = self.robot_id
             arm._build_jnt_id()
             arm._init_compliant_consts()
-            arm._ik_jds = [self._ik_jd] * 2 * len(arm.rvl_joint_names)
+            arm._ik_jds = [self._ik_jd] * 2 * len(arm.ik_joint_names)

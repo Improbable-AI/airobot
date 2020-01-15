@@ -50,16 +50,6 @@ class SingleArmPybullet(ARM):
         self.realtime_simulation(rt_simulation)
         self._in_torque_mode = [False] * self.arm_dof
 
-    @property
-    def joint_names(self):
-        """
-        Return the joint names in urdf
-
-        Returns:
-            list: joint names
-        """
-        return list(self.jnt_to_id.keys())
-
     def go_home(self, ignore_physics=False):
         """
         Move the robot to a pre-defined home pose
@@ -570,8 +560,8 @@ class SingleArmPybullet(ARM):
                                                          **ex_args)
         jnt_poss = map(ang_in_mpi_ppi, jnt_poss)
         jnt_poss = list(jnt_poss)
-        inds = (self.full_dof_inds[0], self.full_dof_inds[-1] + 1)
-        return jnt_poss[inds[0]:inds[1]]
+        arm_jnt_poss = [jnt_poss[i] for i in self.full_dof_inds]
+        return arm_jnt_poss
 
     def _get_joint_ranges(self):
         """
@@ -673,10 +663,9 @@ class SingleArmPybullet(ARM):
             # info[3] > -1 for joints that are not fixed
             if info[3] > -1:
                 if jnt_name in self.arm_jnt_names:
+                    # keep track of arm joints vs. gripper joints for IK
                     self.full_dof_inds.append(full_dof_ind)
                 full_dof_ind += 1
-
         self._ik_jds = [self._ik_jd] * len(self.jnt_names)
-
         self.ee_link_id = self.jnt_to_id[self.ee_link_jnt]
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]

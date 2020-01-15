@@ -19,7 +19,7 @@ def main():
     robot.arm.set_ee_pose(tgt_pos, tgt_euler, arm='right')
     time.sleep(3)
     pos, quat, rot, euler = robot.arm.get_ee_pose(arm='right')
-    print('End effector pose:')
+    print('Right arm end effector pose:')
     print('Position:')
     print(pos)
     print('Euler angles:')

@@ -14,8 +14,13 @@ def main():
     robot.arm.right_arm.set_jpos(
         [0.5, -1.0, -1.0, -0.0, -0.2, 1.0, -1.57])
 
-    # sleep statement is not necessary
     time.sleep(3)
+    print('Right arm joint positions: ')
+    print(robot.arm.right_arm.get_jpos())
+    print('Both arm joint positions: ')
+    print(robot.arm.get_jpos())
+    print('\n')
+
     robot.arm.right_arm.set_jpos(0.5, 'yumi_joint_3_r')
     time.sleep(3)
 
@@ -25,14 +30,16 @@ def main():
     time.sleep(3)
 
     robot.arm.left_arm.eetool.set_pos(0.005)
-    print('EE_tool position:')
+    print('Left gripper position: ')
     print(robot.arm.left_arm.eetool.get_pos())
+    print('\n')
     time.sleep(3)
 
     robot.arm.left_arm.eetool.close()
     time.sleep(3)
-    print('EE_tool position:')
+    print('Left gripper position at close: ')
     print(robot.arm.left_arm.eetool.get_pos())
+    print('\n')
 
 
 if __name__ == '__main__':
