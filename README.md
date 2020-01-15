@@ -69,7 +69,7 @@ robot.arm.move_ee_xyz([0.1, 0.1, 0.1])
 ## Credits
 **AIRobot** is maintained by the Improbable AI team at MIT. It follows a similar architecture in [PyRobot](https://pyrobot.org). Contributors include:
 * [Tao Chen](https://taochenshh.github.io/)
-* Anthony Simeonov
+* [Anthony Simeonov](https://anthonysimeonov.github.io/)
 * [Pulkit Agrawal](http://people.csail.mit.edu/pulkitag/)
 
 **AIRobot** is currently under development and used internally by Prof. Pulkit Agrawal's lab only. Please do not distribute the code publicly without permission from Prof. Pulkit Agrawal.

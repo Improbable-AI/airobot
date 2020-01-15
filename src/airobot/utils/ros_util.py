@@ -105,7 +105,7 @@ def read_cam_ext(robot_name):
 
         - np.ndarray: position of the camera (shape: :math:`[3]`)
         - np.ndarray: orientation (quaternion) of
-        the camera (shape: :math:`[4]`)
+          the camera (shape: :math:`[4]`)
     """
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')

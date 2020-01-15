@@ -22,7 +22,7 @@ class Robot:
                  ):
         """
         Create a robot instance, which contains:
-            arm, base, camera
+        arm, base, camera
         End effector tool is inside the arm class
 
         Args:
