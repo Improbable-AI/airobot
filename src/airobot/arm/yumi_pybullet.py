@@ -20,7 +20,7 @@ class YumiPybullet(DualArmPybullet):
     separate functionality for both arms
     """
 
-    def __init__(self, cfgs, render=False, seed=None, 
+    def __init__(self, cfgs, render=False, seed=None,
                  rt_simulation=True, self_collision=False,
                  eetool_cfg=None):
         """

@@ -1,5 +1,8 @@
 import time
 
+import numpy as np
+
+import airobot as ar
 from airobot import Robot
 
 
@@ -15,11 +18,11 @@ def main():
         [0.5, -1.0, -1.0, -0.0, -0.2, 1.0, -1.57])
 
     time.sleep(3)
-    print('Right arm joint positions: ')
-    print(robot.arm.right_arm.get_jpos())
-    print('Both arm joint positions: ')
-    print(robot.arm.get_jpos())
-    print('\n')
+    ar.log_info('Right arm joint positions: ')
+    ar.log_info(np.round(robot.arm.right_arm.get_jpos(), 6))
+    ar.log_info('Both arm joint positions: ')
+    ar.log_info(np.round(robot.arm.get_jpos(), 6))
+    ar.log_info('\n')
 
     robot.arm.right_arm.set_jpos(0.5, 'yumi_joint_3_r')
     time.sleep(3)
@@ -30,16 +33,16 @@ def main():
     time.sleep(3)
 
     robot.arm.left_arm.eetool.set_pos(0.005)
-    print('Left gripper position: ')
-    print(robot.arm.left_arm.eetool.get_pos())
-    print('\n')
+    ar.log_info('Left gripper position: ')
+    ar.log_info(np.round(robot.arm.left_arm.eetool.get_pos(), 6))
+    ar.log_info('\n')
     time.sleep(3)
 
     robot.arm.left_arm.eetool.close()
     time.sleep(3)
-    print('Left gripper position at close: ')
-    print(robot.arm.left_arm.eetool.get_pos())
-    print('\n')
+    ar.log_info('Left gripper position at close: ')
+    ar.log_info(np.round(robot.arm.left_arm.eetool.get_pos(), 6))
+    ar.log_info('\n')
 
 
 if __name__ == '__main__':

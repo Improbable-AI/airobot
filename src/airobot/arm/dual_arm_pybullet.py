@@ -561,7 +561,7 @@ class DualArmPybullet(ARM):
             arm (str): Which arm EE pose corresponds to, must
                 match arm names in cfg file
             ns (bool): whether to use the nullspace options in pybullet,
-                True if nullspace should be used. Defaults to False.                
+                True if nullspace should be used. Defaults to False.
 
         Returns:
             list: solution to inverse kinematics, joint angles which achieve

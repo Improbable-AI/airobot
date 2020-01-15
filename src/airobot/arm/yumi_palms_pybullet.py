@@ -258,7 +258,7 @@ class YumiPalmsPybullet(DualArmPybullet):
     grippers
     """
 
-    def __init__(self, cfgs, render=False, seed=None, 
+    def __init__(self, cfgs, render=False, seed=None,
                  rt_simulation=True, self_collision=False,
                  eetool_cfg=None):
         """
