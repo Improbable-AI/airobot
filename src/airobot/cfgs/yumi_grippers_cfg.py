@@ -14,7 +14,8 @@ _C.HAS_CAMERA = True
 _C.HAS_EETOOL = False
 
 _C.ROBOT_DESCRIPTION = '/robot_description'
-_C.PYBULLET_URDF = 'yumi.urdf'
+_C.PYBULLET_URDF = 'yumi_grippers.urdf'
+
 
 # prefix of the class name of the ARM
 # if it's for pybullet simulation, the name will
@@ -37,9 +38,7 @@ _C.ARM.RIGHT.ARM.JOINT_NAMES = [
     'yumi_joint_3_r', 'yumi_joint_4_r', 'yumi_joint_5_r',
     'yumi_joint_6_r'
 ]
-_C.ARM.RIGHT.ARM.COMPLIANT_JOINT_NAMES = [
-    'yumi_palm_r', 'yumi_gel_r'
-]
+
 _C.ARM.RIGHT.ARM.MAX_TORQUES = [300, 300, 300, 300, 300, 300, 300]
 _C.ARM.RIGHT.ARM.ROBOT_EE_FRAME = 'yumi_link_7_r'
 _C.ARM.RIGHT.ARM.ROBOT_EE_FRAME_JOINT = 'yumi_joint_6_r'
@@ -59,9 +58,7 @@ _C.ARM.LEFT.ARM.JOINT_NAMES = [
     'yumi_joint_3_l', 'yumi_joint_4_l', 'yumi_joint_5_l',
     'yumi_joint_6_l'
 ]
-_C.ARM.LEFT.ARM.COMPLIANT_JOINT_NAMES = [
-    'yumi_palm_l', 'yumi_gel_l'
-]
+
 _C.ARM.LEFT.ARM.MAX_TORQUES = [300, 300, 300, 300, 300, 300, 300]
 _C.ARM.LEFT.ARM.ROBOT_EE_FRAME = 'yumi_link_7_l'
 _C.ARM.LEFT.ARM.ROBOT_EE_FRAME_JOINT = 'yumi_joint_6_l'

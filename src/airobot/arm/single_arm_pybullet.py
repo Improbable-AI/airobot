@@ -555,8 +555,9 @@ class SingleArmPybullet(ARM):
             ex_args['upperLimits'] = ul
             ex_args['jointRanges'] = jr
             ex_args['restPoses'] = rp
+
         if ori is not None:
-            ori = arutil.to_quat(ori)            
+            ori = arutil.to_quat(ori)
             jnt_poss = self.p.calculateInverseKinematics(self.robot_id,
                                                          self.ee_link_id,
                                                          pos,
@@ -569,19 +570,18 @@ class SingleArmPybullet(ARM):
                                                          **ex_args)
         jnt_poss = map(ang_in_mpi_ppi, jnt_poss)
         jnt_poss = list(jnt_poss)
-        inds = (self.full_dof_inds[0], self.full_dof_inds[-1]+1)
-        return jnt_poss[inds[0]:inds[1]]
+        return jnt_poss
 
     def _get_joint_ranges(self):
         """
         Return a default set of values for the arguments to IK
-        with nullspace turned on. Returns joint ranges from the 
+        with nullspace turned on. Returns joint ranges from the
         URDF and the current value of each joint angle for the
         rest poses
-        
+
         Returns:
             4-element tuple containing:
-            
+
             - list: list of lower limits for each joint (shape: :math:`[DOF]`)
             - list: list of upper limits for each joint (shape: :math:`[DOF]`)
             - list: list of joint ranges for each joint (shape: :math:`[DOF]`)
@@ -591,14 +591,14 @@ class SingleArmPybullet(ARM):
 
         for i in range(self.p.getNumJoints(self.robot_id,
                                            physicsClientId=PB_CLIENT)):
-            info = self.p.getJointInfo(self.robot_id, i, 
+            info = self.p.getJointInfo(self.robot_id, i,
                                        physicsClientId=PB_CLIENT)
             if info[3] > -1:
                 lower, upper = info[8:10]
                 j_range = upper - lower
 
                 rest_pose = self.p.getJointState(
-                    self.robot_id, 
+                    self.robot_id,
                     i,
                     physicsClientId=PB_CLIENT)[0]
 

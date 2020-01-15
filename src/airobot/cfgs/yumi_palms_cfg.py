@@ -14,7 +14,8 @@ _C.HAS_CAMERA = True
 _C.HAS_EETOOL = False
 
 _C.ROBOT_DESCRIPTION = '/robot_description'
-_C.PYBULLET_URDF = 'yumi.urdf'
+_C.PYBULLET_URDF = 'yumi_gelslim_palm.urdf'
+
 
 # prefix of the class name of the ARM
 # if it's for pybullet simulation, the name will
@@ -22,7 +23,10 @@ _C.PYBULLET_URDF = 'yumi.urdf'
 # if it's for the real robot, the name will be
 # augmented to be '<Prefix>Real'
 _C.ARM = get_yumi_arm_cfg()
-_C.ARM.CLASS = 'Yumi'
+_C.ARM.CLASS = 'YumiPalms'
+
+_C.ARM.COMPLIANT_GAINS = [5, 5]
+_C.ARM.COMPLIANT_MAX_FORCE = 20
 
 _C.ARM.RIGHT = CN()
 _C.ARM.RIGHT.HAS_EETOOL = _C.HAS_EETOOL

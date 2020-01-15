@@ -8,7 +8,7 @@ def main():
     This function demonstrates how to move the robot arm
     to the desired joint positions
     """
-    robot = Robot('yumi', arm_cfg={'render': True})
+    robot = Robot('yumi_grippers', arm_cfg={'render': True})
     robot.arm.go_home()
 
     from IPython import embed

@@ -597,7 +597,7 @@ class DualArmPybullet(ARM):
         self._home_position = self._r_home_position + self._l_home_position
 
         # joint damping for inverse kinematics
-        self._ik_jd = 0.05
+        self._ik_jd = 0.0005
 
         self.right_arm_jnt_names = self.cfgs.ARM.RIGHT.ARM.JOINT_NAMES
         self.left_arm_jnt_names = self.cfgs.ARM.LEFT.ARM.JOINT_NAMES
