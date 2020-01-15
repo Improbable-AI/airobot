@@ -7,15 +7,16 @@ from airobot.utils.common import load_class_from_path
 
 class ARM(object):
     """
-    Base class for robots
+    Base class for robots.
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the robot
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class. Defaults to None
+
     """
 
     def __init__(self, cfgs, eetool_cfg=None):
-        """
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the robot
-        """
         self.cfgs = cfgs
         if cfgs.HAS_EETOOL:
             if eetool_cfg is None:
@@ -28,7 +29,7 @@ class ARM(object):
 
     def go_home(self):
         """
-        Move the robot arm to a pre-defined home pose
+        Move the robot arm to a pre-defined home pose.
         """
         raise NotImplementedError
 
@@ -74,7 +75,7 @@ class ARM(object):
 
     def set_jtorq(self, torque, joint_name=None, *args, **kwargs):
         """
-        Apply torque(s) to the joint(s)
+        Apply torque(s) to the joint(s).
 
         Args:
             torque (float or list or flattened np.ndarray):
@@ -96,7 +97,7 @@ class ARM(object):
 
     def set_ee_pose(self, pos=None, ori=None, *args, **kwargs):
         """
-        Move the end effector to the specifed pose
+        Move the end effector to the specifed pose.
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
@@ -117,7 +118,7 @@ class ARM(object):
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, *args, **kwargs):
         """
         Move the end-effector in a straight line without changing the
-        orientation
+        orientation.
 
         Args:
             delta_xyz (list or np.ndarray): movement in x, y, z directions
@@ -133,7 +134,7 @@ class ARM(object):
 
     def get_jpos(self, joint_name=None):
         """
-        Return the joint position(s)
+        Return the joint position(s).
 
         Args:
             joint_name (str): If it's None, it will return joint positions
@@ -150,7 +151,7 @@ class ARM(object):
 
     def get_jvel(self, joint_name=None):
         """
-        Return the joint velocity(ies)
+        Return the joint velocity(ies).
 
         Args:
             joint_name (str): If it's None, it will return joint velocities
@@ -167,7 +168,7 @@ class ARM(object):
 
     def get_jtorq(self, joint_name=None):
         """
-        Return the joint torque(s)
+        Return the joint torque(s).
 
         Args:
             joint_name (str): If it's None, it will return joint torques
@@ -184,7 +185,7 @@ class ARM(object):
 
     def get_ee_pose(self):
         """
-        Return the end effector pose
+        Return the end effector pose.
 
         Returns:
             4-element tuple containing
@@ -203,7 +204,7 @@ class ARM(object):
     def compute_ik(self, pos, ori=None, *args, **kwargs):
         """
         Compute the inverse kinematics solution given the
-        position and orientation of the end effector
+        position and orientation of the end effector.
 
         Args:
             pos (list or np.ndarray): position (shape: :math:`[3,]`)

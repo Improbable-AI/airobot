@@ -16,6 +16,16 @@ class UR5ePybullet(SingleArmPybullet):
     """
     Class for the pybullet simulation environment
     of a UR5e robot with a robotiq 2f140 gripper.
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the arm
+        render (bool): whether to render the environment using GUI
+        seed (int): random seed
+        rt_simulation (bool): turn on realtime simulation or not
+        self_collision (bool): enable self_collision or
+                               not whiling loading URDF
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class
     """
 
     def __init__(self,
@@ -25,20 +35,6 @@ class UR5ePybullet(SingleArmPybullet):
                  rt_simulation=True,
                  self_collision=False,
                  eetool_cfg=None):
-        """
-        Constructor for the pybullet simulation environment
-        of a UR5e robot with a robotiq 2f140 gripper
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the arm
-            render (bool): whether to render the environment using GUI
-            seed (int): random seed
-            rt_simulation (bool): turn on realtime simulation or not
-            self_collision (bool): enable self_collision or
-                                   not whiling loading URDF
-            eetool_cfg (dict): arguments to pass in the constructor
-                of the end effector tool class
-        """
         super(UR5ePybullet, self).__init__(cfgs=cfgs,
                                            render=render,
                                            seed=seed,
@@ -90,7 +86,7 @@ class UR5ePybullet(SingleArmPybullet):
 
     def set_visual_shape(self):
         """
-        Set the color of the UR arm
+        Set the color of the UR arm.
         """
         color1 = [0.25, 0.25, 0.25, 1]
         color2 = [0.95, 0.95, 0.95, 1]

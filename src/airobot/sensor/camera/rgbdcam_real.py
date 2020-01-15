@@ -16,14 +16,14 @@ from airobot.utils.common import to_rot_mat
 
 
 class RGBDCameraReal(RGBDCamera):
-    def __init__(self, cfgs, cam_name=None):
-        """
-        Initialize the rgbd camera
+    """
+    Real RGBD camera
 
-        Args:
-            cfgs (YACS CfgNode): configurations for the camera
-            cam_name (str): camera name
-        """
+    Args:
+        cfgs (YACS CfgNode): configurations for the camera
+        cam_name (str): camera name
+    """
+    def __init__(self, cfgs, cam_name=None):
         super(RGBDCameraReal, self).__init__(cfgs=cfgs)
         self.depth_topic = self.cfgs.CAM.REAL.ROSTOPIC_CAMERA_DEPTH
         self.rgb_topic = self.cfgs.CAM.REAL.ROSTOPIC_CAMERA_RGB

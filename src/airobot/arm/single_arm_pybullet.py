@@ -19,25 +19,22 @@ from airobot.utils.pb_util import set_step_sim
 class SingleArmPybullet(ARM):
     """
     Base class for a single arm simulated in pybullet
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the arm
+        render (bool): whether to render the environment using GUI
+        seed (int): random seed
+        rt_simulation (bool): turn on realtime simulation or not
+        self_collision (bool): enable self_collision or
+                               not whiling loading URDF
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class
+
     """
 
     def __init__(self, cfgs, render=False, seed=None,
                  rt_simulation=True, self_collision=False,
                  eetool_cfg=None):
-        """
-        Constructor for pybullet simulation of a single arm manipulator
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the arm
-            render (bool): whether to render the environment using GUI
-            seed (int): random seed
-            rt_simulation (bool): turn on realtime simulation or not
-            self_collision (bool): enable self_collision or
-                                   not whiling loading URDF
-            eetool_cfg (dict): arguments to pass in the constructor
-                of the end effector tool class
-        """
-
         self._render = render
         self.self_collision = self_collision
         super(SingleArmPybullet, self).__init__(cfgs=cfgs,

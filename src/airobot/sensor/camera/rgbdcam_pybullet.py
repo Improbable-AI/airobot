@@ -6,11 +6,13 @@ from airobot.utils.pb_util import PB_CLIENT
 
 
 class RGBDCameraPybullet(RGBDCamera):
+    """
+    RGBD Camera in Pybullet.
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the camera
+    """
     def __init__(self, cfgs):
-        """
-        Args:
-            cfgs (YACS CfgNode): configurations for the camera
-        """
         super(RGBDCameraPybullet, self).__init__(cfgs=cfgs)
         self.p = p
         self.view_matrix = None

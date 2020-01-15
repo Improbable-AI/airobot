@@ -4,11 +4,14 @@ from airobot.sensor.camera.camera import Camera
 
 
 class RGBDCamera(Camera):
+    """
+    A RGBD camera.
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the camera
+
+    """
     def __init__(self, cfgs):
-        """
-        Args:
-            cfgs (YACS CfgNode): configurations for the camera
-        """
         super(RGBDCamera, self).__init__(cfgs=cfgs)
         self.cam_height = None
         self.cam_width = None
@@ -22,7 +25,7 @@ class RGBDCamera(Camera):
     def _init_pers_mat(self):
         """
         Initialize related matrices for projecting
-        pixels to points in camera frame
+        pixels to points in camera frame.
         """
         self.cam_int_mat_inv = np.linalg.inv(self.cam_int_mat)
 
@@ -36,7 +39,7 @@ class RGBDCamera(Camera):
     def get_pix_3dpt(self, rs, cs, in_world=True, filter_depth=False,
                      k=1, ktype='median', depth_min=None, depth_max=None):
         """
-        Calculate the 3D position of pixels in the RGB image
+        Calculate the 3D position of pixels in the RGB image.
 
         Args:
             rs (int or list or np.ndarray): rows of interest.
@@ -146,7 +149,7 @@ class RGBDCamera(Camera):
                 depth_min=None, depth_max=None):
         """
         Get the point cloud from the entire depth image
-        +in the camera frame or in the world frame
+        in the camera frame or in the world frame.
 
         Args:
             in_world (bool): return point cloud in the world frame, otherwise,

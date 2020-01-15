@@ -25,17 +25,19 @@ from airobot.utils.ros_util import get_tf_transform
 
 
 class SingleArmROS(SingleArmReal):
+    """
+    A class for single arms with ROS-related functions.
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the arm
+        moveit_planner (str): motion planning algorithm
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class
+    """
+
     def __init__(self, cfgs,
                  moveit_planner='RRTstarkConfigDefault',
                  eetool_cfg=None):
-        """
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the arm
-            moveit_planner (str): motion planning algorithm
-            eetool_cfg (dict): arguments to pass in the constructor
-                of the end effector tool class
-        """
         super(SingleArmROS, self).__init__(cfgs=cfgs, eetool_cfg=eetool_cfg)
 
         self.moveit_planner = moveit_planner

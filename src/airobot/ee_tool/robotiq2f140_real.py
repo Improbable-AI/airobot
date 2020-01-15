@@ -19,16 +19,13 @@ class Robotiq2F140Real(EndEffectorTool):
     """
     Class for interfacing with Robotiq 2F140 gripper when
     it is attached to UR5e arm. Communication with the gripper
-    is either through ROS over through a TCP/IP socket
+    is either through ROS over through a TCP/IP socket.
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the gripper
     """
 
     def __init__(self, cfgs):
-        """
-        Constructor for Robotiq2F140 class
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the gripper
-        """
         super(Robotiq2F140Real, self).__init__(cfgs=cfgs)
         self.jnt_names = [
             'finger_joint', 'left_inner_knuckle_joint',
@@ -70,7 +67,7 @@ class Robotiq2F140Real(EndEffectorTool):
 
     def activate(self):
         """
-        Method to activate the gripper
+        Method to activate the gripper.
         """
         if not self.gazebo_sim:
             urscript = self._get_new_urscript()
@@ -91,7 +88,7 @@ class Robotiq2F140Real(EndEffectorTool):
         values from API position range to URScript position
         range. After sending position command, update internal
         position variable by sending urscript program to
-        controller
+        controller.
 
         Args:
             pos (float): Desired gripper position
@@ -121,7 +118,7 @@ class Robotiq2F140Real(EndEffectorTool):
 
     def set_speed(self, speed):
         """
-        Set the default speed which the gripper should move at
+        Set the default speed which the gripper should move at.
 
         Args:
             speed (int): Desired gripper speed (0 min, 255 max)
@@ -137,19 +134,19 @@ class Robotiq2F140Real(EndEffectorTool):
 
     def open(self):
         """
-        Open gripper
+        Open gripper.
         """
         self.set_pos(self.cfgs.EETOOL.OPEN_ANGLE)
 
     def close(self):
         """
-        Close gripper
+        Close gripper.
         """
         self.set_pos(self.cfgs.EETOOL.CLOSE_ANGLE)
 
     def get_pos(self):
         """
-        Get the current position of the gripper
+        Get the current position of the gripper.
         """
         self._get_state_lock.acquire()
         pos = self._gripper_data
@@ -158,7 +155,7 @@ class Robotiq2F140Real(EndEffectorTool):
 
     def _get_current_pos_cb(self, msg):
         """
-        Callback for rospy subscriber to get joint information
+        Callback for rospy subscriber to get joint information.
 
         Args:
             msg (JointState): Contains the full joint state topic
@@ -176,7 +173,7 @@ class Robotiq2F140Real(EndEffectorTool):
         Internal method used to create an empty URScript
         program, which is filled with URScript commands and
         eventually sent to the robot over one of the communication
-        interfaces
+        interfaces.
         """
         urscript = Robotiq2F140URScript(
             socket_host=self.cfgs.EETOOL.SOCKET_HOST,
@@ -270,7 +267,7 @@ class Robotiq2F140Real(EndEffectorTool):
     def _pub_pos_target(self):
         """
         Function to run in background thread to publish updated
-        gripper state
+        gripper state.
         """
         while not rospy.is_shutdown():
             try:
@@ -283,7 +280,7 @@ class Robotiq2F140Real(EndEffectorTool):
 
     def _get_local_ip(self):
         """
-        Function to get machine ip address on local network
+        Function to get machine ip address on local network.
 
         Returns:
             str: Local IP address
@@ -299,7 +296,7 @@ class Robotiq2F140Real(EndEffectorTool):
     def _initialize_comm(self):
         """
         Set up the internal publisher to send gripper command
-        URScript programs to the robot thorugh ROS
+        URScript programs to the robot thorugh ROS.
         """
         if self.gazebo_sim:
             self.pub_command = rospy.Publisher(

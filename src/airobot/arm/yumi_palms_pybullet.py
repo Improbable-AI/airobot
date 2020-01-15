@@ -256,24 +256,22 @@ class YumiPalmsPybullet(DualArmPybullet):
     separate functionality for both arms, with two Gelslim
     Palms attached as end effectors instead of parallel jaw
     grippers
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the arm
+        render (bool): whether to render the environment using GUI
+        seed (int): random seed
+        rt_simulation (bool): turn on realtime simulation or not
+        self_collision (bool): enable self_collision or
+                               not whiling loading URDF
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class
+
     """
 
     def __init__(self, cfgs, render=False, seed=None,
                  rt_simulation=True, self_collision=False,
                  eetool_cfg=None):
-        """
-        Constructor
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the arm
-            render (bool): whether to render the environment using GUI
-            seed (int): random seed
-            rt_simulation (bool): turn on realtime simulation or not
-            self_collision (bool): enable self_collision or
-                                   not whiling loading URDF
-            eetool_cfg (dict): arguments to pass in the constructor
-                of the end effector tool class
-        """
         super(YumiPalmsPybullet, self).__init__(cfgs=cfgs,
                                                 render=render,
                                                 seed=seed,
@@ -320,7 +318,7 @@ class YumiPalmsPybullet(DualArmPybullet):
 
     def setup_single_arms(self, right_arm, left_arm):
         """
-        Function for setting up individual arms
+        Function for setting up individual arms.
 
         Args:
             right_arm (CompliantYumiArm): Instance of a single

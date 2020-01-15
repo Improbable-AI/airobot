@@ -1,14 +1,12 @@
 class EndEffectorTool(object):
     """
     Base class for end effector
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the end effector
     """
 
     def __init__(self, cfgs):
-        """
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the end effector
-        """
         self.cfgs = cfgs
 
     def open(self, **kwargs):

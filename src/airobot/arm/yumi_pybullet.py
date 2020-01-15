@@ -18,24 +18,22 @@ class YumiPybullet(DualArmPybullet):
     """
     Class for pybullet simulation of ABB Yumi robot with
     separate functionality for both arms
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the arm
+        render (bool): whether to render the environment using GUI
+        seed (int): random seed
+        rt_simulation (bool): turn on realtime simulation or not
+        self_collision (bool): enable self_collision or
+                               not whiling loading URDF
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class
+
     """
 
     def __init__(self, cfgs, render=False, seed=None,
                  rt_simulation=True, self_collision=False,
                  eetool_cfg=None):
-        """
-        Constructor
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the arm
-            render (bool): whether to render the environment using GUI
-            seed (int): random seed
-            rt_simulation (bool): turn on realtime simulation or not
-            self_collision (bool): enable self_collision or
-                                   not whiling loading URDF
-            eetool_cfg (dict): arguments to pass in the constructor
-                of the end effector tool class
-        """
         super(YumiPybullet, self).__init__(cfgs=cfgs,
                                            render=render,
                                            seed=seed,

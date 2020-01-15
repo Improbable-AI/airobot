@@ -13,14 +13,11 @@ class YumiParallelJawPybullet(EndEffectorTool):
     """
     Class for interfacing with the standard Yumi
     parallel jaw gripper
+    Args:
+        cfgs (YACS CfgNode): configurations for the gripper
     """
 
     def __init__(self, cfgs):
-        """
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the gripper
-        """
         super(YumiParallelJawPybullet, self).__init__(cfgs=cfgs)
         self.p = p
         self._gripper_mimic_coeff = [1, 1]
@@ -38,7 +35,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
 
     def feed_robot_info(self, robot_id, jnt_to_id):
         """
-        Setup the gripper, pass the robot info from the arm to the gripper
+        Setup the gripper, pass the robot info from the arm to the gripper.
 
         Args:
             robot_id (int): robot id in Pybullet
@@ -66,7 +63,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
 
     def open(self, wait=True):
         """
-        Open the gripper
+        Open the gripper.
 
         Returns:
             bool: return if the action is sucessful or not
@@ -79,7 +76,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
 
     def close(self, wait=True):
         """
-        Close the gripper
+        Close the gripper.
 
         Returns:
             bool: return if the action is sucessful or not
@@ -135,7 +132,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
         Return the joint position(s) of the gripper.
         Joint name is not required, we add this here just to
         make the api consistent. Also, it's used in
-        function `wait_to_reach_jnt_goal`
+        function `wait_to_reach_jnt_goal`.
 
         Returns:
             float: joint position
@@ -152,7 +149,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
         Return the joint velocity of the gripper.
         Joint name is not required, we add this here just to
         make the api consistent. Also, it's used in
-        function `wait_to_reach_jnt_goal`
+        function `wait_to_reach_jnt_goal`.
 
         Returns:
             float: joint velocity
@@ -166,7 +163,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
 
     def disable_gripper_self_collision(self):
         """
-        Disable the gripper collision checking in Pybullet
+        Disable the gripper collision checking in Pybullet.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
@@ -184,7 +181,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
     def _mimic_gripper(self, joint_val):
         """
         Given the value for the first joint,
-        mimic the joint values for the rest joints
+        mimic the joint values for the rest joints.
         """
         jnt_vals = [joint_val]
         for i in range(1, len(self.jnt_names)):
@@ -194,7 +191,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
     def _th_mimic_gripper(self):
         """
         Make all the other joints of the gripper
-        follow the motion of the first joint of the gripper
+        follow the motion of the first joint of the gripper.
         """
         while True:
             if self._is_activated and not self._step_sim_mode:
@@ -217,7 +214,13 @@ class YumiParallelJawPybullet(EndEffectorTool):
                                          physicsClientId=PB_CLIENT)
 
     def deactivate(self):
+        """
+        Deactivate the gripper.
+        """
         self._is_activated = False
 
     def activate(self):
+        """
+        Activate the gripper.
+        """
         self._is_activated = True

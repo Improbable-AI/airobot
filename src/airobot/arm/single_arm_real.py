@@ -21,30 +21,31 @@ from airobot.utils.ros_util import kdl_frame_to_numpy
 
 
 class SingleArmReal(ARM):
+    """
+    This class contains methods that are common for most single-arm robots
+    and do not depend on ROS
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the arm
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class
+    """
+
     def __init__(self, cfgs,
                  eetool_cfg=None):
-        """
-        This class contains methods that are common for most single-arm robots
-        and do not depend on ROS
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the arm
-            eetool_cfg (dict): arguments to pass in the constructor
-                of the end effector tool class
-        """
         super(SingleArmReal, self).__init__(cfgs=cfgs, eetool_cfg=eetool_cfg)
 
         self._init_real_consts()
 
     def go_home(self):
         """
-        Move the robot to a pre-defined home pose
+        Move the robot to a pre-defined home pose.
         """
         self.set_jpos(self._home_position, wait=True)
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
-        Method to send a joint position command to the robot (units in rad)
+        Method to send a joint position command to the robot (units in rad).
 
         Args:
             position (float or list or flattened np.ndarray):
@@ -65,7 +66,7 @@ class SingleArmReal(ARM):
     def set_jvel(self, velocity, joint_name=None, wait=False,
                  *args, **kwargs):
         """
-        Set joint velocity command to the robot (units in rad/s)
+        Set joint velocity command to the robot (units in rad/s).
 
         Args:
             velocity (float or list or flattened np.ndarray): list of target
@@ -85,7 +86,7 @@ class SingleArmReal(ARM):
 
     def set_ee_pose(self, pos=None, ori=None, wait=True, *args, **kwargs):
         """
-        Set cartesian space pose of end effector
+        Set cartesian space pose of end effector.
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
@@ -106,7 +107,7 @@ class SingleArmReal(ARM):
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True,
                     *args, **kwargs):
         """
-        Move end effector in straight line while maintaining orientation
+        Move end effector in straight line while maintaining orientation.
 
         Args:
             delta_xyz (list or np.ndarray): Goal change in x, y, z position of
@@ -126,7 +127,7 @@ class SingleArmReal(ARM):
         """
         Gets the current joint position of the robot. Gets the value
         from the internally updated dictionary that subscribes to the ROS
-        topic /joint_states
+        topic /joint_states.
 
         Args:
             joint_name (str, optional): If it's None,
@@ -148,7 +149,7 @@ class SingleArmReal(ARM):
         """
         Gets the current joint angular velocities of the robot. Gets the value
         from the internally updated dictionary that subscribes to the ROS
-        topic /joint_states
+        topic /joint_states.
 
         Args:
             joint_name (str, optional): If it's None,
@@ -168,7 +169,7 @@ class SingleArmReal(ARM):
     def get_ee_pose(self):
         """
         Get current cartesian pose of the EE, in the robot's base frame,
-        using ROS subscriber to the tf tree topic
+        using ROS subscriber to the tf tree topic.
 
         Returns:
             4-element tuple containing
@@ -186,7 +187,7 @@ class SingleArmReal(ARM):
 
     def get_ee_vel(self):
         """
-        Return the end effector's velocity
+        Return the end effector's velocity.
 
         Returns:
             2-element tuple containing
@@ -201,7 +202,7 @@ class SingleArmReal(ARM):
     def get_jacobian(self, joint_angles):
         """
         Return the geometric jacobian on the given joint angles.
-        Refer to P112 in "Robotics: Modeling, Planning, and Control"
+        Refer to P112 in "Robotics: Modeling, Planning, and Control".
 
         Args:
             joint_angles (list or flattened np.ndarray): joint angles
@@ -223,7 +224,7 @@ class SingleArmReal(ARM):
         """
         Given joint angles, compute the pose of desired_frame with respect
         to the base frame (self.cfgs.ARM.ROBOT_BASE_FRAME). The desired frame
-        must be in self.arm_link_names
+        must be in self.arm_link_names.
 
         Args:
             jpos (list or flattened np.ndarray): joint angles
@@ -260,7 +261,7 @@ class SingleArmReal(ARM):
         """
         Given joint_positions and joint velocities,
         compute the velocities of tgt_frame with respect
-        to the base frame
+        to the base frame.
 
         Args:
             jpos (list or flattened np.ndarray): joint positions
@@ -293,7 +294,7 @@ class SingleArmReal(ARM):
         """
         Compute the inverse kinematics solution given the
         position and orientation of the end effector
-        (self.cfgs.ARM.ROBOT_EE_FRAME)
+        (self.cfgs.ARM.ROBOT_EE_FRAME).
 
         Args:
             pos (list or np.ndarray): position (shape: :math:`[3,]`)
@@ -343,7 +344,7 @@ class SingleArmReal(ARM):
 
     def _init_real_consts(self):
         """
-        Initialize constants
+        Initialize constants.
         """
         self._home_position = self.cfgs.ARM.HOME_POSITION
 
@@ -370,7 +371,7 @@ class SingleArmReal(ARM):
 
     def _get_kdl_link_names(self):
         """
-        Internal method to get the link names from the KDL URDF chain
+        Internal method to get the link names from the KDL URDF chain.
 
         Returns:
             list: List of link names
@@ -383,7 +384,7 @@ class SingleArmReal(ARM):
 
     def _get_kdl_joint_names(self):
         """
-        Internal method to get the joint names from the KDL URDF chain
+        Internal method to get the joint names from the KDL URDF chain.
 
         Returns:
             list: List of joint names

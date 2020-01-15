@@ -14,9 +14,6 @@ class MoveitScene(object):
     """
 
     def __init__(self):
-        """
-        Constructor of the MoveitObjectHandler class.
-        """
         moveit_commander.roscpp_initialize(sys.argv)
         self.scene = moveit_commander.PlanningSceneInterface()
         time.sleep(1)

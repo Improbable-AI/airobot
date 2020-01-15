@@ -13,14 +13,12 @@ class Robotiq2F140Pybullet(EndEffectorTool):
     """
     Class for interfacing with a Robotiq 2F140 gripper when
     it is attached to UR5e arm in pybullet.
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the gripper
     """
 
     def __init__(self, cfgs):
-        """
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the gripper
-        """
         super(Robotiq2F140Pybullet, self).__init__(cfgs=cfgs)
         self.p = p
         self._gripper_mimic_coeff = [1, -1, 1, -1, -1, 1]
@@ -40,7 +38,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
 
     def feed_robot_info(self, robot_id, jnt_to_id):
         """
-        Setup the gripper, pass the robot info from the arm to the gripper
+        Setup the gripper, pass the robot info from the arm to the gripper.
 
         Args:
             robot_id (int): robot id in Pybullet
@@ -77,7 +75,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
 
     def open(self, wait=True):
         """
-        Open the gripper
+        Open the gripper.
 
         Returns:
             bool: return if the action is sucessful or not
@@ -90,7 +88,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
 
     def close(self, wait=True):
         """
-        Close the gripper
+        Close the gripper.
 
         Returns:
             bool: return if the action is sucessful or not
@@ -227,7 +225,13 @@ class Robotiq2F140Pybullet(EndEffectorTool):
                                          physicsClientId=PB_CLIENT)
 
     def deactivate(self):
+        """
+        Deactivate the gripper.
+        """
         self._is_activated = False
 
     def activate(self):
+        """
+        Activate the gripper.
+        """
         self._is_activated = True

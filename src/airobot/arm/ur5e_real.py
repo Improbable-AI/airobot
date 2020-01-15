@@ -26,22 +26,23 @@ from airobot.utils.ros_util import kdl_frame_to_numpy
 
 
 class UR5eReal(SingleArmROS):
+    """
+    A Class for interfacing with real UR5e robot.
+
+    Args:
+        cfgs (YACS CfgNode): configurations for the arm
+        moveit_planner (str): motion planning algorithm
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class
+        wrist_cam (bool): whether the robot has a wrist camera
+            mounted. If so, a box will be placed around the camera
+            so that moveit is aware of the wrist camera when it's
+            doing motion planning
+    """
     def __init__(self, cfgs,
                  moveit_planner='RRTstarkConfigDefault',
                  eetool_cfg=None,
                  wrist_cam=True):
-        """
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the arm
-            moveit_planner (str): motion planning algorithm
-            eetool_cfg (dict): arguments to pass in the constructor
-                of the end effector tool class
-            wrist_cam (bool): whether the robot has a wrist camera
-                mounted. If so, a box will be placed around the camera
-                so that moveit is aware of the wrist camera when it's
-                doing motion planning
-        """
         super(UR5eReal, self).__init__(cfgs=cfgs,
                                        moveit_planner=moveit_planner,
                                        eetool_cfg=eetool_cfg)
@@ -94,7 +95,7 @@ class UR5eReal(SingleArmROS):
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
-        Method to send a joint position command to the robot (units in rad)
+        Method to send a joint position command to the robot (units in rad).
 
         Args:
             position (float or list or flattened np.ndarray):
@@ -159,7 +160,7 @@ class UR5eReal(SingleArmROS):
     def set_jvel(self, velocity, joint_name=None, wait=False,
                  *args, **kwargs):
         """
-        Set joint velocity command to the robot (units in rad/s)
+        Set joint velocity command to the robot (units in rad/s).
 
         Args:
             velocity (float or list or flattened np.ndarray): list of target
@@ -230,7 +231,7 @@ class UR5eReal(SingleArmROS):
     def set_ee_pose(self, pos=None, ori=None, wait=True,
                     ik_first=False, *args, **kwargs):
         """
-        Set cartesian space pose of end effector
+        Set cartesian space pose of end effector.
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
@@ -312,7 +313,7 @@ class UR5eReal(SingleArmROS):
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True,
                     *args, **kwargs):
         """
-        Move end effector in straight line while maintaining orientation
+        Move end effector in straight line while maintaining orientation.
 
         Args:
             delta_xyz (list or np.ndarray): Goal change in x, y, z position of
@@ -403,7 +404,7 @@ class UR5eReal(SingleArmROS):
 
     def _send_urscript(self, prog):
         """
-        Method to send URScript program to the URScript ROS topic
+        Method to send URScript program to the URScript ROS topic.
 
         Args:
             prog (str): URScript program which will be sent and run on
@@ -418,7 +419,7 @@ class UR5eReal(SingleArmROS):
 
     def _output_pendant_msg(self, msg):
         """
-        Method to display a text message on the UR5e teach pendant
+        Method to display a text message on the UR5e teach pendant.
 
         Args:
             msg (str): message to display
@@ -430,7 +431,7 @@ class UR5eReal(SingleArmROS):
     def _get_tip_transform(self):
         """
         Internal method to get the transform between the robot's
-        wrist and the tip of the gripper
+        wrist and the tip of the gripper.
 
         Returns:
             2-element tuple containing
@@ -470,7 +471,7 @@ class UR5eReal(SingleArmROS):
         """
         Received joint velocity command, puts it in a ROS trajectory
         msg, and uses internal publisher to send to /joint_speed topic
-        on the real robot
+        on the real robot.
 
         Args:
             velocity (list): List of desired joint velocities
@@ -484,7 +485,7 @@ class UR5eReal(SingleArmROS):
 
     def _setup_pub_sub(self):
         """
-        Initialize all the publishers and subscribers used internally
+        Initialize all the publishers and subscribers used internally.
         """
         # for publishing joint speed to real robot
         self.joint_vel_pub = rospy.Publisher(

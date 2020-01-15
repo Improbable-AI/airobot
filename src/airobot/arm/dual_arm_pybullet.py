@@ -18,26 +18,21 @@ class DualArmPybullet(ARM):
     Class for the pybullet simulation environment
     of a dual arm robot
 
+    Args:
+        cfgs (YACS CfgNode): configurations for the arm
+        render (bool): whether to render the environment using GUI
+        seed (int): random seed
+        rt_simulation (bool): turn on realtime simulation or not
+        self_collision (bool): enable self_collision or
+                               not whiling loading URDF
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class
+
     """
 
     def __init__(self, cfgs, render=False, seed=None,
                  rt_simulation=True, self_collision=False,
                  eetool_cfg=None):
-        """
-        Constructor for the pybullet simulation environment
-        of a dual arm robot
-
-        Args:
-            cfgs (YACS CfgNode): configurations for the arm
-            render (bool): whether to render the environment using GUI
-            seed (int): random seed
-            rt_simulation (bool): turn on realtime simulation or not
-            self_collision (bool): enable self_collision or
-                                   not whiling loading URDF
-            eetool_cfg (dict): arguments to pass in the constructor
-                of the end effector tool class
-        """
-
         self._render = render
         self.self_collision = self_collision
         super(DualArmPybullet, self).__init__(cfgs=cfgs,
@@ -56,7 +51,7 @@ class DualArmPybullet(ARM):
     def setup_single_arms(self, right_arm, left_arm):
         """
         Function to setup the single arm instances, and
-        maintain an internal dictionary interface to them
+        maintain an internal dictionary interface to them.
 
         Args:
             right_arm (SingleArmPybullet): Right arm instance
@@ -71,7 +66,7 @@ class DualArmPybullet(ARM):
 
     def go_home(self, arm=None):
         """
-        Move the robot to a pre-defined home pose
+        Move the robot to a pre-defined home pose.
         """
         if arm is None:
             success = self.set_jpos(self._home_position)
@@ -97,7 +92,7 @@ class DualArmPybullet(ARM):
 
     def realtime_simulation(self, on=True):
         """
-        Turn on/off the realtime simulation mode
+        Turn on/off the realtime simulation mode.
 
         Args:
             on (bool): run the simulation in realtime if True
@@ -286,7 +281,7 @@ class DualArmPybullet(ARM):
     def set_ee_pose(self, pos=None, ori=None, wait=True, arm=None,
                     *args, **kwargs):
         """
-        Move the end effector to the specifed pose
+        Move the end effector to the specifed pose.
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
@@ -322,7 +317,7 @@ class DualArmPybullet(ARM):
                     *args, **kwargs):
         """
         Move the end-effector in a straight line without changing the
-        orientation
+        orientation.
 
         Args:
             delta_xyz (list or np.ndarray): movement in x, y, z
@@ -354,7 +349,7 @@ class DualArmPybullet(ARM):
 
     def enable_torque_control(self, joint_name=None):
         """
-        Enable the torque control mode in Pybullet
+        Enable the torque control mode in Pybullet.
 
         Args:
             joint_name (str): If it's none, then all the six joints
@@ -386,7 +381,7 @@ class DualArmPybullet(ARM):
 
     def disable_torque_control(self, joint_name=None):
         """
-        Disable the torque control mode in Pybullet
+        Disable the torque control mode in Pybullet.
 
         Args:
             joint_name (str): If it's none, then all the six joints
@@ -406,7 +401,7 @@ class DualArmPybullet(ARM):
 
     def get_jpos(self, joint_name=None):
         """
-        Return the joint position(s) of the arm
+        Return the joint position(s) of the arm.
 
         Args:
             joint_name (str, optional): If it's None,
@@ -435,7 +430,7 @@ class DualArmPybullet(ARM):
 
     def get_jvel(self, joint_name=None):
         """
-        Return the joint velocity(ies) of the arm
+        Return the joint velocity(ies) of the arm.
 
         Args:
             joint_name (str, optional): If it's None, it will return
@@ -497,7 +492,7 @@ class DualArmPybullet(ARM):
 
     def get_ee_pose(self, arm=None):
         """
-        Return the end effector pose
+        Return the end effector pose.
 
         Args:
             arm (str): Returned pose will be for specified arm, must
@@ -526,7 +521,7 @@ class DualArmPybullet(ARM):
 
     def get_ee_vel(self, arm=None):
         """
-        Return the end effector's velocity
+        Return the end effector's velocity.
 
         Args:
             arm (str): Which arm to get velocity for,
@@ -550,7 +545,7 @@ class DualArmPybullet(ARM):
     def compute_ik(self, pos, ori=None, arm=None, ns=False, *args, **kwargs):
         """
         Compute the inverse kinematics solution given the
-        position and orientation of the end effector
+        position and orientation of the end effector.
 
         Args:
             pos (list or np.ndarray): position (shape: :math:`[3,]`)
@@ -619,7 +614,7 @@ class DualArmPybullet(ARM):
 
     def _build_jnt_id(self):
         """
-        Build the mapping from the joint name to joint index
+        Build the mapping from the joint name to joint index.
         """
         self.jnt_to_id = {}
         self.jnt_names = []
