@@ -12,21 +12,29 @@ from airobot.utils.pb_util import PB_CLIENT
 class YumiParallelJawPybullet(EndEffectorTool):
     """
     Class for interfacing with the standard Yumi
-    parallel jaw gripper
+    parallel jaw gripper.
+
     Args:
         cfgs (YACS CfgNode): configurations for the gripper
+
+    Attributes:
+        cfgs (YACS CfgNode): configurations for the gripper
+        gripper_close_angle (float):
+        gripper_open_angle (float):
+        jnt_names (list):
+        gripper_jnt_ids (list):
+        robot_id (int): robot id in Pybullet
+        jnt_to_id (dict): mapping from the joint name to joint id
     """
 
     def __init__(self, cfgs):
         super(YumiParallelJawPybullet, self).__init__(cfgs=cfgs)
-        self.p = p
         self._gripper_mimic_coeff = [1, 1]
 
         self.jnt_names = self.cfgs.EETOOL.JOINT_NAMES
-        self.jnt_names_set = set(self.jnt_names)
 
         self._step_sim_mode = False
-        self.max_torque = self.cfgs.EETOOL.MAX_FORCE
+        self._max_torque = self.cfgs.EETOOL.MAX_FORCE
         self.gripper_close_angle = self.cfgs.EETOOL.CLOSE_ANGLE
         self.gripper_open_angle = self.cfgs.EETOOL.OPEN_ANGLE
 
@@ -106,12 +114,12 @@ class YumiParallelJawPybullet(EndEffectorTool):
             min(self.gripper_open_angle, self.gripper_close_angle),
             max(self.gripper_open_angle, self.gripper_close_angle))
         jnt_id = self.jnt_to_id[joint_name]
-        self.p.setJointMotorControl2(self.robot_id,
-                                     jnt_id,
-                                     self.p.POSITION_CONTROL,
-                                     targetPosition=tgt_pos,
-                                     force=self.max_torque,
-                                     physicsClientId=PB_CLIENT)
+        p.setJointMotorControl2(self.robot_id,
+                                jnt_id,
+                                p.POSITION_CONTROL,
+                                targetPosition=tgt_pos,
+                                force=self._max_torque,
+                                physicsClientId=PB_CLIENT)
         if self._step_sim_mode:
             self._set_rest_joints(tgt_pos)
 
@@ -127,12 +135,9 @@ class YumiParallelJawPybullet(EndEffectorTool):
             )
         return success
 
-    def get_pos(self, joint_name=None):
+    def get_pos(self):
         """
         Return the joint position(s) of the gripper.
-        Joint name is not required, we add this here just to
-        make the api consistent. Also, it's used in
-        function `wait_to_reach_jnt_goal`.
 
         Returns:
             float: joint position
@@ -140,16 +145,13 @@ class YumiParallelJawPybullet(EndEffectorTool):
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
         jnt_id = self.jnt_to_id[self.jnt_names[0]]
-        pos = self.p.getJointState(self.robot_id, jnt_id,
-                                   physicsClientId=PB_CLIENT)[0]
+        pos = p.getJointState(self.robot_id, jnt_id,
+                              physicsClientId=PB_CLIENT)[0]
         return pos
 
-    def get_vel(self, joint_name=None):
+    def get_vel(self):
         """
         Return the joint velocity of the gripper.
-        Joint name is not required, we add this here just to
-        make the api consistent. Also, it's used in
-        function `wait_to_reach_jnt_goal`.
 
         Returns:
             float: joint velocity
@@ -157,8 +159,8 @@ class YumiParallelJawPybullet(EndEffectorTool):
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
         jnt_id = self.jnt_to_id[self.jnt_names[0]]
-        vel = self.p.getJointState(self.robot_id, jnt_id,
-                                   physicsClientId=PB_CLIENT)[1]
+        vel = p.getJointState(self.robot_id, jnt_id,
+                              physicsClientId=PB_CLIENT)[1]
         return vel
 
     def disable_gripper_self_collision(self):
@@ -171,12 +173,12 @@ class YumiParallelJawPybullet(EndEffectorTool):
             for j in range(i + 1, len(self.jnt_names)):
                 jnt_idx1 = self.jnt_to_id[self.jnt_names[i]]
                 jnt_idx2 = self.jnt_to_id[self.jnt_names[j]]
-                self.p.setCollisionFilterPair(self.robot_id,
-                                              self.robot_id,
-                                              jnt_idx1,
-                                              jnt_idx2,
-                                              enableCollision=0,
-                                              physicsClientId=PB_CLIENT)
+                p.setCollisionFilterPair(self.robot_id,
+                                         self.robot_id,
+                                         jnt_idx1,
+                                         jnt_idx2,
+                                         enableCollision=0,
+                                         physicsClientId=PB_CLIENT)
 
     def _mimic_gripper(self, joint_val):
         """
@@ -199,19 +201,19 @@ class YumiParallelJawPybullet(EndEffectorTool):
             time.sleep(0.005)
 
     def _set_rest_joints(self, gripper_pos=None):
-        max_torq = self.max_torque
+        max_torq = self._max_torque
         max_torques = [max_torq] * (len(self.jnt_names) - 1)
         if gripper_pos is None:
             gripper_pos = self.get_pos()
         gripper_poss = self._mimic_gripper(gripper_pos)[1:]
         gripper_vels = [0.0] * len(max_torques)
-        self.p.setJointMotorControlArray(self.robot_id,
-                                         self.gripper_jnt_ids[1:],
-                                         self.p.POSITION_CONTROL,
-                                         targetPositions=gripper_poss,
-                                         targetVelocities=gripper_vels,
-                                         forces=max_torques,
-                                         physicsClientId=PB_CLIENT)
+        p.setJointMotorControlArray(self.robot_id,
+                                    self.gripper_jnt_ids[1:],
+                                    p.POSITION_CONTROL,
+                                    targetPositions=gripper_poss,
+                                    targetVelocities=gripper_vels,
+                                    forces=max_torques,
+                                    physicsClientId=PB_CLIENT)
 
     def deactivate(self):
         """

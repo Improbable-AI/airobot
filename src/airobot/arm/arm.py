@@ -14,6 +14,9 @@ class ARM(object):
         eetool_cfg (dict): arguments to pass in the constructor
             of the end effector tool class. Defaults to None
 
+    Attributes:
+        cfgs (YACS CfgNode): configurations for the robot
+        eetool (EndEffectorTool): end effector tool
     """
 
     def __init__(self, cfgs, eetool_cfg=None):

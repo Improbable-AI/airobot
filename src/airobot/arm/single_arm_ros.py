@@ -33,6 +33,14 @@ class SingleArmROS(SingleArmReal):
         moveit_planner (str): motion planning algorithm
         eetool_cfg (dict): arguments to pass in the constructor
             of the end effector tool class
+
+    Attributes:
+        max_vel (float)
+        max_acc (float)
+        tf_listner (tf.TransformListener)
+        moveit_group (MoveGroupCommander)
+        moveit_scene (MoveitScene)
+        moveit_planner (str)
     """
 
     def __init__(self, cfgs,
@@ -41,7 +49,7 @@ class SingleArmROS(SingleArmReal):
         super(SingleArmROS, self).__init__(cfgs=cfgs, eetool_cfg=eetool_cfg)
 
         self.moveit_planner = moveit_planner
-        self.gazebo_sim = rospy.get_param('sim')
+        self._gazebo_sim = rospy.get_param('sim')
         self._init_ros_consts()
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):

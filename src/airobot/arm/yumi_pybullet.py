@@ -29,6 +29,11 @@ class YumiPybullet(DualArmPybullet):
         eetool_cfg (dict): arguments to pass in the constructor
             of the end effector tool class
 
+    Attributes:
+        right_arm (SingleArmPybullet)
+        left_arm (SingleArmPybullet)
+        robot_id (int)
+
     """
 
     def __init__(self, cfgs, render=False, seed=None,
@@ -64,7 +69,7 @@ class YumiPybullet(DualArmPybullet):
 
         yumi_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         yumi_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
-        if self.self_collision:
+        if self._self_collision:
             self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
                                        yumi_pos,
                                        yumi_ori,
@@ -80,9 +85,9 @@ class YumiPybullet(DualArmPybullet):
         self.setup_single_arms(right_arm=self.right_arm,
                                left_arm=self.left_arm)
 
-        for arm in self.arm_dict.values():
+        for arm in self.arms.values():
             if hasattr(arm, 'eetool'):
                 arm.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
                 arm.eetool.activate()
-                if arm.self_collision:
+                if arm._self_collision:
                     arm.eetool.disable_gripper_self_collision()

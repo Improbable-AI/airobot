@@ -23,14 +23,14 @@ _C.PYBULLET_URDF = 'yumi_gelslim_palm.urdf'
 # augmented to be '<Prefix>Real'
 _C.ARM = get_yumi_arm_cfg()
 _C.ARM.CLASS = 'YumiPalms'
-
+_C.ARM.PYBULLET_IK_DAMPING = 0.0005
 _C.ARM.RIGHT = CN()
 _C.ARM.RIGHT.HAS_EETOOL = _C.HAS_EETOOL
 _C.ARM.RIGHT.HAS_CAMERA = _C.HAS_CAMERA
 _C.ARM.RIGHT.HAS_ARM = _C.HAS_ARM
 
 _C.ARM.RIGHT.ARM = get_yumi_arm_cfg()
-
+_C.ARM.RIGHT.ARM.PYBULLET_IK_DAMPING = 0.0005
 _C.ARM.RIGHT.ARM.NAME = 'right'
 _C.ARM.RIGHT.ARM.JOINT_NAMES = [
     'yumi_joint_1_r', 'yumi_joint_2_r', 'yumi_joint_7_r',
@@ -55,7 +55,7 @@ _C.ARM.LEFT.HAS_CAMERA = _C.HAS_CAMERA
 _C.ARM.LEFT.HAS_ARM = _C.HAS_ARM
 
 _C.ARM.LEFT.ARM = get_yumi_arm_cfg()
-
+_C.ARM.LEFT.ARM.PYBULLET_IK_DAMPING = 0.0005
 _C.ARM.LEFT.ARM.NAME = 'left'
 _C.ARM.LEFT.ARM.JOINT_NAMES = [
     'yumi_joint_1_l', 'yumi_joint_2_l', 'yumi_joint_7_l',

@@ -10,11 +10,23 @@ class RGBDCamera(Camera):
     Args:
         cfgs (YACS CfgNode): configurations for the camera
 
+    Attributes:
+        cfgs (YACS CfgNode): configurations for the end effector
+        img_height (int): height of the image
+        img_width (int): width of the image
+        cam_ext_mat (np.ndarray): extrinsic matrix (shape: :math:`[4, 4]`)
+            for the camera
+        cam_int_mat (np.ndarray): intrinsic matrix (shape: :math:`[3, 3]`)
+            for the camera
+        cam_int_mat_inv (np.ndarray): inverse of the intrinsic matrix
+        depth_scale (float): ratio of the depth image value to true depth value
+        depth_min (float): minimum depth value considered in 3D reconstruction
+        depth_max (float): maximum depth value considered in 3D reconstruction
     """
     def __init__(self, cfgs):
         super(RGBDCamera, self).__init__(cfgs=cfgs)
-        self.cam_height = None
-        self.cam_width = None
+        self.img_height = None
+        self.img_width = None
         self.cam_ext_mat = None
         self.cam_int_mat = None
         self.cam_int_mat_inv = None
@@ -29,12 +41,12 @@ class RGBDCamera(Camera):
         """
         self.cam_int_mat_inv = np.linalg.inv(self.cam_int_mat)
 
-        img_pixs = np.mgrid[0: self.cam_height,
-                            0: self.cam_width].reshape(2, -1)
+        img_pixs = np.mgrid[0: self.img_height,
+                            0: self.img_width].reshape(2, -1)
         img_pixs[[0, 1], :] = img_pixs[[1, 0], :]
-        self.uv_one = np.concatenate((img_pixs,
-                                      np.ones((1, img_pixs.shape[1]))))
-        self.uv_one_in_cam = np.dot(self.cam_int_mat_inv, self.uv_one)
+        self._uv_one = np.concatenate((img_pixs,
+                                       np.ones((1, img_pixs.shape[1]))))
+        self._uv_one_in_cam = np.dot(self.cam_int_mat_inv, self._uv_one)
 
     def get_pix_3dpt(self, rs, cs, in_world=True, filter_depth=False,
                      k=1, ktype='median', depth_min=None, depth_max=None):
@@ -74,7 +86,7 @@ class RGBDCamera(Camera):
 
         Returns:
             np.ndarray: 3D point coordinates of the pixels in
-            camera frame (shape: [N, 3])
+            camera frame (shape: :math:`[N, 3]`)
         """
         if not isinstance(rs, int) and not isinstance(rs, list) and \
                 not isinstance(rs, np.ndarray):
@@ -110,9 +122,9 @@ class RGBDCamera(Camera):
             for r, c in zip(rs, cs):
                 s = k // 2
                 rmin = max(0, r - s)
-                rmax = min(self.cam_height, r + s + 1)
+                rmax = min(self.img_height, r + s + 1)
                 cmin = max(0, c - s)
-                cmax = min(self.cam_width, c + s + 1)
+                cmax = min(self.img_width, c + s + 1)
                 depth_im_list.append(ktype_func(depth_im[rmin:rmax,
                                                 cmin:cmax]))
             depth_im = np.array(depth_im_list)
@@ -164,8 +176,8 @@ class RGBDCamera(Camera):
         Returns:
             2-element tuple containing
 
-            - np.ndarray: point coordinates (shape: [N, 3])
-            - np.ndarray: rgb values (shape: [N, 3])
+            - np.ndarray: point coordinates (shape: :math:`[N, 3]`)
+            - np.ndarray: rgb values (shape: :math:`[N, 3]`)
         """
         rgb_im, depth_im = self.get_images(get_rgb=True, get_depth=True)
         # pcd in camera from depth
@@ -182,9 +194,9 @@ class RGBDCamera(Camera):
             depth = depth[valid]
             if rgb is not None:
                 rgb = rgb[valid]
-            uv_one_in_cam = self.uv_one_in_cam[:, valid]
+            uv_one_in_cam = self._uv_one_in_cam[:, valid]
         else:
-            uv_one_in_cam = self.uv_one_in_cam
+            uv_one_in_cam = self._uv_one_in_cam
         pts_in_cam = np.multiply(uv_one_in_cam, depth)
         if not in_world:
             pcd_pts = pts_in_cam.T

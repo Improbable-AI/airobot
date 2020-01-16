@@ -4,6 +4,9 @@ class EndEffectorTool(object):
 
     Args:
         cfgs (YACS CfgNode): configurations for the end effector
+
+    Attributes:
+        cfgs (YACS CfgNode): configurations for the end effector
     """
 
     def __init__(self, cfgs):

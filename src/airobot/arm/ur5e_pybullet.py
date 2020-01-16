@@ -6,6 +6,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import pybullet as p
+
 import airobot.utils.common as arutil
 from airobot.arm.single_arm_pybullet import SingleArmPybullet
 from airobot.utils.pb_util import PB_CLIENT
@@ -26,6 +28,12 @@ class UR5ePybullet(SingleArmPybullet):
                                not whiling loading URDF
         eetool_cfg (dict): arguments to pass in the constructor
             of the end effector tool class
+
+    Attributes:
+        floor_id (int): xxx
+        robot_id (int): xxx
+        robot_base_pos (list): xxx
+        robot_base_ori (list): xxx
     """
 
     def __init__(self,
@@ -49,9 +57,9 @@ class UR5ePybullet(SingleArmPybullet):
         """
         if hasattr(self, 'eetool'):
             self.eetool.deactivate()
-        self.p.resetSimulation(physicsClientId=PB_CLIENT)
-        self.p.configureDebugVisualizer(self.p.COV_ENABLE_RENDERING, 0,
-                                        physicsClientId=PB_CLIENT)
+        p.resetSimulation(physicsClientId=PB_CLIENT)
+        p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0,
+                                   physicsClientId=PB_CLIENT)
         self.floor_id = load_geom('box', size=[10, 10, 0.01], mass=0,
                                   base_pos=[0, 0, 0],
                                   rgba=[0.7, 0.77, 0.7, 1],
@@ -59,27 +67,27 @@ class UR5ePybullet(SingleArmPybullet):
 
         self.robot_base_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         robot_base_ori = self.cfgs.ARM.PYBULLET_RESET_ORI
-        self.robot_base_ori = arutil.euler2quat(robot_base_ori)
-        if self.self_collision:
-            colli_flag = self.p.URDF_USE_SELF_COLLISION
-            self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                            self.robot_base_pos,
-                                            self.robot_base_ori,
-                                            flags=colli_flag,
-                                            physicsClientId=PB_CLIENT)
+        self.robot_base_ori = arutil.euler2quat(robot_base_ori).tolist()
+        if self._self_collision:
+            colli_flag = p.URDF_USE_SELF_COLLISION
+            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
+                                       self.robot_base_pos,
+                                       self.robot_base_ori,
+                                       flags=colli_flag,
+                                       physicsClientId=PB_CLIENT)
         else:
-            self.robot_id = self.p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                            self.robot_base_pos,
-                                            self.robot_base_ori,
-                                            physicsClientId=PB_CLIENT)
+            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
+                                       self.robot_base_pos,
+                                       self.robot_base_ori,
+                                       physicsClientId=PB_CLIENT)
         self._build_jnt_id()
         self.set_visual_shape()
-        self.p.configureDebugVisualizer(self.p.COV_ENABLE_RENDERING, 1,
-                                        physicsClientId=PB_CLIENT)
+        p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1,
+                                   physicsClientId=PB_CLIENT)
         if hasattr(self, 'eetool'):
             self.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
             self.eetool.activate()
-            if self.self_collision:
+            if self._self_collision:
                 # weird behavior occurs on the gripper
                 # when self-collision is enforced
                 self.eetool.disable_gripper_self_collision()
@@ -91,24 +99,24 @@ class UR5ePybullet(SingleArmPybullet):
         color1 = [0.25, 0.25, 0.25, 1]
         color2 = [0.95, 0.95, 0.95, 1]
 
-        self.p.changeVisualShape(self.robot_id,
-                                 self.jnt_to_id['base-base_link_fixed_joint'],
-                                 rgbaColor=color1)
-        self.p.changeVisualShape(self.robot_id,
-                                 self.jnt_to_id['shoulder_pan_joint'],
-                                 rgbaColor=color2)
-        self.p.changeVisualShape(self.robot_id,
-                                 self.jnt_to_id['shoulder_lift_joint'],
-                                 rgbaColor=color1)
-        self.p.changeVisualShape(self.robot_id,
-                                 self.jnt_to_id['elbow_joint'],
-                                 rgbaColor=color2)
-        self.p.changeVisualShape(self.robot_id,
-                                 self.jnt_to_id['wrist_1_joint'],
-                                 rgbaColor=color1)
-        self.p.changeVisualShape(self.robot_id,
-                                 self.jnt_to_id['wrist_2_joint'],
-                                 rgbaColor=color2)
-        self.p.changeVisualShape(self.robot_id,
-                                 self.jnt_to_id['wrist_3_joint'],
-                                 rgbaColor=color1)
+        p.changeVisualShape(self.robot_id,
+                            self.jnt_to_id['base-base_link_fixed_joint'],
+                            rgbaColor=color1)
+        p.changeVisualShape(self.robot_id,
+                            self.jnt_to_id['shoulder_pan_joint'],
+                            rgbaColor=color2)
+        p.changeVisualShape(self.robot_id,
+                            self.jnt_to_id['shoulder_lift_joint'],
+                            rgbaColor=color1)
+        p.changeVisualShape(self.robot_id,
+                            self.jnt_to_id['elbow_joint'],
+                            rgbaColor=color2)
+        p.changeVisualShape(self.robot_id,
+                            self.jnt_to_id['wrist_1_joint'],
+                            rgbaColor=color1)
+        p.changeVisualShape(self.robot_id,
+                            self.jnt_to_id['wrist_2_joint'],
+                            rgbaColor=color2)
+        p.changeVisualShape(self.robot_id,
+                            self.jnt_to_id['wrist_3_joint'],
+                            rgbaColor=color1)

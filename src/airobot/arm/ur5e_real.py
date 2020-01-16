@@ -38,6 +38,10 @@ class UR5eReal(SingleArmROS):
             mounted. If so, a box will be placed around the camera
             so that moveit is aware of the wrist camera when it's
             doing motion planning
+
+    Attributes:
+        gripper_tip_pos (list)
+        gripper_tip_ori (list)
     """
     def __init__(self, cfgs,
                  moveit_planner='RRTstarkConfigDefault',
@@ -46,10 +50,10 @@ class UR5eReal(SingleArmROS):
         super(UR5eReal, self).__init__(cfgs=cfgs,
                                        moveit_planner=moveit_planner,
                                        eetool_cfg=eetool_cfg)
-        self.has_wrist_cam = wrist_cam
+        self._has_wrist_cam = wrist_cam
         self._init_ur_consts()
 
-        if not self.gazebo_sim:
+        if not self._gazebo_sim:
             self.robot_ip = rospy.get_param('robot_ip')
             self.set_comm_mode()
             self._setup_pub_sub()
@@ -87,11 +91,11 @@ class UR5eReal(SingleArmROS):
             use_urscript (bool): True we should use urscript
                 False if we should use ros and moveit
         """
-        if self.gazebo_sim:
-            self.use_urscript = False
+        if self._gazebo_sim:
+            self._use_urscript = False
             arutil.print_yellow('Use urscript is not supported in Gazebo!')
         else:
-            self.use_urscript = use_urscript
+            self._use_urscript = use_urscript
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
@@ -130,7 +134,7 @@ class UR5eReal(SingleArmROS):
                 tgt_pos = self.get_jpos()
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_pos[arm_jnt_idx] = position
-        if self.use_urscript:
+        if self._use_urscript:
             prog = 'movej([%f, %f, %f, %f, %f, %f],' \
                    ' a=%f, v=%f)' % (tgt_pos[0],
                                      tgt_pos[1],
@@ -182,7 +186,7 @@ class UR5eReal(SingleArmROS):
         # TODO improve velocity control performance
         ar.log_warn('Velocity control is not well tested!!!')
 
-        if self.gazebo_sim:
+        if self._gazebo_sim:
             raise NotImplementedError('cannot set_jvel in Gazebo')
 
         if joint_name is None:
@@ -202,7 +206,7 @@ class UR5eReal(SingleArmROS):
                 tgt_vel = [0.0] * len(self.arm_jnt_names)
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 tgt_vel[arm_jnt_idx] = velocity
-        if self.use_urscript:
+        if self._use_urscript:
             prog = 'speedj([%f, %f, %f, %f, %f, %f],' \
                    ' a=%f)' % (tgt_vel[0],
                                tgt_vel[1],
@@ -247,7 +251,7 @@ class UR5eReal(SingleArmROS):
                 by IK, or to use UR built in movel function which moves
                 linearly in tool space (movel may sometimes fail due to
                 sinularities). This parameter takes effect only when
-                self.use_urscript is True. Defaults to False.
+                self._use_urscript is True. Defaults to False.
 
         Returns:
             bool: Returns True is robot successfully moves to goal pose
@@ -264,7 +268,7 @@ class UR5eReal(SingleArmROS):
             pose = self.get_ee_pose()
             pos = pose[0]
 
-        if self.use_urscript:
+        if self._use_urscript:
             if ik_first:
                 jnt_pos = self.compute_ik(pos, quat)
                 # use movej instead of movel
@@ -329,7 +333,7 @@ class UR5eReal(SingleArmROS):
         """
         ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
 
-        if self.use_urscript:
+        if self._use_urscript:
             ee_pos[0] += delta_xyz[0]
             ee_pos[1] += delta_xyz[1]
             ee_pos[2] += delta_xyz[2]
@@ -372,7 +376,7 @@ class UR5eReal(SingleArmROS):
                       'Be careful when you use moveit to plan the path! You '
                       'can try again to add the base manually.')
 
-        if self.has_wrist_cam:
+        if self._has_wrist_cam:
             # add a virtual bounding box for the wrist mounted camera
             wrist_cam_name = 'wrist_cam'
             wrist_cam_attached = False
@@ -415,7 +419,7 @@ class UR5eReal(SingleArmROS):
         # such as if the robot gives any error,
         # the execution is successful or not
 
-        self.urscript_pub.publish(prog)
+        self._urscript_pub.publish(prog)
 
     def _output_pendant_msg(self, msg):
         """
@@ -443,7 +447,7 @@ class UR5eReal(SingleArmROS):
         """
         ee_frame = self.cfgs.ARM.ROBOT_EE_FRAME
         gripper_tip_id = self.arm_link_names.index(ee_frame)
-        gripper_tip_link = self.urdf_chain.getSegment(gripper_tip_id)
+        gripper_tip_link = self._urdf_chain.getSegment(gripper_tip_id)
         gripper_tip_tf = kdl_frame_to_numpy(gripper_tip_link.getFrameToTip())
         gripper_tip_pos = gripper_tip_tf[:3, 3].flatten()
         gripper_tip_rot_mat = gripper_tip_tf[:3, :3]
@@ -481,20 +485,20 @@ class UR5eReal(SingleArmROS):
         goal_speed_msg.points.append(
             JointTrajectoryPoint(
                 velocities=velocity))
-        self.joint_vel_pub.publish(goal_speed_msg)
+        self._joint_vel_pub.publish(goal_speed_msg)
 
     def _setup_pub_sub(self):
         """
         Initialize all the publishers and subscribers used internally.
         """
         # for publishing joint speed to real robot
-        self.joint_vel_pub = rospy.Publisher(
+        self._joint_vel_pub = rospy.Publisher(
             self.cfgs.ARM.JOINT_SPEED_TOPIC,
             JointTrajectory,
             queue_size=2
         )
 
-        self.urscript_pub = rospy.Publisher(
+        self._urscript_pub = rospy.Publisher(
             self.cfgs.ARM.URSCRIPT_TOPIC,
             String,
             queue_size=10

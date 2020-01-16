@@ -8,6 +8,40 @@ from airobot.version import __version__
 
 
 class Robot:
+    """
+    Create a robot instance, which contains:
+    arm, base, camera
+    End effector tool is inside the arm class
+
+    Args:
+        robot_name (str): robot name
+        pb (bool): if True, the pybullet simulation
+            environment of the robot will be created.
+            Otherwise, the ROS environment of the robot
+            will be created.
+        use_arm (bool): whether to create the robot arm instance
+            if the robot has an arm class
+        use_eetool (bool): whether to create the robot gripper instance
+            if the robot has an arm class
+        use_base (bool): whether to create the robot base instance
+            if the robot has an base class
+        use_cam (bool): whether to create the robot camera instance
+            if the robot has an camera class
+        arm_cfg (dict): arguments to pass in the constructor
+            of the arm class
+        base_cfg (dict): arguments to pass in the constructor
+            of the base class
+        cam_cfg (dict): arguments to pass in the constructor
+            of the camera class
+        eetool_cfg (dict): arguments to pass in the constructor
+            of the end effector tool class
+
+    Attributes:
+        arm (ARM): robot arm
+        base (BASE): robot base
+        cam (CAMERA): camera
+    """
+
     def __init__(self,
                  robot_name,
                  pb=True,
@@ -20,34 +54,6 @@ class Robot:
                  cam_cfg=None,
                  eetool_cfg=None
                  ):
-        """
-        Create a robot instance, which contains:
-        arm, base, camera
-        End effector tool is inside the arm class
-
-        Args:
-            robot_name (str): robot name
-            pb (bool): if True, the pybullet simulation
-                environment of the robot will be created.
-                Otherwise, the ROS environment of the robot
-                will be created.
-            use_arm (bool): whether to create the robot arm instance
-                if the robot has an arm class
-            use_eetool (bool): whether to create the robot gripper instance
-                if the robot has an arm class
-            use_base (bool): whether to create the robot base instance
-                if the robot has an base class
-            use_cam (bool): whether to create the robot camera instance
-                if the robot has an camera class
-            arm_cfg (dict): arguments to pass in the constructor
-                of the arm class
-            base_cfg (dict): arguments to pass in the constructor
-                of the base class
-            cam_cfg (dict): arguments to pass in the constructor
-                of the camera class
-            eetool_cfg (dict): arguments to pass in the constructor
-                of the end effector tool class
-        """
         if arm_cfg is None:
             arm_cfg = {}
         if base_cfg is None:

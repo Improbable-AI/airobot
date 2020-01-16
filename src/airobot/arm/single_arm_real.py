@@ -29,6 +29,12 @@ class SingleArmReal(ARM):
         cfgs (YACS CfgNode): configurations for the arm
         eetool_cfg (dict): arguments to pass in the constructor
             of the end effector tool class
+
+    Attributes:
+        arm_jnt_names (list)
+        arm_link_names (list)
+        arm_dof (int)
+        ee_link (str)
     """
 
     def __init__(self, cfgs,
@@ -210,11 +216,11 @@ class SingleArmReal(ARM):
         Returns:
             np.ndarray: jacobian (shape: :math:`[6, DOF]`)
         """
-        q = kdl.JntArray(self.urdf_chain.getNrOfJoints())
+        q = kdl.JntArray(self._urdf_chain.getNrOfJoints())
         for i in range(q.rows()):
             q[i] = joint_angles[i]
-        jac = kdl.Jacobian(self.urdf_chain.getNrOfJoints())
-        fg = self.jac_solver.JntToJac(q, jac)
+        jac = kdl.Jacobian(self._urdf_chain.getNrOfJoints())
+        fg = self._jac_solver.JntToJac(q, jac)
         if fg < 0:
             raise ValueError('KDL JntToJac error!')
         jac_np = kdl_array_to_numpy(jac)
@@ -247,9 +253,9 @@ class SingleArmReal(ARM):
 
         kdl_end_frame = kdl.Frame()
         idx = self.arm_link_names.index(tgt_frame) + 1
-        fg = self.fk_solver_pos.JntToCart(kdl_jnt_angles,
-                                          kdl_end_frame,
-                                          idx)
+        fg = self._fk_solver_pos.JntToCart(kdl_jnt_angles,
+                                           kdl_end_frame,
+                                           idx)
         if fg < 0:
             raise ValueError('KDL Pos JntToCart error!')
         pose = kdl_frame_to_numpy(kdl_end_frame)
@@ -281,9 +287,9 @@ class SingleArmReal(ARM):
         kdl_jnt_vels = joints_to_kdl(jvel)
         kdl_jnt_qvels = kdl.JntArrayVel(kdl_jnt_angles, kdl_jnt_vels)
         idx = self.arm_link_names.index(tgt_frame) + 1
-        fg = self.fk_solver_vel.JntToCart(kdl_jnt_qvels,
-                                          kdl_end_frame,
-                                          idx)
+        fg = self._fk_solver_vel.JntToCart(kdl_jnt_qvels,
+                                           kdl_end_frame,
+                                           idx)
         if fg < 0:
             raise ValueError('KDL Vel JntToCart error!')
         end_twist = kdl_end_frame.GetTwist()
@@ -324,20 +330,20 @@ class SingleArmReal(ARM):
             qinit = qinit.flatten().tolist()
         pos_tol = self.cfgs.ARM.IK_POSITION_TOLERANCE
         ori_tol = self.cfgs.ARM.IK_ORIENTATION_TOLERANCE
-        jnt_poss = self.num_ik_solver.get_ik(qinit,
-                                             pos[0],
-                                             pos[1],
-                                             pos[2],
-                                             ori_x,
-                                             ori_y,
-                                             ori_z,
-                                             ori_w,
-                                             pos_tol,
-                                             pos_tol,
-                                             pos_tol,
-                                             ori_tol,
-                                             ori_tol,
-                                             ori_tol)
+        jnt_poss = self._num_ik_solver.get_ik(qinit,
+                                              pos[0],
+                                              pos[1],
+                                              pos[2],
+                                              ori_x,
+                                              ori_y,
+                                              ori_z,
+                                              ori_w,
+                                              pos_tol,
+                                              pos_tol,
+                                              pos_tol,
+                                              ori_tol,
+                                              ori_tol,
+                                              ori_tol)
         if jnt_poss is None:
             return None
         return list(jnt_poss)
@@ -350,22 +356,21 @@ class SingleArmReal(ARM):
 
         robot_description = self.cfgs.ROBOT_DESCRIPTION
         urdf_string = rospy.get_param(robot_description)
-        self.num_ik_solver = trac_ik.IK(self.cfgs.ARM.ROBOT_BASE_FRAME,
-                                        self.cfgs.ARM.ROBOT_EE_FRAME,
-                                        urdf_string=urdf_string)
-        _, self.urdf_tree = treeFromParam(robot_description)
+        self._num_ik_solver = trac_ik.IK(self.cfgs.ARM.ROBOT_BASE_FRAME,
+                                         self.cfgs.ARM.ROBOT_EE_FRAME,
+                                         urdf_string=urdf_string)
+        _, urdf_tree = treeFromParam(robot_description)
         base_frame = self.cfgs.ARM.ROBOT_BASE_FRAME
         ee_frame = self.cfgs.ARM.ROBOT_EE_FRAME
-        self.urdf_chain = self.urdf_tree.getChain(base_frame,
-                                                  ee_frame)
+        self._urdf_chain = urdf_tree.getChain(base_frame,
+                                              ee_frame)
         self.arm_jnt_names = self._get_kdl_joint_names()
-        self.arm_jnt_names_set = set(self.arm_jnt_names)
         self.arm_link_names = self._get_kdl_link_names()
         self.arm_dof = len(self.arm_jnt_names)
 
-        self.jac_solver = kdl.ChainJntToJacSolver(self.urdf_chain)
-        self.fk_solver_pos = kdl.ChainFkSolverPos_recursive(self.urdf_chain)
-        self.fk_solver_vel = kdl.ChainFkSolverVel_recursive(self.urdf_chain)
+        self._jac_solver = kdl.ChainJntToJacSolver(self._urdf_chain)
+        self._fk_solver_pos = kdl.ChainFkSolverPos_recursive(self._urdf_chain)
+        self._fk_solver_vel = kdl.ChainFkSolverVel_recursive(self._urdf_chain)
 
         self.ee_link = self.cfgs.ARM.ROBOT_EE_FRAME
 
@@ -376,10 +381,10 @@ class SingleArmReal(ARM):
         Returns:
             list: List of link names
         """
-        num_links = self.urdf_chain.getNrOfSegments()
+        num_links = self._urdf_chain.getNrOfSegments()
         link_names = []
         for i in range(num_links):
-            link_names.append(self.urdf_chain.getSegment(i).getName())
+            link_names.append(self._urdf_chain.getSegment(i).getName())
         return copy.deepcopy(link_names)
 
     def _get_kdl_joint_names(self):
@@ -389,11 +394,11 @@ class SingleArmReal(ARM):
         Returns:
             list: List of joint names
         """
-        num_links = self.urdf_chain.getNrOfSegments()
-        num_joints = self.urdf_chain.getNrOfJoints()
+        num_links = self._urdf_chain.getNrOfSegments()
+        num_joints = self._urdf_chain.getNrOfJoints()
         joint_names = []
         for i in range(num_links):
-            link = self.urdf_chain.getSegment(i)
+            link = self._urdf_chain.getSegment(i)
             joint = link.getJoint()
             joint_type = joint.getType()
             # JointType definition: [RotAxis,RotX,RotY,RotZ,TransAxis,

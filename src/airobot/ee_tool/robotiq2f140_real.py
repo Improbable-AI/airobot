@@ -23,6 +23,10 @@ class Robotiq2F140Real(EndEffectorTool):
 
     Args:
         cfgs (YACS CfgNode): configurations for the gripper
+
+    Attributes:
+        cfgs (YACS CfgNode): configurations for the gripper
+        jnt_names (list): list of joint names of the gripper
     """
 
     def __init__(self, cfgs):
@@ -33,22 +37,19 @@ class Robotiq2F140Real(EndEffectorTool):
             'right_inner_knuckle_joint', 'right_inner_finger_joint'
         ]
 
-        self.gazebo_sim = rospy.get_param('sim')
-
-        self.jnt_names_set = set(self.jnt_names)
-
+        self._gazebo_sim = rospy.get_param('sim')
         self._comm_initialized = False
         self._get_state_lock = threading.RLock()
         self._initialize_comm()
 
-        if not self.gazebo_sim:
+        if not self._gazebo_sim:
             self._gripper_data = None
             self._pub_state_lock = threading.RLock()
 
             self._updated_gripper_pos = JointState()
             self._updated_gripper_pos.name = ['finger_joint']
             self._updated_gripper_pos.position = [0.0]
-            self.err_thresh = 1
+            self._err_thresh = 1
 
             self._local_ip_addr = None
             local_ip = self._get_local_ip()
@@ -69,7 +70,7 @@ class Robotiq2F140Real(EndEffectorTool):
         """
         Method to activate the gripper.
         """
-        if not self.gazebo_sim:
+        if not self._gazebo_sim:
             urscript = self._get_new_urscript()
 
             urscript.set_activate()
@@ -77,9 +78,9 @@ class Robotiq2F140Real(EndEffectorTool):
 
             urscript.sleep(0.1)
 
-            self.pub_command.publish(urscript())
+            self._pub_command.publish(urscript())
         time.sleep(3)
-        if not self.gazebo_sim:
+        if not self._gazebo_sim:
             self._get_current_pos_urscript()
 
     def set_pos(self, pos):
@@ -98,7 +99,7 @@ class Robotiq2F140Real(EndEffectorTool):
             self.cfgs.EETOOL.OPEN_ANGLE,
             self.cfgs.EETOOL.CLOSE_ANGLE
         )
-        if not self.gazebo_sim:
+        if not self._gazebo_sim:
             urscript = self._get_new_urscript()
 
             pos = int(pos * self.cfgs.EETOOL.POSITION_SCALING)
@@ -111,9 +112,9 @@ class Robotiq2F140Real(EndEffectorTool):
             gripper_cmd = GripperCommandActionGoal()
             gripper_cmd.goal.command.position = pos
 
-        self.pub_command.publish(gripper_cmd)
+        self._pub_command.publish(gripper_cmd)
         time.sleep(1.0)
-        if not self.gazebo_sim:
+        if not self._gazebo_sim:
             self._get_current_pos_urscript()
 
     def set_speed(self, speed):
@@ -124,13 +125,13 @@ class Robotiq2F140Real(EndEffectorTool):
             speed (int): Desired gripper speed (0 min, 255 max)
         """
         speed = int(clamp(speed, 0, 255))
-        if not self.gazebo_sim:
+        if not self._gazebo_sim:
             urscript = self._get_new_urscript()
 
             urscript.set_gripper_speed(speed)
             urscript.sleep(0.1)
 
-            self.pub_command.publish(urscript())
+            self._pub_command.publish(urscript())
 
     def open(self):
         """
@@ -194,7 +195,7 @@ class Robotiq2F140Real(EndEffectorTool):
         consecutively consistent, and is eventually published to the
         gripper state topic. Function will exit if timeout is reached.
         """
-        if self.gazebo_sim:
+        if self._gazebo_sim:
             return
         tcp_port = 50201
 
@@ -209,7 +210,7 @@ class Robotiq2F140Real(EndEffectorTool):
         tcp_msg += ' sync()\n'
         tcp_msg += ' socket_close("desktop_socket")\n'
         tcp_msg += 'end\n'
-        self.pub_command.publish(tcp_msg)
+        self._pub_command.publish(tcp_msg)
 
         returned_pos = None
         last_returned_pos = 0.0
@@ -248,7 +249,7 @@ class Robotiq2F140Real(EndEffectorTool):
                 continue
             returned_pos = int(struct.unpack('!i', data[0:4])[0])
 
-            if np.abs(returned_pos - last_returned_pos) < self.err_thresh:
+            if np.abs(returned_pos - last_returned_pos) < self._err_thresh:
                 equal_pos += 1
             else:
                 equal_pos = 0
@@ -272,7 +273,7 @@ class Robotiq2F140Real(EndEffectorTool):
         while not rospy.is_shutdown():
             try:
                 self._pub_state_lock.acquire()
-                self.pub_gripper_pos.publish(self._updated_gripper_pos)
+                self._pub_gripper_pos.publish(self._updated_gripper_pos)
                 self._pub_state_lock.release()
                 time.sleep(0.002)
             except rospy.ROSException:
@@ -298,21 +299,21 @@ class Robotiq2F140Real(EndEffectorTool):
         Set up the internal publisher to send gripper command
         URScript programs to the robot thorugh ROS.
         """
-        if self.gazebo_sim:
-            self.pub_command = rospy.Publisher(
+        if self._gazebo_sim:
+            self._pub_command = rospy.Publisher(
                 self.cfgs.EETOOL.GAZEBO_COMMAND_TOPIC,
                 GripperCommandActionGoal,
                 queue_size=10)
         else:
-            self.pub_command = rospy.Publisher(
+            self._pub_command = rospy.Publisher(
                 self.cfgs.EETOOL.COMMAND_TOPIC,
                 String,
                 queue_size=10)
-            self.pub_gripper_pos = rospy.Publisher(
+            self._pub_gripper_pos = rospy.Publisher(
                 '/gripper_state',
                 JointState,
                 queue_size=10)
-        self.sub_position = rospy.Subscriber(
+        self._sub_position = rospy.Subscriber(
             self.cfgs.EETOOL.JOINT_STATE_TOPIC,
             JointState,
             self._get_current_pos_cb

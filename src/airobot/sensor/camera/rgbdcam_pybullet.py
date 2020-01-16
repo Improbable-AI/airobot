@@ -11,10 +11,16 @@ class RGBDCameraPybullet(RGBDCamera):
 
     Args:
         cfgs (YACS CfgNode): configurations for the camera
+
+    Attributes:
+        view_matrix (np.ndarray): view matrix of opengl
+            camera (shape: :math:`[4, 4]`)
+        proj_matrix (np.ndarray): projection matrix of
+            opengl camera (shape: :math:`[4, 4]`)
     """
+
     def __init__(self, cfgs):
         super(RGBDCameraPybullet, self).__init__(cfgs=cfgs)
-        self.p = p
         self.view_matrix = None
         self.proj_matrix = None
         self.depth_scale = 1
@@ -45,7 +51,6 @@ class RGBDCameraPybullet(RGBDCamera):
             focus_pt = [0, 0, 0]
         if len(focus_pt) != 3:
             raise ValueError('Length of focus_pt should be 3 ([x, y, z]).')
-        print("PB_CLIENT: " + str(PB_CLIENT))
         vm = p.computeViewMatrixFromYawPitchRoll(focus_pt,
                                                  dist,
                                                  yaw,
@@ -53,10 +58,10 @@ class RGBDCameraPybullet(RGBDCamera):
                                                  roll,
                                                  upAxisIndex=2,
                                                  physicsClientId=PB_CLIENT)
-        self.view_matrix = vm
-        self.cam_height = height if height else self.cfgs.CAM.SIM.HEIGHT
-        self.cam_width = width if width else self.cfgs.CAM.SIM.WIDTH
-        aspect = self.cam_width / float(self.cam_height)
+        self.view_matrix = np.array(vm).reshape(4, 4)
+        self.img_height = height if height else self.cfgs.CAM.SIM.HEIGHT
+        self.img_width = width if width else self.cfgs.CAM.SIM.WIDTH
+        aspect = self.img_width / float(self.img_height)
         znear = self.cfgs.CAM.SIM.ZNEAR
         zfar = self.cfgs.CAM.SIM.ZFAR
         fov = self.cfgs.CAM.SIM.FOV
@@ -65,22 +70,22 @@ class RGBDCameraPybullet(RGBDCamera):
                                           znear,
                                           zfar,
                                           physicsClientId=PB_CLIENT)
-        self.proj_matrix = pm
+        self.proj_matrix = np.array(pm).reshape(4, 4)
         rot = np.array([[1, 0, 0, 0],
                         [0, -1, 0, 0],
                         [0, 0, -1, 0],
                         [0, 0, 0, 1]])
-        view_matrix = np.array(self.view_matrix).reshape(4, 4).T
-        self.cam_ext_mat = np.dot(np.linalg.inv(view_matrix), rot)
+        view_matrix_T = self.view_matrix.T
+        self.cam_ext_mat = np.dot(np.linalg.inv(view_matrix_T), rot)
 
         vfov = np.deg2rad(fov)
         tan_half_vfov = np.tan(vfov / 2.0)
-        tan_half_hfov = tan_half_vfov * self.cam_width / float(self.cam_height)
+        tan_half_hfov = tan_half_vfov * self.img_width / float(self.img_height)
         # focal length in pixel space
-        fx = self.cam_width / 2.0 / tan_half_hfov
-        fy = self.cam_height / 2.0 / tan_half_vfov
-        self.cam_int_mat = np.array([[fx, 0, self.cam_width / 2.0],
-                                     [0, fy, self.cam_height / 2.0],
+        fx = self.img_width / 2.0 / tan_half_hfov
+        fy = self.img_height / 2.0 / tan_half_vfov
+        self.cam_int_mat = np.array([[fx, 0, self.img_width / 2.0],
+                                     [0, fy, self.img_height / 2.0],
                                      [0, 0, 1]])
         self._init_pers_mat()
 
@@ -108,10 +113,10 @@ class RGBDCameraPybullet(RGBDCamera):
         if self.view_matrix is None:
             raise ValueError('Please call setup_camera() first!')
 
-        images = p.getCameraImage(width=self.cam_width,
-                                  height=self.cam_height,
-                                  viewMatrix=self.view_matrix,
-                                  projectionMatrix=self.proj_matrix,
+        images = p.getCameraImage(width=self.img_width,
+                                  height=self.img_height,
+                                  viewMatrix=self.view_matrix.flatten(),
+                                  projectionMatrix=self.proj_matrix.flatten(),
                                   shadow=shadow,
                                   flags=p.ER_NO_SEGMENTATION_MASK,
                                   renderer=p.ER_BULLET_HARDWARE_OPENGL,
@@ -121,11 +126,11 @@ class RGBDCameraPybullet(RGBDCamera):
         depth = None
         if get_rgb:
             rgb = np.reshape(images[2],
-                             (self.cam_height,
-                              self.cam_width, 4))[:, :, :3]  # 0 to 255
+                             (self.img_height,
+                              self.img_width, 4))[:, :, :3]  # 0 to 255
         if get_depth:
-            depth_buffer = np.reshape(images[3], [self.cam_height,
-                                                  self.cam_width])
+            depth_buffer = np.reshape(images[3], [self.img_height,
+                                                  self.img_width])
             znear = self.cfgs.CAM.SIM.ZNEAR
             zfar = self.cfgs.CAM.SIM.ZFAR
             depth = zfar * znear / (zfar - (zfar - znear) * depth_buffer)

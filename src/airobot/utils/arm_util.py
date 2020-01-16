@@ -54,7 +54,10 @@ def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
             break
         if get_func_derv is not None:
             vel_threshold = 0.006
-            jnt_vel = get_func_derv(joint_name)
+            try:
+                jnt_vel = get_func_derv(joint_name)
+            except TypeError as e:
+                jnt_vel = get_func_derv()
             if np.max(np.abs(jnt_vel)) <= vel_threshold \
                     and vel_stop_time is None:
                 vel_stop_time = time.time()
@@ -86,7 +89,10 @@ def reach_jnt_goal(goal, get_func, joint_name=None, max_error=0.01):
         bool: if the goal is reached or not
     """
     goal = np.array(goal)
-    new_jnt_val = get_func(joint_name)
+    try:
+        new_jnt_val = get_func(joint_name)
+    except TypeError as e:
+        new_jnt_val = get_func()
     new_jnt_val = np.array(new_jnt_val)
     jnt_diff = new_jnt_val - goal
     error = np.max(np.abs(jnt_diff))

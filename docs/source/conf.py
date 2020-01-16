@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../src/airobot/'))
 # -- Project information -----------------------------------------------------
 
 project = u'AIRobot'
-copyright = u'2019, MIT Improbable AI'
+copyright = u'2019, MIT Improbable AI Lab'
 author = u'Tao Chen; Anthony Simeonov; Pulkit Agrawal'
 
 # The short X.Y version
@@ -204,8 +204,8 @@ napoleon_include_special_with_doc = False
 napoleon_use_admonition_for_examples = False
 napoleon_use_admonition_for_notes = False
 napoleon_use_admonition_for_references = False
-napoleon_use_ivar = False
-napoleon_use_param = False
+napoleon_use_ivar = True
+napoleon_use_param = True
 napoleon_use_rtype = False
 napoleon_use_keyword = True
 napoleon_custom_sections = None
