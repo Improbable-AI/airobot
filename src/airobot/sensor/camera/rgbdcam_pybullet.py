@@ -95,7 +95,7 @@ class RGBDCameraPybullet(RGBDCamera):
     def get_cam_int(self):
         return self.cam_int_mat
 
-    def get_images(self, get_rgb=True, get_depth=True, shadow=False, **kwargs):
+    def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
         Return rgb/depth images
 
@@ -117,7 +117,6 @@ class RGBDCameraPybullet(RGBDCamera):
                                   height=self.img_height,
                                   viewMatrix=self.view_matrix.flatten(),
                                   projectionMatrix=self.proj_matrix.flatten(),
-                                  shadow=shadow,
                                   flags=p.ER_NO_SEGMENTATION_MASK,
                                   renderer=p.ER_BULLET_HARDWARE_OPENGL,
                                   physicsClientId=PB_CLIENT,
