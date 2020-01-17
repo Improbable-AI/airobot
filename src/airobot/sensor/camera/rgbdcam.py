@@ -15,7 +15,7 @@ class RGBDCamera(Camera):
         img_height (int): height of the image
         img_width (int): width of the image
         cam_ext_mat (np.ndarray): extrinsic matrix (shape: :math:`[4, 4]`)
-            for the camera
+            for the camera (source frame: base frame. target frame: camera frame)
         cam_int_mat (np.ndarray): intrinsic matrix (shape: :math:`[3, 3]`)
             for the camera
         cam_int_mat_inv (np.ndarray): inverse of the intrinsic matrix
