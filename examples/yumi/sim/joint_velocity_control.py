@@ -25,7 +25,7 @@ def main():
     Move all the joints of the robot in a sine-wave fashion
     """
 
-    robot = Robot('yumi_grippers', arm_cfg={'render': True})
+    robot = Robot('yumi', arm_cfg={'render': True})
     robot.arm.go_home()
 
     A = 0.2

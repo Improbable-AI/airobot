@@ -8,6 +8,8 @@ _C.CLOSE_ANGLE = 0.0
 
 _C.MAX_FORCE = 100.0
 
+_C.CLASS = 'YumiParallelJawPybullet'
+
 
 def get_yumi_parallel_jaw_cfg():
     return _C.clone()
