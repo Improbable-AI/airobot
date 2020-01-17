@@ -11,7 +11,7 @@ class Camera(object):
         cfgs (YACS CfgNode): configurations for the camera
 
     Attributes:
-        cfgs (YACS CfgNode): configurations for the end effector
+        cfgs (YACS CfgNode): configurations for the camera
     """
 
     def __init__(self, cfgs):
