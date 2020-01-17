@@ -8,7 +8,7 @@ from airobot import Robot
 def main():
     """
     This function demonstrates how to setup camera
-    and get rgb/depth images.
+    and get rgb/depth images and segmentation mask.
     """
     robot = Robot('ur5e', arm_cfg={'render': False})
     focus_pt = [0, 0, 1]  # ([x, y, z])
@@ -20,12 +20,15 @@ def main():
     robot.arm.go_home()
     rgb, depth = robot.cam.get_images(get_rgb=True,
                                       get_depth=True)
+    seg = robot.cam.get_segmentation_mask()
     plt.figure()
     plt.imshow(rgb)
     plt.figure()
     plt.imshow(depth * 25, cmap='gray', vmin=0, vmax=255)
     ar.log_info('Maximum Depth (m): %f' % np.max(depth))
     ar.log_info('Minimum Depth (m): %f' % np.min(depth))
+    plt.figure()
+    plt.imshow(seg)
     plt.show()
 
 

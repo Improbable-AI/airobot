@@ -134,3 +134,35 @@ class RGBDCameraPybullet(RGBDCamera):
             zfar = self.cfgs.CAM.SIM.ZFAR
             depth = zfar * znear / (zfar - (zfar - znear) * depth_buffer)
         return rgb, depth
+
+    def get_segmentation_mask(self, **kwargs):
+        """
+        Return segmentation mask from PyBullet's builtin
+        segmentation mask functionality.
+
+        Returns:
+            np.ndarray: segmentation mask image (shape: [H, W]), with
+                pixel values corresponding to object id and link id.
+                From the PyBullet documentation, the pixel value
+                "combines the object unique id and link index as follows:
+                value = objectUniqueId + (linkIndex+1)<<24 ...
+                for a free floating body without joints/links, the
+                segmentation mask is equal to its body unique id,
+                since its link index is -1."
+        """
+        if self.view_matrix is None:
+            raise ValueError('Please call setup_camera() first!')
+
+        images = p.getCameraImage(
+            width=self.img_width,
+            height=self.img_height,
+            viewMatrix=self.view_matrix.flatten(),
+            projectionMatrix=self.proj_matrix.flatten(),
+            flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
+            renderer=p.ER_BULLET_HARDWARE_OPENGL,
+            physicsClientId=PB_CLIENT,
+            **kwargs)
+
+        seg = np.reshape(images[4], [self.img_height,
+                                     self.img_width])
+        return seg
