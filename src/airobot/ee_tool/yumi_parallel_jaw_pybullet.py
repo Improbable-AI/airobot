@@ -19,10 +19,12 @@ class YumiParallelJawPybullet(EndEffectorTool):
 
     Attributes:
         cfgs (YACS CfgNode): configurations for the gripper
-        gripper_close_angle (float):
-        gripper_open_angle (float):
-        jnt_names (list):
-        gripper_jnt_ids (list):
+        gripper_close_angle (float): position value corresponding to the
+            fully closed position of the gripper
+        gripper_open_angle (float): position value corresponding to the
+            fully open position of the gripper
+        jnt_names (list): names of the gripper joints
+        gripper_jnt_ids (list): pybullet joint ids of the gripper joints
         robot_id (int): robot id in Pybullet
         jnt_to_id (dict): mapping from the joint name to joint id
     """

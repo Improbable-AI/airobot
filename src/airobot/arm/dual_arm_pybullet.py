@@ -29,19 +29,22 @@ class DualArmPybullet(ARM):
             of the end effector tool class
 
     Attributes:
-        cfgs (YACS CfgNode)
-        robot_id (int)
-        arms (dict)
-        arm_jnt_names (list)
-        right_arm_jnt_names (list)
-        left_arm_jnt_names (list)
-        arm_jnt_ids (list)
-        r_ee_link_jnt (str)
-        l_ee_link_jnt (str)
-        dual_arm_dof (int)
-        single_arm_dof (int)
-        jnt_to_id (dict)
-        non_fixed_jnt_names (list)
+        cfgs (YACS CfgNode): configurations for the robot
+        robot_id (int): pybullet body unique id of the robot
+        arms (dict): internal dictionary keyed by the names of each
+            single arm, with values as interfaces to the arms
+        arm_jnt_names (list): names of the arm joints
+        right_arm_jnt_names (list): names of the arm joints on the right arm
+        left_arm_jnt_names (list): names of the arm joints on the left arm
+        arm_jnt_ids (list): pybullet joint ids of the arm joints
+        r_ee_link_jnt (str): name of the end effector link on the right arm
+        l_ee_link_jnt (str): name of the end effector link on the left arm
+        dual_arm_dof (int): total number of arm joints in the robot
+        single_arm_dof (int): number of joints in a single arm of the robot
+        jnt_to_id (dict): dictionary with [joint name : pybullet joint] id
+            [key : value] pairs
+        non_fixed_jnt_names (list): names of non-fixed joints in the arms,
+            used for returning the correct inverse kinematics solution
 
     """
 

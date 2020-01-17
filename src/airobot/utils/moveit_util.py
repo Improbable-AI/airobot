@@ -11,6 +11,10 @@ from moveit_commander import conversions
 class MoveitScene(object):
     """
     Use this class to create objects that reside in moveit environments
+
+    Attributes:
+        scene (moveit_commander.PlanningSceneInterface): interface
+            to the MoveIt! planning scene
     """
 
     def __init__(self):
@@ -204,7 +208,8 @@ class MoveitScene(object):
 
 
 def moveit_cartesian_path(start_pos, start_quat,
-                          delta_xyz, moveit_group, eef_step):
+                          delta_xyz, moveit_group,
+                          eef_step, jump_threshold=0.0):
     """
     Compute the motion plan for cartesian path
 
@@ -217,6 +222,11 @@ def moveit_cartesian_path(start_pos, start_quat,
         moveit_group (MoveGroupCommander): moveit group commander
         eef_step (float): Discretization step in cartesian space
             for computing waypoints along the path.
+        jump_threshold (float): Value indicating the maximum allowable joint
+            space jump between time steps. Small values are more conservative,
+            not allowing large rapid joint movements. A value of 0.0 tells
+            MoveIt! to ignore this parameter, allowing for infinitely large
+            configuration space jumps.
 
     Returns:
         moveit_msgs/RobotTrajectory: motion plan to move the end
@@ -250,5 +260,5 @@ def moveit_cartesian_path(start_pos, start_quat,
     (plan, fraction) = moveit_group.compute_cartesian_path(
         moveit_waypoints,  # waypoints to follow
         eef_step,  # eef_step
-        0.0)  # jump_threshold
+        jump_threshold)  # jump_threshold
     return plan

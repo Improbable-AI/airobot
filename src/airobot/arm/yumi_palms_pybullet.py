@@ -34,11 +34,12 @@ class CompliantYumiArm(SingleArmPybullet):
             of the end effector tool class
 
     Attributes:
-        comp_jnt_names (list)
-        comp_dof (list)
-        comp_jnt_gains (list)
-        comp_jnt_ids (list)
-        max_force_comp (list)
+        comp_jnt_names (list): Names of the spring-like compliant joints
+        comp_dof (list): Number of spring-like compliant joints
+        comp_jnt_gains (list): Stiffness of spring-like compliant joints
+        comp_jnt_ids (list): PyBullet joint ids of compliant joints
+        max_force_comp (list): Maximum force that can be applied at
+            the compliant joints
     """
 
     def __init__(self, cfgs, render=False, seed=None,
@@ -270,10 +271,11 @@ class YumiPalmsPybullet(DualArmPybullet):
             of the end effector tool class
 
     Attributes:
-        arms (dict)
-        robot_id (int)
-        left_arm (CompliantYumiArm)
-        right_arm (CompliantYumiArm)
+        arms (dict): internal dictioanry keyed by the single arm names,
+            values are interfaces to the single arm instances
+        robot_id (int): pybullet unique body id of the robot
+        left_arm (CompliantYumiArm): left arm interface
+        right_arm (CompliantYumiArm): right arm interface
     """
 
     def __init__(self, cfgs, render=False, seed=None,

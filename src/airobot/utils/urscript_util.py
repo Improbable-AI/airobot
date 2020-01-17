@@ -24,19 +24,19 @@ class URScript(object):
         that runs on the contoller
         """
         # The program is code inside the myProg() method
-        self.program = ""
+        self._program = ""
 
     def __call__(self):
         """
         Create a string formatted properly as a urscript program
         upon call
         """
-        if self.program == "":
+        if self._program == "":
             ar.log_debug("urscript program is empty")
             return ""
 
         # Construct the program
-        myprog = """def myProg():{}\nend""".format(self.program)
+        myprog = """def myProg():{}\nend""".format(self._program)
 
         # Construct the full script
         script = ""
@@ -47,7 +47,7 @@ class URScript(object):
         """
         Reset the urscript to empty
         """
-        self.program = ""
+        self._program = ""
 
     def _add_line_to_program(self, new_line):
         """
@@ -56,7 +56,7 @@ class URScript(object):
         Args:
             new_line (str): Line to add to myProg() urscript program
         """
-        self.program = "{}\n\t{}".format(self.program, new_line)
+        self._program = "{}\n\t{}".format(self._program, new_line)
 
     def constrain_unsigned_char(self, value):
         """
@@ -159,23 +159,28 @@ class Robotiq2F140URScript(URScript):
     Class for creating Robotiq 2F140 specific URScript
     messages to send to the UR robot, for setting gripper
     related variables
+
+    Args:
+        socket_host (str): gripper IP address used by the UR controller
+        socket_port (int): gripper communication port used by the UR controller
+        socket_name (str): name of the socket connection
     """
 
     def __init__(self,
                  socket_host,
                  socket_port,
                  socket_name):
-        self.socket_host = socket_host
-        self.socket_port = socket_port
-        self.socket_name = socket_name
+        self._socket_host = socket_host
+        self._socket_port = socket_port
+        self._socket_name = socket_name
         super(Robotiq2F140URScript, self).__init__()
 
         # reset gripper connection
-        self.socket_close(self.socket_name)
+        self.socket_close(self._socket_name)
         self.socket_open(
-            self.socket_host,
-            self.socket_port,
-            self.socket_name
+            self._socket_host,
+            self._socket_port,
+            self._socket_name
         )
 
     def set_activate(self):
@@ -183,8 +188,8 @@ class Robotiq2F140URScript(URScript):
         Activate the gripper, by setting some internal
         variables on the UR controller to 1
         """
-        self.socket_set_var('ACT', 1, self.socket_name)
-        self.socket_set_var('GTO', 1, self.socket_name)
+        self.socket_set_var('ACT', 1, self._socket_name)
+        self.socket_set_var('GTO', 1, self._socket_name)
 
     def set_gripper_position(self, position):
         """
@@ -196,7 +201,7 @@ class Robotiq2F140URScript(URScript):
             position (int): Position value, ranges from 0-255
         """
         position = self.constrain_unsigned_char(position)
-        self.socket_set_var('POS', position, self.socket_name)
+        self.socket_set_var('POS', position, self._socket_name)
 
     def set_gripper_speed(self, speed):
         """
@@ -206,7 +211,7 @@ class Robotiq2F140URScript(URScript):
             speed (int): Desired gripper speed, ranges from 0-255
         """
         speed = self.constrain_unsigned_char(speed)
-        self.socket_set_var('SPE', speed, self.socket_name)
+        self.socket_set_var('SPE', speed, self._socket_name)
 
     def set_gripper_force(self, force):
         """
@@ -217,4 +222,4 @@ class Robotiq2F140URScript(URScript):
                 from 0-255
         """
         force = self.constrain_unsigned_char(force)
-        self.socket_set_var('FOR', force, self.socket_name)
+        self.socket_set_var('FOR', force, self._socket_name)

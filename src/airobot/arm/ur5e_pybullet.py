@@ -30,10 +30,12 @@ class UR5ePybullet(SingleArmPybullet):
             of the end effector tool class
 
     Attributes:
-        floor_id (int): xxx
-        robot_id (int): xxx
-        robot_base_pos (list): xxx
-        robot_base_ori (list): xxx
+        floor_id (int): pybullet body unique id of the floor
+        robot_id (int): pybullet body unique id of the robot
+        robot_base_pos (list): world frame position of the robot base link,
+            shape: :math:`[3,]` ([x, y, z])
+        robot_base_ori (list): world frame orientation of the robot base link
+            shape: :math:`[4,]` ([x, y, z, w])
     """
 
     def __init__(self,

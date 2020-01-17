@@ -30,9 +30,9 @@ class YumiPybullet(DualArmPybullet):
             of the end effector tool class
 
     Attributes:
-        right_arm (SingleArmPybullet)
-        left_arm (SingleArmPybullet)
-        robot_id (int)
+        right_arm (SingleArmPybullet): Right arm instance
+        left_arm (SingleArmPybullet): Left arm instance
+        robot_id (int): PyBullet body unique id of the robot
 
     """
 

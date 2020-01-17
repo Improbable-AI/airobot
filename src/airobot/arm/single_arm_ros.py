@@ -35,12 +35,18 @@ class SingleArmROS(SingleArmReal):
             of the end effector tool class
 
     Attributes:
-        max_vel (float)
-        max_acc (float)
-        tf_listner (tf.TransformListener)
-        moveit_group (MoveGroupCommander)
-        moveit_scene (MoveitScene)
-        moveit_planner (str)
+        max_vel (float): Maximum joint velocity, read in from
+            MoveIt config file. Can be scaled with self.scale_motion()
+        max_acc (float): Maximum joint acceleration, read in from
+            MoveIt config file. Can be scaled with self.scale_motion()
+        tf_listner (tf.TransformListener): ROS subscriber to the /tf topic
+        moveit_group (MoveGroupCommander): Internal interface to MoveIt!
+            move_group, used to call motion planning functions
+        moveit_scene (MoveitScene): Internal interface to MoveIt! planning
+            scene, used to add objects, remove objects, etc. from the
+            motion planning environment
+        moveit_planner (str): The name of the motion planning algorithm
+            being used for all motion planning requests
     """
 
     def __init__(self, cfgs,

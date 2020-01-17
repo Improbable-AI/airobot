@@ -432,6 +432,10 @@ def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
 class TextureModder:
     """
     Modify textures in model
+
+    Attributes:
+        texture_dict (dict):
+        texture_files (list):
     """
 
     def __init__(self):

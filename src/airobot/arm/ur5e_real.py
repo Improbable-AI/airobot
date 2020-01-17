@@ -40,8 +40,10 @@ class UR5eReal(SingleArmROS):
             doing motion planning
 
     Attributes:
-        gripper_tip_pos (list)
-        gripper_tip_ori (list)
+        gripper_tip_pos (list): Position of the end effector link frame
+            w.r.t. to its parent link frame, shape: :math:`[3,]` ([x, y, z])
+        gripper_tip_ori (list): Orientation of the end effector link frame
+            w.r.t. to its parent link frame, shape: :math:`[4,]` ([x, y, z, w])
     """
     def __init__(self, cfgs,
                  moveit_planner='RRTstarkConfigDefault',

@@ -31,10 +31,10 @@ class SingleArmReal(ARM):
             of the end effector tool class
 
     Attributes:
-        arm_jnt_names (list)
-        arm_link_names (list)
-        arm_dof (int)
-        ee_link (str)
+        arm_jnt_names (list): Names of the joints in the arm
+        arm_link_names (list): Names of the links in the arm
+        arm_dof (int): Number of degrees of freedom in the arm
+        ee_link (str): Name of the arms end-effector link
     """
 
     def __init__(self, cfgs,
