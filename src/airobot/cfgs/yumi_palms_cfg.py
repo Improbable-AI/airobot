@@ -18,10 +18,12 @@ _C.PYBULLET_URDF = 'yumi_gelslim_palm.urdf'
 # augmented to be '<Prefix>Real'
 _C.ARM.CLASS = 'YumiPalms'
 
+# yumi with palms has compliant joints at the wrist and in the gel
 _C.ARM.RIGHT.ARM.COMPLIANT_JOINT_NAMES = ['yumi_palm_r', 'yumi_gel_r']
 _C.ARM.RIGHT.ARM.COMPLIANT_GAINS = [5, 5]
 _C.ARM.RIGHT.ARM.COMPLIANT_MAX_FORCE = 20
 
+# yumi with palms has compliant joints at the wrist and in the gel
 _C.ARM.LEFT.ARM.COMPLIANT_JOINT_NAMES = ['yumi_palm_l', 'yumi_gel_l']
 _C.ARM.LEFT.ARM.COMPLIANT_GAINS = [5, 5]
 _C.ARM.LEFT.ARM.COMPLIANT_MAX_FORCE = 20

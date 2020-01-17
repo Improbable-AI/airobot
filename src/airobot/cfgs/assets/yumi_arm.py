@@ -27,8 +27,12 @@ _C.TIMEOUT_LIMIT = 10
 _C.PYBULLET_RESET_POS = [0, 0, -0.1]
 # reset orientation (euler angles) for the robot in pybullet
 _C.PYBULLET_RESET_ORI = [0, 0, 0]
-
+# damped inverse kinematics value
 _C.PYBULLET_IK_DAMPING = 0.0005
+
+# NOTE: Order of joints on yumi is [1, 2, 7, 3, 4, 5, 6]
+# these torques are listed in that order
+_C.MAX_TORQUES = [14, 30, 13, 14, 1, 3.5, 0.2]
 
 
 def get_yumi_arm_cfg():

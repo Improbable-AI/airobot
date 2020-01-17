@@ -86,7 +86,7 @@ class DualArmPybullet(ARM):
             success = self.set_jpos(self._home_position)
         else:
             if arm not in self.arms:
-                raise ValueError('Valid arm name must be specified'
+                raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             success = self.arms[arm].go_home()
@@ -146,7 +146,7 @@ class DualArmPybullet(ARM):
         success = False
         if arm is None:
             if len(position) != self.dual_arm_dof:
-                raise ValueError('Position should contain %d'
+                raise ValueError('Position should contain %d '
                                  'elements if arm is not provided'
                                  % self.dual_arm_dof)
             tgt_pos = position
@@ -167,7 +167,7 @@ class DualArmPybullet(ARM):
                 )
         else:
             if arm not in self.arms:
-                raise ValueError('Valid arm name must be specified'
+                raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             success = self.arms[arm].set_jpos(position,
@@ -204,7 +204,7 @@ class DualArmPybullet(ARM):
         success = False
         if arm is None:
             if len(velocity) != self.dual_arm_dof:
-                raise ValueError('velocity should contain %d'
+                raise ValueError('velocity should contain %d '
                                  'elements if arm is not provided'
                                  % self.dual_arm_dof)
             tgt_vel = velocity
@@ -224,7 +224,7 @@ class DualArmPybullet(ARM):
                 )
         else:
             if arm not in self.arms:
-                raise ValueError('Valid arm name must be specified'
+                raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             success = self.arms[arm].set_jvel(velocity,
@@ -284,7 +284,7 @@ class DualArmPybullet(ARM):
                                         physicsClientId=PB_CLIENT)
         else:
             if arm not in self.arms:
-                raise ValueError('Valid arm name must be specified'
+                raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             success = self.arms[arm].set_jtorq(torque,
@@ -319,7 +319,7 @@ class DualArmPybullet(ARM):
             raise NotImplementedError
         else:
             if arm not in self.arms:
-                raise ValueError('Valid arm name must be specified'
+                raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             success = self.arms[arm].set_ee_pose(pos=pos,
@@ -354,7 +354,7 @@ class DualArmPybullet(ARM):
             raise NotImplementedError
         else:
             if arm not in self.arms:
-                raise ValueError('Valid arm name must be specified'
+                raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             success = self.arms[arm].move_ee_xyz(delta_xyz=delta_xyz,
@@ -528,7 +528,7 @@ class DualArmPybullet(ARM):
             raise NotImplementedError
         else:
             if arm not in self.arms:
-                raise ValueError('Valid arm name must be specified'
+                raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             return self.arms[arm].get_ee_pose()
@@ -551,7 +551,7 @@ class DualArmPybullet(ARM):
             raise NotImplementedError
         else:
             if arm not in self.arms:
-                raise ValueError('Valid arm name must be specified'
+                raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             return self.arms[arm].get_ee_vel()
@@ -580,7 +580,7 @@ class DualArmPybullet(ARM):
             raise NotImplementedError
         else:
             if arm not in self.arms:
-                raise ValueError('Valid arm name must be specified'
+                raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % self._arm_names[0], self._arm_names[1])
             return self.arms[arm].compute_ik(pos=pos, ori=ori, ns=ns)

@@ -1,9 +1,9 @@
 from yacs.config import CfgNode as CN
 
-from airobot.cfgs.default_configs import get_cfg_defaults
-from airobot.cfgs.pybullet_camera import get_sim_cam_cfg
-from airobot.cfgs.realsense_camera import get_realsense_cam_cfg
-from airobot.cfgs.yumi_arm import get_yumi_arm_cfg
+from airobot.cfgs.assets.default_configs import get_cfg_defaults
+from airobot.cfgs.assets.pybullet_camera import get_sim_cam_cfg
+from airobot.cfgs.assets.realsense_camera import get_realsense_cam_cfg
+from airobot.cfgs.assets.yumi_arm import get_yumi_arm_cfg
 
 _C = get_cfg_defaults()
 # whether the robot has an arm or not
@@ -36,10 +36,8 @@ _C.ARM.RIGHT.ARM.JOINT_NAMES = [
     'yumi_joint_3_r', 'yumi_joint_4_r', 'yumi_joint_5_r',
     'yumi_joint_6_r'
 ]
-_C.ARM.RIGHT.ARM.COMPLIANT_JOINT_NAMES = [
-    'yumi_palm_r', 'yumi_gel_r'
-]
-_C.ARM.RIGHT.ARM.MAX_TORQUES = [300, 300, 300, 300, 300, 300, 300]
+# _C.ARM.RIGHT.ARM.MAX_TORQUES = [14, 30, 0.2, 13, 14, 1, 3.5]
+
 _C.ARM.RIGHT.ARM.ROBOT_EE_FRAME = 'yumi_link_7_r'
 _C.ARM.RIGHT.ARM.ROBOT_EE_FRAME_JOINT = 'yumi_joint_6_r'
 _C.ARM.RIGHT.ARM.HOME_POSITION = [
@@ -58,10 +56,8 @@ _C.ARM.LEFT.ARM.JOINT_NAMES = [
     'yumi_joint_3_l', 'yumi_joint_4_l', 'yumi_joint_5_l',
     'yumi_joint_6_l'
 ]
-_C.ARM.LEFT.ARM.COMPLIANT_JOINT_NAMES = [
-    'yumi_palm_l', 'yumi_gel_l'
-]
-_C.ARM.LEFT.ARM.MAX_TORQUES = [300, 300, 300, 300, 300, 300, 300]
+# _C.ARM.LEFT.ARM.MAX_TORQUES = [14, 30, 0.2, 13, 14, 1, 3.5]
+
 _C.ARM.LEFT.ARM.ROBOT_EE_FRAME = 'yumi_link_7_l'
 _C.ARM.LEFT.ARM.ROBOT_EE_FRAME_JOINT = 'yumi_joint_6_l'
 _C.ARM.LEFT.ARM.HOME_POSITION = [

@@ -27,6 +27,7 @@ _C.UPDATE_TIMEOUT = 5.0
 # default maximum values for gripper state varibles
 # minimum values are all 0
 _C.POSITION_RANGE = 255
+# scaling factor to convert from URScript range to Robotiq range
 _C.POSITION_SCALING = (255 / 0.7)
 
 
