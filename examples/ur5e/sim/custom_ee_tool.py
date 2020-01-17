@@ -46,7 +46,7 @@ def main():
         robot.arm.ee_link_id,
         stick_id,
         -1,
-        robot.arm.p.JOINT_FIXED,
+        p.JOINT_FIXED,
         jointAxis=[1, 1, 1],
         parentFramePosition=[0, 0, 0],
         childFramePosition=[0, 0, -0.077],
