@@ -503,3 +503,6 @@ class UR5eReal(SingleArmROS):
             String,
             queue_size=10
         )
+        # This is necessary as set_tcp command
+        # needs to use the publisher
+        time.sleep(1)

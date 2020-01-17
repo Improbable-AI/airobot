@@ -13,7 +13,7 @@ def main():
     First movement is executed with MoveIt!, and second movement
     is executed using urscript commands
     """
-    robot = Robot('ur5e',
+    robot = Robot('ur5e_2f140',
                   pb=False,
                   use_cam=False)
     robot.arm.go_home()

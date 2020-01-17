@@ -42,7 +42,7 @@ def main():
     to be collision free (change the goal poses when use_urscript=True
     at your own risk)
     """
-    robot = Robot('ur5e', pb=False, use_cam=False)
+    robot = Robot('ur5e_2f140', pb=False, use_cam=False)
     robot.arm.go_home()
     max_iter = 5
 

@@ -23,7 +23,8 @@ def main():
     """
     Visualize the point cloud from the RGBD camera
     """
-    robot = Robot('ur5e', pb=False, use_cam=True, use_arm=False)
+    robot = Robot('ur5e_2f140',
+                  pb=False, use_cam=True, use_arm=False)
 
     cam_pos, cam_ori = read_cam_ext('ur5e')
     robot.cam.set_cam_ext(cam_pos, cam_ori)

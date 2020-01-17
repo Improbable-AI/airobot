@@ -37,7 +37,7 @@ def main():
     args = parser.parse_args()
     np.set_printoptions(precision=4, suppress=True)
 
-    robot = Robot('ur5e', pb=False, use_cam=True)
+    robot = Robot('ur5e_2f140', pb=False, use_cam=True)
     pre_jnts = [1.57, -1.66, -1.92, -1.12, 1.57, 0]
     robot.arm.set_jpos(pre_jnts)
 
