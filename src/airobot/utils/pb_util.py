@@ -434,8 +434,8 @@ class TextureModder:
     Modify textures in model
 
     Attributes:
-        texture_dict (dict):
-        texture_files (list):
+        texture_dict (dict): a dictionary that tells the texture of a link on a body
+        texture_files (list): a list of texture files (usuallly images)
     """
 
     def __init__(self):
