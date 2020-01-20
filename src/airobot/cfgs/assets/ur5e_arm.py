@@ -20,8 +20,8 @@ _C.JOINT_NAMES = [
 # base frame for the arm
 _C.ROBOT_BASE_FRAME = 'base'
 # end-effector frame of the arm
-_C.ROBOT_EE_FRAME = 'gripper_tip'
-_C.ROBOT_EE_FRAME_JOINT = 'gripper_tip_joint'
+_C.ROBOT_EE_FRAME = 'ee_tip'
+_C.ROBOT_EE_FRAME_JOINT = 'ee_tip_joint'
 _C.JOINT_SPEED_TOPIC = '/joint_speed'
 _C.URSCRIPT_TOPIC = '/ur_driver/URScript'
 # inverse kinematics position tolerance (m)
