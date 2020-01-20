@@ -1,4 +1,4 @@
-from airobot.cfgs.assets.default_configs import get_cfg_defaults
+efrom airobot.cfgs.assets.default_configs import get_cfg_defaults
 from airobot.cfgs.assets.pybullet_camera import get_sim_cam_cfg
 from airobot.cfgs.assets.realsense_camera import get_realsense_cam_cfg
 from airobot.cfgs.assets.ur5e_arm import get_ur5e_arm_cfg
@@ -17,8 +17,8 @@ _C.PYBULLET_URDF = 'ur5e_stick_pybullet.urdf'
 _C.ARM = get_ur5e_arm_cfg()
 
 # update end-effector frame of the arm
-_C.ARM.ROBOT_EE_FRAME = 'stick_tip'
-_C.ARM.ROBOT_EE_FRAME_JOINT = 'stick_tip_joint'
+_C.ARM.ROBOT_EE_FRAME = 'ee_tip'
+_C.ARM.ROBOT_EE_FRAME_JOINT = 'ee_tip_joint'
 
 _C.CAM.SIM = get_sim_cam_cfg()
 _C.CAM.REAL = get_realsense_cam_cfg()
