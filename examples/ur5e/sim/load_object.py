@@ -18,7 +18,7 @@ def main():
     objects and get state information of objects
     """
     np.set_printoptions(precision=3, suppress=True)
-    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot = Robot('ur5e_stick', arm_cfg={'render': True})
     robot.arm.go_home()
 
     ori = euler2quat([0, 0, np.pi / 2])

@@ -32,8 +32,8 @@ _C.PYBULLET_IK_DAMPING = 0.0005
 
 # NOTE: Order of joints on yumi is [1, 2, 7, 3, 4, 5, 6]
 # these torques are listed in that order
-_C.MAX_TORQUES = [14, 30, 13, 14, 1, 3.5, 0.2]
-
+# _C.MAX_TORQUES = [14, 30, 13, 14, 1, 3.5, 0.2]
+_C.MAX_TORQUES = [42, 90, 39, 42, 3, 12, 1]
 
 def get_yumi_arm_cfg():
     return _C.clone()

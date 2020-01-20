@@ -560,7 +560,7 @@
   <link name="yumi_palm_r">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="2"/>
+      <mass value="0.1"/>
       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
     <visual>
@@ -577,6 +577,11 @@
     <origin rpy="0 0.0 0.0" xyz="0 0 0.0"/>
   </joint>
   <link name="yumi_rail_r">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.02"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>  
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
@@ -593,6 +598,11 @@
     <!-- <axis xyz="0 1 0"/> -->
   </joint>
   <link name="yumi_palm_body_r">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.02"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>  
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
@@ -610,7 +620,7 @@
   <link name="yumi_metal_bottom_r">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="2"/>
+      <mass value="0.3"/>
       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
     <visual>
@@ -633,7 +643,7 @@
   <link name="yumi_gel_r">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="2"/>
+      <mass value="0.01"/>
       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
     <visual>
@@ -662,6 +672,11 @@
     <origin rpy="0 0.0 0.0" xyz="0 -0.071399 0.14344421"/>
   </joint>
   <link name="yumi_tip_r">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>  
     <contact>
       <lateral_friction value="1"/>
     </contact>  
@@ -678,7 +693,7 @@
   <link name="yumi_palm_l">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="2"/>
+      <mass value="0.3"/>
       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
     <visual>
@@ -695,6 +710,11 @@
     <origin rpy="0 0.0 0.0" xyz="0 0 0.0"/>
   </joint>
   <link name="yumi_rail_l">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.02"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>  
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
@@ -711,6 +731,11 @@
     <!-- <axis xyz="0 1 0"/> -->
   </joint>
   <link name="yumi_palm_body_l">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.02"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>  
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
@@ -728,7 +753,7 @@
   <link name="yumi_metal_bottom_l">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="2"/>
+      <mass value="0.3"/>
       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
     <visual>
@@ -751,7 +776,7 @@
   <link name="yumi_gel_l">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="2"/>
+      <mass value="0.01"/>
       <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
     </inertial>
     <visual>
@@ -780,6 +805,11 @@
     <origin rpy="0 0.0 0.0" xyz="0 -0.071399 0.14344421"/>
   </joint>
   <link name="yumi_tip_l">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+    </inertial>  
     <contact>
       <lateral_friction value="1"/>
     </contact>
