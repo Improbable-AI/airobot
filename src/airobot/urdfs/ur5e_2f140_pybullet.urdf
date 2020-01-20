@@ -729,10 +729,10 @@
         <origin rpy="0.0 0.0 1.57079632679" xyz=" 0.0 0.0 0.0"/>
     </joint>
     <!-- not sure what this does, parent link-->
-    <link name="gripper_tip"/>
-    <joint name="gripper_tip_joint" type="fixed">
+    <link name="ee_tip"/>
+    <joint name="ee_tip_joint" type="fixed">
         <parent link="tool0"/>
-        <child link="gripper_tip"/>
+        <child link="ee_tip"/>
         <!--  just an estimation, not an accurate value-->
         <origin rpy="0.0 0.0 0.0" xyz=" 0.00 0.0 0.23"/>
     </joint>
