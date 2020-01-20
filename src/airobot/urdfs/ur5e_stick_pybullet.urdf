@@ -365,10 +365,10 @@
     <child link="ee_stick"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
   </joint>
-  <link name="stick_tip"/>
-  <joint name="stick_tip_joint" type="fixed">
+  <link name="ee_tip"/>
+  <joint name="ee_tip_joint" type="fixed">
     <parent link="ee_stick"/>
-    <child link="stick_tip"/>
+    <child link="ee_tip"/>
     <!-- stick_tip end effector link position offset by length of stick -->
     <origin rpy="0.0 0.0 0.0" xyz=" 0.00 0.0 0.1524"/>
   </joint>
