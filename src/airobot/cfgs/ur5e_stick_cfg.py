@@ -16,6 +16,10 @@ _C.PYBULLET_URDF = 'ur5e_stick_pybullet.urdf'
 
 _C.ARM = get_ur5e_arm_cfg()
 
+# update end-effector frame of the arm
+_C.ARM.ROBOT_EE_FRAME = 'stick_tip'
+_C.ARM.ROBOT_EE_FRAME_JOINT = 'stick_tip_joint'
+
 _C.CAM.SIM = get_sim_cam_cfg()
 _C.CAM.REAL = get_realsense_cam_cfg()
 _C.CAM.CLASS = 'RGBDCamera'

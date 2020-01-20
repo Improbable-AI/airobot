@@ -338,16 +338,11 @@
     <child link="base"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
   </joint>
-  <link name="gripper_tip"/>
-  <joint name="gripper_tip_joint" type="fixed">
-    <parent link="tool0"/>
-    <child link="gripper_tip"/>
-    <origin rpy="0.0 0.0 0.0" xyz=" 0.00 0.0 0.0"/>
-  </joint>
   <link name="ee_stick">
     <visual>
       <geometry>
-        <mesh filename="meshes/custom_ee_tools/stick/visual/ur5e_ee_stick.stl" scale="0.0005 0.0005 0.001"/>
+        <!-- original stick dimensions are height=6in (0.1524m), radius=1.25in (0.03175m) -->
+        <mesh filename="meshes/custom_ee_tools/stick/visual/ur5e_ee_stick.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="BlueStick">
         <color rgba="0.0 0.0 0.7 1.0"/>
@@ -355,7 +350,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="meshes/custom_ee_tools/stick/visual/ur5e_ee_stick.stl" scale="0.0005 0.0005 0.001"/>
+        <mesh filename="meshes/custom_ee_tools/stick/visual/ur5e_ee_stick.stl" scale="0.001 0.001 0.001"/>
       </geometry>
     </collision>
     <inertial>
@@ -366,9 +361,16 @@
     </inertial>
   </link>
   <joint name="stick_joint" type="fixed">
-    <parent link="gripper_tip"/>
+    <parent link="tool0"/>
     <child link="ee_stick"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+  <link name="stick_tip"/>
+  <joint name="stick_tip_joint" type="fixed">
+    <parent link="ee_stick"/>
+    <child link="stick_tip"/>
+    <!-- stick_tip end effector link position offset by length of stick -->
+    <origin rpy="0.0 0.0 0.0" xyz=" 0.00 0.0 0.1524"/>
   </joint>
   
 </robot>
