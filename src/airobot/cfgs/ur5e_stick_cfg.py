@@ -1,4 +1,4 @@
-efrom airobot.cfgs.assets.default_configs import get_cfg_defaults
+from airobot.cfgs.assets.default_configs import get_cfg_defaults
 from airobot.cfgs.assets.pybullet_camera import get_sim_cam_cfg
 from airobot.cfgs.assets.realsense_camera import get_realsense_cam_cfg
 from airobot.cfgs.assets.ur5e_arm import get_ur5e_arm_cfg
