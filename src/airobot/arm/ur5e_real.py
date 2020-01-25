@@ -405,8 +405,7 @@ class UR5eReal(SingleArmROS):
                           'you use moveit to plan paths!'
                           'You can try again to add the camera box manually.')
 
-        # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
-        self._max_torques = [150, 150, 150, 28, 28, 28]
+        self._max_torques = self.cfgs.ARM.MAX_TORQUES
 
     def _send_urscript(self, prog):
         """
