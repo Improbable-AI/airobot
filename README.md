@@ -27,11 +27,15 @@ If you use AIRobot in your research, please use the following BibTeX entry.
 
 ### Pre-installation steps for ROS 
 
+#### Option 1:
 If you want to use ROS to interface with robots, please install [ROS Kinetic](http://wiki.ros.org/kinetic/Installation/Ubuntu) first.
 
 If you want to use ROS for UR5e robots, please install [ur5e driver](https://github.com/Improbable-AI/ur5e_robotiq_2f140). 
 
 If you are using RealSense cameras, please follow the instructions [here](https://github.com/IntelRealSense/realsense-ros#installation-instructions) or [here](https://github.com/Improbable-AI/camera_calibration/tree/qa).
+
+#### Option 2:
+Use the dockerfile provided in this library. Checkout the [instructions](docker) for docker usage. Docker is not necessary if you just want to use the pybullet simulation environment.
 
 ### Install AIRobot
 
