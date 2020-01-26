@@ -1,10 +1,9 @@
 import numbers
 import time
 
-import numpy as np
-
 import airobot as ar
 import airobot.utils.common as arutil
+import numpy as np
 
 
 def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
@@ -56,7 +55,7 @@ def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
             vel_threshold = 0.006
             try:
                 jnt_vel = get_func_derv(joint_name)
-            except TypeError as e:
+            except TypeError:
                 jnt_vel = get_func_derv()
             if np.max(np.abs(jnt_vel)) <= vel_threshold \
                     and vel_stop_time is None:
@@ -91,7 +90,7 @@ def reach_jnt_goal(goal, get_func, joint_name=None, max_error=0.01):
     goal = np.array(goal)
     try:
         new_jnt_val = get_func(joint_name)
-    except TypeError as e:
+    except TypeError:
         new_jnt_val = get_func()
     new_jnt_val = np.array(new_jnt_val)
     jnt_diff = new_jnt_val - goal

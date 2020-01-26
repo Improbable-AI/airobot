@@ -6,13 +6,12 @@ from subprocess import check_output
 
 import numpy as np
 import rospy
-from control_msgs.msg import GripperCommandActionGoal
-from sensor_msgs.msg import JointState
-from std_msgs.msg import String
-
 from airobot.ee_tool.ee import EndEffectorTool
 from airobot.utils.common import clamp, print_red
 from airobot.utils.urscript_util import Robotiq2F140URScript
+from control_msgs.msg import GripperCommandActionGoal
+from sensor_msgs.msg import JointState
+from std_msgs.msg import String
 
 
 class Robotiq2F140Real(EndEffectorTool):

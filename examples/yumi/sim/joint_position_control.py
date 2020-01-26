@@ -1,8 +1,7 @@
 import time
 
-import numpy as np
-
 import airobot as ar
+import numpy as np
 from airobot import Robot
 
 
@@ -11,7 +10,7 @@ def main():
     This function demonstrates how to move the robot arm
     to the desired joint positions
     """
-    robot = Robot('yumi_grippers', arm_cfg={'render': True})
+    robot = Robot('yumi_grippers')
     robot.arm.go_home()
 
     robot.arm.right_arm.set_jpos(

@@ -8,13 +8,10 @@ from __future__ import print_function
 
 import copy
 
-import pybullet as p
-
 import airobot.utils.common as arutil
 from airobot.arm.dual_arm_pybullet import DualArmPybullet
 from airobot.arm.single_arm_pybullet import SingleArmPybullet
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
-from airobot.utils.pb_util import PB_CLIENT
 
 
 class CompliantYumiArm(SingleArmPybullet):
@@ -25,9 +22,8 @@ class CompliantYumiArm(SingleArmPybullet):
 
     Args:
         cfgs (YACS CfgNode): configurations for the arm
-        render (bool): whether to render the environment using GUI
+        pb_client (BulletClient): pybullet client
         seed (int): random seed
-        rt_simulation (bool): turn on realtime simulation or not
         self_collision (bool): enable self_collision or
                                not whiling loading URDF
         eetool_cfg (dict): arguments to pass in the constructor
@@ -42,15 +38,17 @@ class CompliantYumiArm(SingleArmPybullet):
             the compliant joints
     """
 
-    def __init__(self, cfgs, render=False, seed=None,
-                 rt_simulation=True, self_collision=False,
+    def __init__(self,
+                 cfgs,
+                 pb_client,
+                 seed=None,
+                 self_collision=False,
                  eetool_cfg=None):
         super(CompliantYumiArm, self).__init__(cfgs=cfgs,
-                                               render=render,
+                                               pb_client=pb_client,
                                                seed=seed,
                                                self_collision=self_collision,
-                                               eetool_cfg=eetool_cfg,
-                                               rt_simulation=rt_simulation)
+                                               eetool_cfg=eetool_cfg)
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
         """
@@ -79,12 +77,11 @@ class CompliantYumiArm(SingleArmPybullet):
                                  'elements if the joint_name'
                                  ' is not provided' % self.arm_dof)
             tgt_pos = position
-            p.setJointMotorControlArray(self.robot_id,
-                                        self.arm_jnt_ids,
-                                        p.POSITION_CONTROL,
-                                        targetPositions=tgt_pos,
-                                        forces=self._max_torques,
-                                        physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControlArray(self.robot_id,
+                                               self.arm_jnt_ids,
+                                               self._pb.POSITION_CONTROL,
+                                               targetPositions=tgt_pos,
+                                               forces=self._max_torques)
         else:
             if joint_name not in self.arm_jnt_names:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -94,12 +91,11 @@ class CompliantYumiArm(SingleArmPybullet):
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 max_torque = self._max_torques[arm_jnt_idx]
                 jnt_id = self.jnt_to_id[joint_name]
-            p.setJointMotorControl2(self.robot_id,
-                                    jnt_id,
-                                    p.POSITION_CONTROL,
-                                    targetPosition=tgt_pos,
-                                    force=max_torque,
-                                    physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControl2(self.robot_id,
+                                           jnt_id,
+                                           self._pb.POSITION_CONTROL,
+                                           targetPosition=tgt_pos,
+                                           force=max_torque)
         self.set_compliant_jpos()
         if not self._step_sim_mode and wait:
             success = wait_to_reach_jnt_goal(
@@ -139,12 +135,11 @@ class CompliantYumiArm(SingleArmPybullet):
                                  'if the joint_name is not '
                                  'provided' % self.arm_dof)
             tgt_vel = velocity
-            p.setJointMotorControlArray(self.robot_id,
-                                        self.arm_jnt_ids,
-                                        p.VELOCITY_CONTROL,
-                                        targetVelocities=tgt_vel,
-                                        forces=self._max_torques,
-                                        physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControlArray(self.robot_id,
+                                               self.arm_jnt_ids,
+                                               self._pb.VELOCITY_CONTROL,
+                                               targetVelocities=tgt_vel,
+                                               forces=self._max_torques)
         else:
             if joint_name not in self.arm_jnt_names:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -154,12 +149,11 @@ class CompliantYumiArm(SingleArmPybullet):
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 max_torque = self._max_torques[arm_jnt_idx]
                 jnt_id = self.jnt_to_id[joint_name]
-            p.setJointMotorControl2(self.robot_id,
-                                    jnt_id,
-                                    p.VELOCITY_CONTROL,
-                                    targetVelocity=tgt_vel,
-                                    force=max_torque,
-                                    physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControl2(self.robot_id,
+                                           jnt_id,
+                                           self._pb.VELOCITY_CONTROL,
+                                           targetVelocity=tgt_vel,
+                                           force=max_torque)
         self.set_compliant_jpos()
         if not self._step_sim_mode and wait:
             success = wait_to_reach_jnt_goal(
@@ -208,21 +202,19 @@ class CompliantYumiArm(SingleArmPybullet):
             if len(torque) != self.arm_dof:
                 raise ValueError('Joint torques should contain'
                                  ' %d elements' % self.arm_dof)
-            p.setJointMotorControlArray(self.robot_id,
-                                        self.arm_jnt_ids,
-                                        p.TORQUE_CONTROL,
-                                        forces=torque,
-                                        physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControlArray(self.robot_id,
+                                               self.arm_jnt_ids,
+                                               self._pb.TORQUE_CONTROL,
+                                               forces=torque)
         else:
             if joint_name not in self.arm_jnt_names:
                 raise ValueError('Only torque control on'
                                  ' the arm is supported!')
             jnt_id = self.jnt_to_id[joint_name]
-            p.setJointMotorControl2(self.robot_id,
-                                    jnt_id,
-                                    p.TORQUE_CONTROL,
-                                    force=torque,
-                                    physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControl2(self.robot_id,
+                                           jnt_id,
+                                           self._pb.TORQUE_CONTROL,
+                                           force=torque)
         self.set_compliant_jpos()
         return True
 
@@ -230,14 +222,13 @@ class CompliantYumiArm(SingleArmPybullet):
         """
         Regulate compliant/spring like joints about nominal position
         """
-        p.setJointMotorControlArray(
+        self._pb.setJointMotorControlArray(
             self.robot_id,
             self.comp_jnt_ids,
-            p.POSITION_CONTROL,
+            self._pb.POSITION_CONTROL,
             targetPositions=[0.0] * len(self.comp_jnt_names),
             forces=[self.max_force_comp] * len(self.comp_jnt_names),
-            positionGains=self.comp_jnt_gains,
-            physicsClientId=PB_CLIENT)
+            positionGains=self.comp_jnt_gains)
 
     def _init_compliant_consts(self):
         """
@@ -262,9 +253,8 @@ class YumiPalmsPybullet(DualArmPybullet):
 
     Args:
         cfgs (YACS CfgNode): configurations for the arm
-        render (bool): whether to render the environment using GUI
+        pb_client (BulletClient): pybullet client
         seed (int): random seed
-        rt_simulation (bool): turn on realtime simulation or not
         self_collision (bool): enable self_collision or
                                not whiling loading URDF
         eetool_cfg (dict): arguments to pass in the constructor
@@ -278,47 +268,43 @@ class YumiPalmsPybullet(DualArmPybullet):
         right_arm (CompliantYumiArm): right arm interface
     """
 
-    def __init__(self, cfgs, render=False, seed=None,
-                 rt_simulation=True, self_collision=False,
+    def __init__(self, cfgs, pb_client, seed=None,
+                 self_collision=False,
                  eetool_cfg=None):
         super(YumiPalmsPybullet, self).__init__(cfgs=cfgs,
-                                                render=render,
+                                                pb_client=pb_client,
                                                 seed=seed,
                                                 self_collision=self_collision,
-                                                eetool_cfg=eetool_cfg,
-                                                rt_simulation=rt_simulation)
+                                                eetool_cfg=eetool_cfg)
         right_cfg = cfgs.ARM.RIGHT
         left_cfg = cfgs.ARM.LEFT
         self.right_arm = CompliantYumiArm(cfgs=right_cfg,
-                                          render=render,
                                           seed=seed,
                                           self_collision=self_collision,
-                                          eetool_cfg=eetool_cfg,
-                                          rt_simulation=rt_simulation)
+                                          eetool_cfg=eetool_cfg)
         self.left_arm = CompliantYumiArm(cfgs=left_cfg,
-                                         render=render,
                                          seed=seed,
                                          self_collision=self_collision,
-                                         eetool_cfg=eetool_cfg,
-                                         rt_simulation=rt_simulation)
+                                         eetool_cfg=eetool_cfg)
         self.reset()
 
     def reset(self):
         """
         Reset the simulation environment.
         """
-        p.resetSimulation(physicsClientId=PB_CLIENT)
+        self._pb.resetSimulation()
 
         yumi_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         yumi_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
         if self._self_collision:
-            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       yumi_pos,
-                                       yumi_ori,
-                                       flags=p.URDF_USE_SELF_COLLISION)
+            colli_flag = {'flags': self._pb.URDF_USE_SELF_COLLISION}
+            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                              yumi_pos,
+                                              yumi_ori,
+                                              **colli_flag)
         else:
-            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       yumi_pos, yumi_ori)
+            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                              yumi_pos, yumi_ori)
 
         self._build_jnt_id()
 

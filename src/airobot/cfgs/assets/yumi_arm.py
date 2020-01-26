@@ -35,5 +35,6 @@ _C.PYBULLET_IK_DAMPING = 0.0005
 # _C.MAX_TORQUES = [14, 30, 13, 14, 1, 3.5, 0.2]
 _C.MAX_TORQUES = [42, 90, 39, 42, 3, 12, 1]
 
+
 def get_yumi_arm_cfg():
     return _C.clone()

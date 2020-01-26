@@ -5,24 +5,20 @@ An example of Gym Wrapper
 import time
 
 import numpy as np
-from gym import spaces
-
 from airobot import Robot
 from airobot.utils.common import ang_in_mpi_ppi
 from airobot.utils.common import clamp
 from airobot.utils.common import euler2quat
 from airobot.utils.common import quat_multiply
 from airobot.utils.common import rotvec2quat
-from airobot.utils.pb_util import load_geom
-from airobot.utils.pb_util import load_urdf
-from airobot.utils.pb_util import step_simulation
+from gym import spaces
 
 
 class URRobotGym:
     def __init__(self, action_repeat=10, render=True):
         self._action_repeat = action_repeat
-        self.robot = Robot('ur5e_2f140', arm_cfg={'render': render,
-                                                  'rt_simulation': False})
+        self.robot = Robot('ur5e_2f140', pb_render=render,
+                           pb_realtime=False)
         self.ee_ori = [-np.sqrt(2) / 2, np.sqrt(2) / 2, 0, 0]
         self._action_bound = 1.0
         self._ee_pos_scale = 0.02
@@ -42,13 +38,13 @@ class URRobotGym:
         self.robot.arm.reset()
         self.robot.arm.go_home(ignore_physics=True)
         ori = euler2quat([0, 0, np.pi / 2])
-        self.table_id = load_urdf('table/table.urdf',
-                                  [.5, 0, 0.4],
-                                  ori,
-                                  scaling=0.9)
-        self.box_id = load_geom('box', size=0.05, mass=1,
-                                base_pos=[0.5, 0.12, 1.0],
-                                rgba=[1, 0, 0, 1])
+        self.table_id = self.robot.pb_client.load_urdf('table/table.urdf',
+                                                       [.5, 0, 0.4],
+                                                       ori,
+                                                       scaling=0.9)
+        self.box_id = self.robot.pb_client.load_geom('box', size=0.05, mass=1,
+                                                     base_pos=[0.5, 0.12, 1.0],
+                                                     rgba=[1, 0, 0, 1])
         self.ref_ee_ori = self.robot.arm.get_ee_pose()[1]
         self.gripper_ori = 0
         return self._get_obs()
@@ -87,7 +83,7 @@ class URRobotGym:
         for step in range(self._action_repeat):
             self.robot.arm.set_jpos(jnt_pos)
             self.robot.arm.eetool.set_pos(gripper_ang)
-            step_simulation()
+            self.robot.pb_client.stepSimulation()
 
     def _scale_gripper_angle(self, command):
         """

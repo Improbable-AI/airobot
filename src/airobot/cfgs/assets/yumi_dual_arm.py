@@ -1,9 +1,6 @@
-from yacs.config import CfgNode as CN
-
 from airobot.cfgs.assets.default_configs import get_cfg_defaults
-from airobot.cfgs.assets.pybullet_camera import get_sim_cam_cfg
-from airobot.cfgs.assets.realsense_camera import get_realsense_cam_cfg
 from airobot.cfgs.assets.yumi_arm import get_yumi_arm_cfg
+from yacs.config import CfgNode as CN
 
 _C = get_cfg_defaults()
 # whether the robot has an arm or not

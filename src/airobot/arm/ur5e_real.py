@@ -9,20 +9,19 @@ import copy
 import numbers
 import time
 
-import numpy as np
-import rospy
-from std_msgs.msg import String
-from trajectory_msgs.msg import JointTrajectory
-from trajectory_msgs.msg import JointTrajectoryPoint
-
 import airobot as ar
 import airobot.utils.common as arutil
+import numpy as np
+import rospy
 from airobot.arm.single_arm_ros import SingleArmROS
 from airobot.utils.arm_util import wait_to_reach_ee_goal
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 from airobot.utils.common import print_red
 from airobot.utils.moveit_util import moveit_cartesian_path
 from airobot.utils.ros_util import kdl_frame_to_numpy
+from std_msgs.msg import String
+from trajectory_msgs.msg import JointTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint
 
 
 class UR5eReal(SingleArmROS):
@@ -45,6 +44,7 @@ class UR5eReal(SingleArmROS):
         gripper_tip_ori (list): Orientation of the end effector link frame
             w.r.t. to its parent link frame, shape: :math:`[4,]` ([x, y, z, w])
     """
+
     def __init__(self, cfgs,
                  moveit_planner='RRTstarkConfigDefault',
                  eetool_cfg=None,

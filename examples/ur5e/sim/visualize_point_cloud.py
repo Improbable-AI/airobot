@@ -3,7 +3,6 @@ import sys
 import time
 
 import open3d
-
 from airobot import Robot
 
 
@@ -22,7 +21,7 @@ def main():
     """
     Visualize the point cloud from the RGBD camera
     """
-    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot = Robot('ur5e')
     robot.arm.go_home()
     robot.cam.setup_camera(focus_pt=robot.arm.robot_base_pos,
                            dist=3,

@@ -25,7 +25,7 @@ def main():
     Move all the joints of the robot in a sine-wave fashion.
     """
 
-    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot = Robot('ur5e')
     robot.arm.go_home()
 
     A = 0.2

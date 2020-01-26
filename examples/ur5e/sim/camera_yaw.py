@@ -10,7 +10,7 @@ def main():
      the yaw angle that is defined in robot.setup_camera) changes
     the camera view
     """
-    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot = Robot('ur5e')
     focus_pt = [0, 0, 1]  # ([x, y, z])
     robot.arm.go_home()
     img = np.random.rand(480, 640)

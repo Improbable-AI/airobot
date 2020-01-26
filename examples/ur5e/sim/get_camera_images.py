@@ -1,7 +1,6 @@
+import airobot as ar
 import matplotlib.pyplot as plt
 import numpy as np
-
-import airobot as ar
 from airobot import Robot
 
 
@@ -10,7 +9,7 @@ def main():
     This function demonstrates how to setup camera
     and get rgb/depth images and segmentation mask.
     """
-    robot = Robot('ur5e', arm_cfg={'render': False})
+    robot = Robot('ur5e', pb_render=False)
     focus_pt = [0, 0, 1]  # ([x, y, z])
     robot.cam.setup_camera(focus_pt=focus_pt,
                            dist=3,

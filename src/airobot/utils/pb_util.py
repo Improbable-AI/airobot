@@ -1,3 +1,5 @@
+import functools
+import inspect
 import os
 import pkgutil
 import random
@@ -9,439 +11,489 @@ import cv2
 import numpy as np
 import pybullet as p
 import pybullet_data
-
 from airobot.utils.common import clamp
 
-PB_CLIENT = 0
-PB_LOADED = False
-STEP_SIM_MODE = True
-RENDER = False
 GRAVITY_CONST = -9.8
 
 
-def load_pb(render=False):
+def create_pybullet_client(render=False, realtime=True):
     """
-    Load the pybullet client
+    Create a pybullet simulation client.
 
     Args:
-        render (bool): if GUI should be used for rendering or not
+        render (bool): use GUI mode or non-GUI mode
+        realtime: use realtime simulation or step simuation
     """
-    global PB_CLIENT, PB_LOADED, RENDER, GRAVITY_CONST
-    RENDER = render
-    if PB_LOADED:
-        return
     if render:
-        PB_CLIENT = p.connect(p.GUI)
+        mode = p.GUI
     else:
-        PB_CLIENT = p.connect(p.DIRECT)
-        # # using the eglRendererPlugin (hardware OpenGL acceleration)
-        egl = pkgutil.get_loader('eglRenderer')
-        if egl:
-            p.loadPlugin(egl.get_filename(), "_eglRendererPlugin",
-                         physicsClientId=PB_CLIENT)
+        mode = p.DIRECT
+    pb_client = BulletClient(connection_mode=mode,
+                             realtime=realtime)
+    pb_client.setAdditionalSearchPath(pybullet_data.getDataPath())
+    return pb_client
+
+
+class BulletClient:
+    """
+    A wrapper for pybullet to manage different clients.
+
+    Args:
+        connection_mode (pybullet mode):
+            `None` connects to an existing simulation or, if fails,
+            creates a new headless simulation,
+            `pybullet.GUI` creates a new simulation with a GUI,
+            `pybullet.DIRECT` creates a headless simulation,
+            `pybullet.SHARED_MEMORY` connects to an existing simulation.
+        realtime (bool): whether to use realtime mode or not
+    """
+
+    def __init__(self, connection_mode=None, realtime=False):
+        self._in_realtime_mode = realtime
+        self._realtime_lock = threading.RLock()
+        if connection_mode is None:
+            self._client = p.connect(p.SHARED_MEMORY)
+            if self._client >= 0:
+                return
+            else:
+                connection_mode = p.DIRECT
+        self._client = p.connect(connection_mode)
+        if connection_mode == p.DIRECT:
+            # # using the eglRendererPlugin (hardware OpenGL acceleration)
+            egl = pkgutil.get_loader('eglRenderer')
+            if egl:
+                p.loadPlugin(egl.get_filename(), "_eglRendererPlugin",
+                             physicsClientId=self._client)
+            else:
+                p.loadPlugin("eglRendererPlugin",
+                             physicsClientId=self._client)
+        self._gui_mode = connection_mode == p.GUI
+        p.setGravity(0, 0, GRAVITY_CONST,
+                     physicsClientId=self._client)
+        self.set_step_sim(not self._in_realtime_mode)
+
+    def __del__(self):
+        """Clean up connection if not already done."""
+        if self._client >= 0:
+            try:
+                p.disconnect(physicsClientId=self._client)
+                self._client = -1
+            except p.error:
+                pass
+
+    def __getattr__(self, name):
+        """Inject the client id into Bullet functions."""
+        attribute = getattr(p, name)
+        if inspect.isbuiltin(attribute):
+            attribute = functools.partial(attribute,
+                                          physicsClientId=self._client)
+        if name == "disconnect":
+            self._client = -1
+        return attribute
+
+    def get_client_id(self):
+        """
+        Return the pybullet client id
+
+        Returns:
+            int: pybullet client id
+
+        """
+        return self._client
+
+    def set_step_sim(self, step_mode=True):
+        """
+        Turn on/off the realtime simulation mode
+
+        Args:
+            step_mode (bool): run the simulation in step mode if
+                it is True. Otherwise, the simulation will be
+                in realtime
+        """
+        self._set_realtime_var(not step_mode)
+        if self._gui_mode:
+            if step_mode:
+                self.setRealTimeSimulation(0)
+            else:
+                self.setRealTimeSimulation(1)
         else:
-            p.loadPlugin("eglRendererPlugin",
-                         physicsClientId=PB_CLIENT)
-    PB_LOADED = True
-    p.setAdditionalSearchPath(pybullet_data.getDataPath())
-    p.setGravity(0, 0, GRAVITY_CONST,
-                 physicsClientId=PB_CLIENT)
-    if not render:
-        th_sim = threading.Thread(target=step_rt_simulation)
-        th_sim.daemon = True
-        th_sim.start()
-    else:
-        p.setRealTimeSimulation(1, physicsClientId=PB_CLIENT)
+            if not step_mode and not hasattr(self, '_direct_real_th'):
+                real_th = threading.Thread(target=self._step_rt_simulation)
+                self._direct_real_th = real_th
+                self._direct_real_th.daemon = True
+                self._direct_real_th.start()
 
+    def in_realtime_mode(self):
+        """
+        Check if the pybullet simulation is in step simulation
+        mode or realtime simulation mode.
 
-def step_rt_simulation():
-    """
-    Run step simulation all the time in backend.
-    This is only needed to run realtime simulation
-    in DIRECT mode, ie, when `render=False`.
-    """
-    global STEP_SIM_MODE, PB_CLIENT
-    while True:
-        if not STEP_SIM_MODE:
-            p.stepSimulation(physicsClientId=PB_CLIENT)
-        time.sleep(0.001)
+        Returns:
+            bool: whether the pybullet simulation is in step simulation
+            mode or realtime simulation mode.
 
+        """
+        realtime_mode = self._get_realtime_var()
+        return realtime_mode
 
-def set_step_sim(step_mode=True):
-    """
-    Turn on/off the realtime simulation mode
+    def get_body_state(self, body_id):
+        """
+        Get the body state.
 
-    Args:
-        step_mode (bool): run the simulation in step mode if
-            it is True. Otherwise, the simulation will be
-            in realtime
-    """
-    global STEP_SIM_MODE
-    STEP_SIM_MODE = step_mode
-    if RENDER:
-        if step_mode:
-            p.setRealTimeSimulation(0, physicsClientId=PB_CLIENT)
-        else:
-            p.setRealTimeSimulation(1, physicsClientId=PB_CLIENT)
+        Args:
+            body_id (int): body index
 
+        Returns:
+            4-element tuple containing
 
-def step_simulation():
-    """
-    One step forward in simulation.
-    This is useful when you turn off
-    the realtime simulation by
-    calling `set_step_sim(False)`
-    """
-    p.stepSimulation(physicsClientId=PB_CLIENT)
+            - np.ndarray: x, y, z position of the body (shape: :math:`[3,]`)
+            - np.ndarray: quaternion representation ([qx, qy, qz, qw]) of the
+              body orientation (shape: :math:`[4,]`)
+            - np.ndarray: linear velocity of the body (shape: :math:`[3,]`)
+            - np.ndarray: angular velocity of the body (shape: :math:`[3,]`)
 
+        """
+        pos, quat = self.getBasePositionAndOrientation(body_id)
+        pos = np.array(pos)
+        quat = np.array(quat)
+        linear_vel, angular_vel = self.getBaseVelocity(body_id)
+        linear_vel = np.array(linear_vel)
+        angular_vel = np.array(angular_vel)
 
-def get_body_state(body_id):
-    """
-    Get the body state
+        return pos, quat, linear_vel, angular_vel
 
-    Args:
-        body_id (int): body index
+    def reset_body(self, body_id, base_pos,
+                   base_quat=None, lin_vel=None, ang_vel=None):
+        """
+        Reset body to the specified pose and specified initial velocity.
 
-    Returns:
-        4-element tuple containing
+        Args:
+            body_id (int): body index
+            base_pos (list or np.ndarray): position [x,y,z] of the body base
+            base_ori (list or np.ndarray): quaternion [qx, qy, qz, qw]
+                of the body base
+            lin_vel (list or np.ndarray): initial linear velocity if provided
+            ang_vel (list or np.ndarray): initial angular velocity if provided
 
-        - np.ndarray: x, y, z position of the body (shape: :math:`[3,]`)
-        - np.ndarray: quaternion representation ([qx, qy, qz, qw]) of the
-          body orientation (shape: :math:`[4,]`)
-        - np.ndarray: linear velocity of the body (shape: :math:`[3,]`)
-        - np.ndarray: angular velocity of the body (shape: :math:`[3,]`)
+        Returns:
 
-    """
-    pos, quat = p.getBasePositionAndOrientation(body_id,
-                                                physicsClientId=PB_CLIENT)
-    pos = np.array(pos)
-    quat = np.array(quat)
-    linear_vel, angular_vel = p.getBaseVelocity(body_id,
-                                                physicsClientId=PB_CLIENT)
-    linear_vel = np.array(linear_vel)
-    angular_vel = np.array(angular_vel)
+        """
+        if base_quat is None:
+            base_quat = [0., 0., 0., 1.]
+        self.resetBasePositionAndOrientation(body_id, base_pos, base_quat)
+        if lin_vel is not None or ang_vel is not None:
+            self.resetBaseVelocity(body_id,
+                                   linearVelocity=lin_vel,
+                                   angularVelocity=ang_vel)
 
-    return pos, quat, linear_vel, angular_vel
+    def remove_body(self, body_id):
+        """
+        Delete body from the simulation.
 
+        Args:
+            body_id (int): body index
 
-def reset_body(body_id, base_pos, base_quat=None, lin_vel=None, ang_vel=None):
-    """
-    Reset body to the specified pose and specified initial velocity
+        Returns:
+            bool: whether the body is removed
 
-    Args:
-        body_id (int): body index
-        base_pos (list or np.ndarray): position [x,y,z] of the body base
-        base_ori (list or np.ndarray): quaternion [qx, qy, qz, qw]
-            of the body base
-        lin_vel (list or np.ndarray): initial linear velocity if provided
-        ang_vel (list or np.ndarray): initial angular velocity if provided
+        """
+        self.removeBody(body_id)
+        success = False
+        try:
+            self.getBodyInfo(body_id)
+        except Exception:
+            success = True
+        return success
 
-    Returns:
+    def load_urdf(self, filename, base_pos=None,
+                  base_ori=None, scaling=1.0, **kwargs):
+        """
+        Load URDF into the pybullet client.
 
-    """
-    if base_quat is None:
-        base_quat = [0., 0., 0., 1.]
-    p.resetBasePositionAndOrientation(body_id, base_pos, base_quat,
-                                      physicsClientId=PB_CLIENT)
-    if lin_vel is not None or ang_vel is not None:
-        p.resetBaseVelocity(body_id,
-                            linearVelocity=lin_vel,
-                            angularVelocity=ang_vel,
-                            physicsClientId=PB_CLIENT)
+        Args:
+            filename (str): a relative or absolute path to the URDF
+                file on the file system of the physics server.
+            base_pos (list or np.ndarray): create the base of the object
+                at the specified position in world space coordinates [X,Y,Z].
+                Note that this position is of the URDF link position.
+            base_ori (list or np.ndarray): create the base of the object
+                at the specified orientation as world space
+                quaternion [X,Y,Z,W].
+            scaling (float): apply a scale factor to the URDF model
 
+        Returns:
+            int: a body unique id, a non-negative integer value.
+            If the URDF file cannot be loaded, this integer will
+            be negative and not a valid body unique id.
 
-def remove_body(body_id):
-    """
-    Delete body from the simulation
-
-    Args:
-        body_id (int): body index
-
-    Returns:
-        bool: whether the body is removed
-
-    """
-    p.removeBody(body_id, physicsClientId=PB_CLIENT)
-    success = False
-    try:
-        p.getBodyInfo(body_id, physicsClientId=PB_CLIENT)
-    except Exception:
-        success = True
-    return success
-
-
-def load_urdf(filename, base_pos=None, base_ori=None, scaling=1.0, **kwargs):
-    """
-    Load URDF into the pybullet client
-
-    Args:
-        filename (str): a relative or absolute path to the URDF
-            file on the file system of the physics server.
-        base_pos (list or np.ndarray): create the base of the object
-            at the specified position in world space coordinates [X,Y,Z].
-            Note that this position is of the URDF link position.
-        base_ori (list or np.ndarray): create the base of the object
-            at the specified orientation as world space
-            quaternion [X,Y,Z,W].
-        scaling (float): apply a scale factor to the URDF model
-
-    Returns:
-        int: a body unique id, a non-negative integer value.
-        If the URDF file cannot be loaded, this integer will
-        be negative and not a valid body unique id.
-
-    """
-    if scaling <= 0:
-        raise ValueError('Scaling should be a positive number.')
-    if base_pos is None:
-        base_pos = [0, 0, 0]
-    if base_ori is None:
-        base_ori = [0, 0, 0, 1]
-    body_id = p.loadURDF(filename,
-                         basePosition=base_pos,
-                         baseOrientation=base_ori,
-                         globalScaling=scaling,
-                         physicsClientId=PB_CLIENT,
-                         **kwargs)
-    p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
-    return body_id
-
-
-def load_sdf(filename, scaling=1.0, **kwargs):
-    """
-    Load SDF into the pybullet client
-
-    Args:
-        filename (str): a relative or absolute path to the SDF
-            file on the file system of the physics server.
-        scaling (float): apply a scale factor to the SDF model
-
-    Returns:
-        int: a body unique id, a non-negative integer value.
-        If the SDF file cannot be loaded, this integer will
-        be negative and not a valid body unique id.
-
-    """
-    if scaling <= 0:
-        raise ValueError('Scaling should be a positive number.')
-    body_id = p.loadSDF(filename,
-                        globalScaling=scaling,
-                        physicsClientId=PB_CLIENT,
-                        **kwargs)
-    p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
-    return body_id
-
-
-def load_mjcf(filename, **kwargs):
-    """
-    Load SDF into the pybullet client
-
-    Args:
-        filename (str): a relative or absolute path to the MJCF
-            file on the file system of the physics server.
-
-    Returns:
-        int: a body unique id, a non-negative integer value.
-        If the MJCF file cannot be loaded, this integer will
-        be negative and not a valid body unique id.
-
-    """
-    body_id = p.loadMJCF(filename,
-                         physicsClientId=PB_CLIENT,
-                         **kwargs)
-    p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
-    return body_id
-
-
-def load_geom(shape_type, size=None, mass=0.5, visualfile=None,
-              collifile=None, mesh_scale=None, rgba=None,
-              specular=None, shift_pos=None, shift_ori=None,
-              base_pos=None, base_ori=None, **kwargs):
-    """
-    Load a regular geometry (`sphere`, `box`, `capsule`, `cylinder`, `mesh`)
-
-    Note:
-        Please do not call **load_geom('capsule')** when you are using
-        **robotiq gripper**. The capsule generated will be in wrong size
-        if the mimicing thread (_th_mimic_gripper) in the robotiq
-        gripper class starts running.
-        This might be a PyBullet Bug (current version is 2.5.6).
-        Note that other geometries(box, sphere, cylinder, etc.)
-        are not affected by the threading in the robotiq gripper.
-
-    Args:
-        shape_type (str): one of [`sphere`, `box`, `capsule`, `cylinder`,
-            `mesh`]
-
-        size (float or list): Defaults to None.
-
-             If shape_type is sphere: size should be a float (radius).
-
-             If shape_type is capsule or cylinder: size should be a 2-element
-             list (radius, length).
-
-             If shape_type is box: size can be a float (same half edge length
-             for 3 dims) or a 3-element list containing the
-             half size of 3 edges
-
-             size doesn't take effect if shape_type is mesh.
-
-        mass (float): mass of the object in kg. If mass=0, then the object is
-            static.
-
-        visualfile (str): path to the visual mesh file.
-            only needed when the shape_type is mesh. If it's None, same
-            collision mesh file will be used as the visual mesh file.
-
-        collifile (str): path to the collision mesh file.
-            only needed when the shape_type is mesh. If it's None, same
-            viusal mesh file will be used as the collision mesh file.
-
-        mesh_scale (float or list): scale the mesh. If it's a float number,
-            the mesh will be scaled in same ratio along 3 dimensions. If it's
-            a list, then it should contain 3 elements
-            (scales along 3 dimensions).
-        rgba (list): color components for red, green, blue and alpha, each in
-            range [0, 1] (shape: :math:`[4,]`)
-        specular(list): specular reflection color components
-            for red, green, blue and alpha, each in
-            range [0, 1] (shape: :math:`[4,]`)
-        shift_pos (list): translational offset of collision
-            shape, visual shape, and inertial frame (shape: :math:`[3,]`)
-        shift_ori (list): rotational offset (quaternion [x, y, z, w])
-            of collision shape, visual shape, and inertial
-            frame (shape: :math:`[4,]`)
-        base_pos (list): cartesian world position of
-            the base (shape: :math:`[3,]`)
-        base_ori (list): cartesian world orientation of the base as
-            quaternion [x, y, z, w] (shape: :math:`[4,]`)
-
-    Returns:
-        int: a body unique id, a non-negative integer value or -1 for failure.
-
-    """
-    global GRAVITY_CONST
-    pb_shape_types = {'sphere': p.GEOM_SPHERE,
-                      'box': p.GEOM_BOX,
-                      'capsule': p.GEOM_CAPSULE,
-                      'cylinder': p.GEOM_CYLINDER,
-                      'mesh': p.GEOM_MESH}
-    if shape_type not in pb_shape_types.keys():
-        raise TypeError('The following shape type is not '
-                        'supported: %s' % shape_type)
-
-    collision_args = {'shapeType': pb_shape_types[shape_type]}
-    visual_args = {'shapeType': pb_shape_types[shape_type]}
-    if shape_type == 'sphere':
-        if size is not None and not (isinstance(size, float) and size > 0):
-            raise TypeError('size should be a positive '
-                            'float number for a sphere.')
-        collision_args['radius'] = 0.5 if size is None else size
-        visual_args['radius'] = collision_args['radius']
-    elif shape_type == 'box':
-        if isinstance(size, float):
-            size = [size, size, size]
-        elif isinstance(size, list):
-            if len(size) != 3:
-                raise ValueError('If size is a list, its length'
-                                 ' should be 3 for a box')
-        elif size is not None:
-            raise TypeError('size should be a float number, '
-                            'or a 3-element list '
-                            'for a box')
-        collision_args['halfExtents'] = [1, 1, 1] if size is None else size
-        visual_args['halfExtents'] = collision_args['halfExtents']
-    elif shape_type in ['capsule', 'cylinder']:
-        if size is not None:
-            if not isinstance(size, list) or len(size) != 2:
-                raise TypeError('size should be a 2-element '
-                                'list (radius, length)'
-                                'for a capsule or a cylinder.')
-            for si in size:
-                if not isinstance(si, Number) or si <= 0.0:
-                    raise TypeError('size should be a list that '
-                                    'contains 2 positive'
-                                    'numbers (radius, length) for '
-                                    'a capsule or '
-                                    'a cylinder.')
-        collision_args['radius'] = 0.5 if size is None else size[0]
-        visual_args['radius'] = collision_args['radius']
-        collision_args['height'] = 1.0 if size is None else size[1]
-        visual_args['length'] = collision_args['height']
-    elif shape_type == 'mesh':
-        if visualfile is None and collifile is None:
-            raise ValueError('At least one of the visualfile and collifile'
-                             'should be provided!')
-        if visualfile is None:
-            visualfile = collifile
-        elif collifile is None:
-            collifile = visualfile
-        if not isinstance(visualfile, str):
-            raise TypeError('visualfile should be the path to '
-                            'the visual mesh file!')
-        if not isinstance(collifile, str):
-            raise TypeError('collifile should be the path to '
-                            'the collision mesh file!')
-        collision_args['fileName'] = collifile
-        visual_args['fileName'] = visualfile
-        if isinstance(mesh_scale, float):
-            mesh_scale = [mesh_scale, mesh_scale, mesh_scale]
-        elif isinstance(mesh_scale, list):
-            if len(mesh_scale) != 3:
-                raise ValueError('If mesh_scale is a list, its length'
-                                 ' should be 3.')
-        elif mesh_scale is not None:
-            raise TypeError('mesh_scale should be a float number'
-                            ', or a 3-element list.')
-        collision_args['meshScale'] = [1, 1, 1] if mesh_scale is None \
-            else mesh_scale
-        visual_args['meshScale'] = collision_args['meshScale']
-    else:
-        raise TypeError('The following shape type is not '
-                        'supported: %s' % shape_type)
-
-    visual_args['rgbaColor'] = rgba
-    visual_args['specularColor'] = specular
-    collision_args['collisionFramePosition'] = shift_pos
-    collision_args['collisionFrameOrientation'] = shift_ori
-    visual_args['visualFramePosition'] = shift_pos
-    visual_args['visualFrameOrientation'] = shift_ori
-
-    collision_args['physicsClientId'] = PB_CLIENT
-    visual_args['physicsClientId'] = PB_CLIENT
-
-    p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0,
-                               physicsClientId=PB_CLIENT)
-    vs_id = p.createVisualShape(**visual_args)
-    cs_id = p.createCollisionShape(**collision_args)
-    body_id = p.createMultiBody(baseMass=mass,
-                                baseInertialFramePosition=shift_pos,
-                                baseInertialFrameOrientation=shift_ori,
-                                baseCollisionShapeIndex=cs_id,
-                                baseVisualShapeIndex=vs_id,
+        """
+        if scaling <= 0:
+            raise ValueError('Scaling should be a positive number.')
+        if base_pos is None:
+            base_pos = [0, 0, 0]
+        if base_ori is None:
+            base_ori = [0, 0, 0, 1]
+        body_id = self.loadURDF(filename,
                                 basePosition=base_pos,
                                 baseOrientation=base_ori,
-                                physicsClientId=PB_CLIENT,
+                                globalScaling=scaling,
                                 **kwargs)
-    p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1,
-                               physicsClientId=PB_CLIENT)
-    p.setGravity(0, 0, GRAVITY_CONST, physicsClientId=PB_CLIENT)
-    return body_id
+        self.setGravity(0, 0, GRAVITY_CONST)
+        return body_id
+
+    def load_sdf(self, filename, scaling=1.0, **kwargs):
+        """
+        Load SDF into the pybullet client.
+
+        Args:
+            filename (str): a relative or absolute path to the SDF
+                file on the file system of the physics server.
+            scaling (float): apply a scale factor to the SDF model
+
+        Returns:
+            int: a body unique id, a non-negative integer value.
+            If the SDF file cannot be loaded, this integer will
+            be negative and not a valid body unique id.
+
+        """
+        if scaling <= 0:
+            raise ValueError('Scaling should be a positive number.')
+        body_id = self.loadSDF(filename,
+                               globalScaling=scaling,
+                               **kwargs)
+        self.setGravity(0, 0, GRAVITY_CONST)
+        return body_id
+
+    def load_mjcf(self, filename, **kwargs):
+        """
+        Load SDF into the pybullet client.
+
+        Args:
+            filename (str): a relative or absolute path to the MJCF
+                file on the file system of the physics server.
+
+        Returns:
+            int: a body unique id, a non-negative integer value.
+            If the MJCF file cannot be loaded, this integer will
+            be negative and not a valid body unique id.
+
+        """
+        body_id = self.loadMJCF(filename,
+                                **kwargs)
+        self.setGravity(0, 0, GRAVITY_CONST)
+        return body_id
+
+    def load_geom(self, shape_type, size=None, mass=0.5, visualfile=None,
+                  collifile=None, mesh_scale=None, rgba=None,
+                  specular=None, shift_pos=None, shift_ori=None,
+                  base_pos=None, base_ori=None, **kwargs):
+        """
+        Load a regular geometry (`sphere`, `box`,
+        `capsule`, `cylinder`, `mesh`).
+
+        Note:
+            Please do not call **load_geom('capsule')** when you are using
+            **robotiq gripper**. The capsule generated will be in wrong size
+            if the mimicing thread (_th_mimic_gripper) in the robotiq
+            gripper class starts running.
+            This might be a PyBullet Bug (current version is 2.5.6).
+            Note that other geometries(box, sphere, cylinder, etc.)
+            are not affected by the threading in the robotiq gripper.
+
+        Args:
+            shape_type (str): one of [`sphere`, `box`, `capsule`, `cylinder`,
+                `mesh`]
+
+            size (float or list): Defaults to None.
+
+                 If shape_type is sphere: size should be a float (radius).
+
+                 If shape_type is capsule or cylinder: size should be
+                 a 2-element list (radius, length).
+
+                 If shape_type is box: size can be a float (same half
+                 edge length for 3 dims) or a 3-element list
+                 containing the half size of 3 edges
+
+                 size doesn't take effect if shape_type is mesh.
+
+            mass (float): mass of the object in kg.
+                If mass=0, then the object is static.
+
+            visualfile (str): path to the visual mesh file.
+                only needed when the shape_type is mesh. If it's None, same
+                collision mesh file will be used as the visual mesh file.
+
+            collifile (str): path to the collision mesh file.
+                only needed when the shape_type is mesh. If it's None, same
+                viusal mesh file will be used as the collision mesh file.
+
+            mesh_scale (float or list): scale the mesh. If it's a float number,
+                the mesh will be scaled in same ratio along 3 dimensions.
+                If it's a list, then it should contain 3 elements
+                (scales along 3 dimensions).
+            rgba (list): color components for red, green, blue and alpha,
+                each in range [0, 1] (shape: :math:`[4,]`)
+            specular(list): specular reflection color components
+                for red, green, blue and alpha, each in
+                range [0, 1] (shape: :math:`[4,]`)
+            shift_pos (list): translational offset of collision
+                shape, visual shape, and inertial frame (shape: :math:`[3,]`)
+            shift_ori (list): rotational offset (quaternion [x, y, z, w])
+                of collision shape, visual shape, and inertial
+                frame (shape: :math:`[4,]`)
+            base_pos (list): cartesian world position of
+                the base (shape: :math:`[3,]`)
+            base_ori (list): cartesian world orientation of the base as
+                quaternion [x, y, z, w] (shape: :math:`[4,]`)
+
+        Returns:
+            int: a body unique id, a non-negative integer
+            value or -1 for failure.
+
+        """
+        global GRAVITY_CONST
+        pb_shape_types = {'sphere': p.GEOM_SPHERE,
+                          'box': p.GEOM_BOX,
+                          'capsule': p.GEOM_CAPSULE,
+                          'cylinder': p.GEOM_CYLINDER,
+                          'mesh': p.GEOM_MESH}
+        if shape_type not in pb_shape_types.keys():
+            raise TypeError('The following shape type is not '
+                            'supported: %s' % shape_type)
+
+        collision_args = {'shapeType': pb_shape_types[shape_type]}
+        visual_args = {'shapeType': pb_shape_types[shape_type]}
+        if shape_type == 'sphere':
+            if size is not None and not (isinstance(size, float) and size > 0):
+                raise TypeError('size should be a positive '
+                                'float number for a sphere.')
+            collision_args['radius'] = 0.5 if size is None else size
+            visual_args['radius'] = collision_args['radius']
+        elif shape_type == 'box':
+            if isinstance(size, float):
+                size = [size, size, size]
+            elif isinstance(size, list):
+                if len(size) != 3:
+                    raise ValueError('If size is a list, its length'
+                                     ' should be 3 for a box')
+            elif size is not None:
+                raise TypeError('size should be a float number, '
+                                'or a 3-element list '
+                                'for a box')
+            collision_args['halfExtents'] = [1, 1, 1] if size is None else size
+            visual_args['halfExtents'] = collision_args['halfExtents']
+        elif shape_type in ['capsule', 'cylinder']:
+            if size is not None:
+                if not isinstance(size, list) or len(size) != 2:
+                    raise TypeError('size should be a 2-element '
+                                    'list (radius, length)'
+                                    'for a capsule or a cylinder.')
+                for si in size:
+                    if not isinstance(si, Number) or si <= 0.0:
+                        raise TypeError('size should be a list that '
+                                        'contains 2 positive'
+                                        'numbers (radius, length) for '
+                                        'a capsule or '
+                                        'a cylinder.')
+            collision_args['radius'] = 0.5 if size is None else size[0]
+            visual_args['radius'] = collision_args['radius']
+            collision_args['height'] = 1.0 if size is None else size[1]
+            visual_args['length'] = collision_args['height']
+        elif shape_type == 'mesh':
+            if visualfile is None and collifile is None:
+                raise ValueError('At least one of the visualfile and collifile'
+                                 'should be provided!')
+            if visualfile is None:
+                visualfile = collifile
+            elif collifile is None:
+                collifile = visualfile
+            if not isinstance(visualfile, str):
+                raise TypeError('visualfile should be the path to '
+                                'the visual mesh file!')
+            if not isinstance(collifile, str):
+                raise TypeError('collifile should be the path to '
+                                'the collision mesh file!')
+            collision_args['fileName'] = collifile
+            visual_args['fileName'] = visualfile
+            if isinstance(mesh_scale, float):
+                mesh_scale = [mesh_scale, mesh_scale, mesh_scale]
+            elif isinstance(mesh_scale, list):
+                if len(mesh_scale) != 3:
+                    raise ValueError('If mesh_scale is a list, its length'
+                                     ' should be 3.')
+            elif mesh_scale is not None:
+                raise TypeError('mesh_scale should be a float number'
+                                ', or a 3-element list.')
+            collision_args['meshScale'] = [1, 1, 1] if mesh_scale is None \
+                else mesh_scale
+            visual_args['meshScale'] = collision_args['meshScale']
+        else:
+            raise TypeError('The following shape type is not '
+                            'supported: %s' % shape_type)
+
+        visual_args['rgbaColor'] = rgba
+        visual_args['specularColor'] = specular
+        collision_args['collisionFramePosition'] = shift_pos
+        collision_args['collisionFrameOrientation'] = shift_ori
+        visual_args['visualFramePosition'] = shift_pos
+        visual_args['visualFrameOrientation'] = shift_ori
+
+        self.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
+        vs_id = self.createVisualShape(**visual_args)
+        cs_id = self.createCollisionShape(**collision_args)
+        body_id = self.createMultiBody(baseMass=mass,
+                                       baseInertialFramePosition=shift_pos,
+                                       baseInertialFrameOrientation=shift_ori,
+                                       baseCollisionShapeIndex=cs_id,
+                                       baseVisualShapeIndex=vs_id,
+                                       basePosition=base_pos,
+                                       baseOrientation=base_ori,
+                                       **kwargs)
+        self.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
+        self.setGravity(0, 0, GRAVITY_CONST)
+        return body_id
+
+    def _set_realtime_var(self, realtime_mode):
+        with self._realtime_lock:
+            self._in_realtime_mode = realtime_mode
+
+    def _get_realtime_var(self):
+        with self._realtime_lock:
+            realtime_mode = self._in_realtime_mode
+        return realtime_mode
+
+    def _step_rt_simulation(self):
+        """
+        Run step simulation all the time in backend.
+        This is only needed to run realtime simulation
+        in DIRECT mode, ie, when `render=False`.
+        """
+        while True:
+            realtime_mode = self._get_realtime_var()
+            if realtime_mode:
+                self.stepSimulation()
+            time.sleep(0.001)
 
 
 class TextureModder:
     """
     Modify textures in model
 
+    Args:
+        pb_client_id (int): pybullet client id
+
     Attributes:
-        texture_dict (dict): a dictionary that tells the texture of a link on a body
+        texture_dict (dict): a dictionary that tells the texture
+            of a link on a body
         texture_files (list): a list of texture files (usuallly images)
     """
 
-    def __init__(self):
+    def __init__(self, pb_client_id):
         # {body_id: {link_id: [texture_id, height, width]}}
         self.texture_dict = {}
         self.texture_files = []
+        self._pb_id = pb_client_id
 
     def set_texture(self, body_id, link_id, texture_file):
         """
@@ -460,7 +512,8 @@ class TextureModder:
         height = img.shape[0]
         tex_id = p.loadTexture(texture_file)
         p.changeVisualShape(body_id, link_id,
-                            textureUniqueId=tex_id)
+                            textureUniqueId=tex_id,
+                            physicsClientId=self._pb_id)
         if body_id not in self.texture_dict:
             self.texture_dict[body_id] = {}
         self.texture_dict[body_id][link_id] = [tex_id, height, width]
@@ -570,7 +623,7 @@ class TextureModder:
 
         """
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0,
-                                   physicsClientId=PB_CLIENT)
+                                   physicsClientId=self._pb_id)
         mode_to_func = {
             'all': self.rand_all,
             'rgb': self.rand_rgb,
@@ -578,7 +631,7 @@ class TextureModder:
             'gradient': self.rand_gradient,
             'texture': self.rand_texture,
         }
-        body_num = p.getNumBodies(physicsClientId=PB_CLIENT)
+        body_num = p.getNumBodies(physicsClientId=self._pb_id)
         if exclude is None:
             sep_bodies = set()
         else:
@@ -589,7 +642,7 @@ class TextureModder:
             if body_idx in sep_bodies and not exclude[body_idx]:
                 continue
             num_jnts = p.getNumJoints(body_idx,
-                                      physicsClientId=PB_CLIENT)
+                                      physicsClientId=self._pb_id)
             # start from -1 for urdf that has no joint but one link
             start = -1 if num_jnts == 0 else 0
             for link_idx in range(start, num_jnts):
@@ -597,7 +650,7 @@ class TextureModder:
                     continue
                 mode_to_func[mode](body_idx, link_idx)
         p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1,
-                                   physicsClientId=PB_CLIENT)
+                                   physicsClientId=self._pb_id)
 
     def set_rgba(self, body_id, link_id, rgba):
         """
@@ -611,7 +664,7 @@ class TextureModder:
 
         """
         p.changeVisualShape(body_id, link_id, rgbaColor=rgba,
-                            physicsClientId=PB_CLIENT)
+                            physicsClientId=self._pb_id)
 
     def set_gradient(self, body_id, link_id, rgb1, rgb2, vertical=True):
         """
@@ -649,7 +702,7 @@ class TextureModder:
                         new_color,
                         width,
                         height,
-                        physicsClientId=PB_CLIENT)
+                        physicsClientId=self._pb_id)
 
     def set_noise(self, body_id, link_id, rgb1, rgb2, fraction=0.9):
         """
@@ -680,7 +733,7 @@ class TextureModder:
                         new_color.flatten(),
                         width,
                         height,
-                        physicsClientId=PB_CLIENT)
+                        physicsClientId=self._pb_id)
 
     def whiten_materials(self, body_id=None, link_id=None):
         """
@@ -695,12 +748,12 @@ class TextureModder:
 
         """
         if body_id is None:
-            body_num = p.getNumBodies(physicsClientId=PB_CLIENT)
+            body_num = p.getNumBodies(physicsClientId=self._pb_id)
             for body_idx in range(body_num):
                 if not self._check_body_exist(body_idx):
                     continue
                 num_jnts = p.getNumJoints(body_idx,
-                                          physicsClientId=PB_CLIENT)
+                                          physicsClientId=self._pb_id)
                 # start from -1 for urdf that has no joint but one link
                 start = -1 if num_jnts == 0 else 0
                 for i in range(start, num_jnts):
@@ -708,7 +761,7 @@ class TextureModder:
         else:
             if link_id is None:
                 num_jnts = p.getNumJoints(body_id,
-                                          physicsClientId=PB_CLIENT)
+                                          physicsClientId=self._pb_id)
                 # start from -1 for urdf that has no joint but one link
                 start = -1 if num_jnts == 0 else 0
                 for i in range(start, num_jnts):
@@ -770,7 +823,7 @@ class TextureModder:
         """
         exist = True
         try:
-            p.getBodyInfo(body_id, physicsClientId=PB_CLIENT)
+            p.getBodyInfo(body_id, physicsClientId=self._pb_id)
         except Exception:
             exist = False
         return exist

@@ -6,12 +6,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import pybullet as p
-
 import airobot.utils.common as arutil
 from airobot.arm.dual_arm_pybullet import DualArmPybullet
 from airobot.arm.single_arm_pybullet import SingleArmPybullet
-from airobot.utils.pb_util import PB_CLIENT
 
 
 class YumiPybullet(DualArmPybullet):
@@ -21,9 +18,8 @@ class YumiPybullet(DualArmPybullet):
 
     Args:
         cfgs (YACS CfgNode): configurations for the arm
-        render (bool): whether to render the environment using GUI
+        pb_client (BulletClient): pybullet client
         seed (int): random seed
-        rt_simulation (bool): turn on realtime simulation or not
         self_collision (bool): enable self_collision or
                                not whiling loading URDF
         eetool_cfg (dict): arguments to pass in the constructor
@@ -36,49 +32,45 @@ class YumiPybullet(DualArmPybullet):
 
     """
 
-    def __init__(self, cfgs, render=False, seed=None,
-                 rt_simulation=True, self_collision=False,
+    def __init__(self, cfgs, pb_client, seed=None,
+                 self_collision=False,
                  eetool_cfg=None):
         super(YumiPybullet, self).__init__(cfgs=cfgs,
-                                           render=render,
+                                           pb_client=pb_client,
                                            seed=seed,
                                            self_collision=self_collision,
-                                           eetool_cfg=eetool_cfg,
-                                           rt_simulation=rt_simulation)
+                                           eetool_cfg=eetool_cfg)
         right_cfg = cfgs.ARM.RIGHT
         left_cfg = cfgs.ARM.LEFT
         self.right_arm = SingleArmPybullet(cfgs=right_cfg,
-                                           render=render,
+                                           pb_client=pb_client,
                                            seed=seed,
                                            self_collision=self_collision,
-                                           eetool_cfg=eetool_cfg,
-                                           rt_simulation=rt_simulation)
+                                           eetool_cfg=eetool_cfg)
         self.left_arm = SingleArmPybullet(cfgs=left_cfg,
-                                          render=render,
+                                          pb_client=pb_client,
                                           seed=seed,
                                           self_collision=self_collision,
-                                          eetool_cfg=eetool_cfg,
-                                          rt_simulation=rt_simulation)
+                                          eetool_cfg=eetool_cfg)
         self.reset()
 
     def reset(self):
         """
         Reset the simulation environment.
         """
-        p.resetSimulation(physicsClientId=PB_CLIENT)
+        self._pb.resetSimulation()
 
         yumi_pos = self.cfgs.ARM.PYBULLET_RESET_POS
         yumi_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
         if self._self_collision:
-            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       yumi_pos,
-                                       yumi_ori,
-                                       flags=p.URDF_USE_SELF_COLLISION,
-                                       physicsClientId=PB_CLIENT)
+            colli_flag = {'flags': self._pb.URDF_USE_SELF_COLLISION}
+            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                              yumi_pos,
+                                              yumi_ori,
+                                              **colli_flag)
         else:
-            self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                       yumi_pos, yumi_ori,
-                                       physicsClientId=PB_CLIENT)
+            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                              yumi_pos, yumi_ori)
 
         self._build_jnt_id()
 

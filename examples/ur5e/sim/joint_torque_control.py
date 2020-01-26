@@ -8,8 +8,7 @@ def main():
     This function demonstrates how to perform torque
     control on the simulated UR robot
     """
-    robot = Robot('ur5e', arm_cfg={'render': True,
-                                   'self_collision': True})
+    robot = Robot('ur5e', arm_cfg={'self_collision': True})
     robot.arm.go_home()
     robot.arm.enable_torque_control()
     while True:

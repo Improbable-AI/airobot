@@ -4,16 +4,12 @@ from __future__ import print_function
 
 import copy
 
-import numpy as np
-import pybullet as p
-from gym.utils import seeding
-
 import airobot.utils.common as arutil
+import numpy as np
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 from airobot.utils.common import ang_in_mpi_ppi
-from airobot.utils.pb_util import PB_CLIENT
-from airobot.utils.pb_util import set_step_sim
+from gym.utils import seeding
 
 
 class SingleArmPybullet(ARM):
@@ -22,40 +18,43 @@ class SingleArmPybullet(ARM):
 
     Args:
         cfgs (YACS CfgNode): configurations for the arm
-        render (bool): whether to render the environment using GUI
+        pb_client (BulletClient): pybullet client
         seed (int): random seed
-        rt_simulation (bool): turn on realtime simulation or not
         self_collision (bool): enable self_collision or
                                not whiling loading URDF
         eetool_cfg (dict): arguments to pass in the constructor
             of the end effector tool class
 
     Attributes:
-        cfgs (YACS CfgNode):
-        robot_id (int):
-        arm_jnt_names (list):
-        arm_dof (int):
-        arm_jnt_ids (list):
-        arm_jnt_ik_ids (list):
-        ee_link_jnt (str):
-        ee_link_id (int):
-        jnt_to_id (dict):
-        non_fixed_jnt_names (list):
+        cfgs (YACS CfgNode): configurations for the arm
+        robot_id (int): pybullet body unique id of the robot
+        arm_jnt_names (list): names of the arm joints
+        arm_dof (int): degrees of freedom of the arm
+        arm_jnt_ids (list): pybullet joint ids of the arm joints
+        arm_jnt_ik_ids (list): joint indices of the non-fixed arm joints
+        ee_link_jnt (str): joint name of the end-effector link
+        ee_link_id (int): joint id of the end-effector link
+        jnt_to_id (dict): dictionary with [joint name : pybullet joint] id
+            [key : value] pairs
+        non_fixed_jnt_names (list): names of non-fixed joints in the arms,
+            used for returning the correct inverse kinematics solution
 
     """
 
-    def __init__(self, cfgs, render=False, seed=None,
-                 rt_simulation=True, self_collision=False,
+    def __init__(self,
+                 cfgs,
+                 pb_client,
+                 seed=None,
+                 self_collision=False,
                  eetool_cfg=None):
-        self._render = render
         self._self_collision = self_collision
+        self._pb = pb_client
         super(SingleArmPybullet, self).__init__(cfgs=cfgs,
                                                 eetool_cfg=eetool_cfg)
         self.robot_id = None
         self._np_random, _ = self._seed(seed)
 
         self._init_consts()
-        self.realtime_simulation(rt_simulation)
         self._in_torque_mode = [False] * self.arm_dof
 
     def go_home(self, ignore_physics=False):
@@ -70,22 +69,8 @@ class SingleArmPybullet(ARM):
         """
         Reset the simulation environment.
         """
-        self.robot_id = p.loadURDF(self.cfgs.PYBULLET_URDF,
-                                   [0, 0, 0], [0, 0, 0, 1],
-                                   physicsClientId=PB_CLIENT)
-
-    def realtime_simulation(self, on=True):
-        """
-        Turn on/off the realtime simulation mode
-
-        Args:
-            on (bool): run the simulation in realtime if True
-                stop the realtime simulation if False
-        """
-        self._step_sim_mode = not on
-        if self.cfgs.HAS_EETOOL:
-            self.eetool._step_sim_mode = self._step_sim_mode
-        set_step_sim(self._step_sim_mode)
+        self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                          [0, 0, 0], [0, 0, 0, 1])
 
     def set_jpos(self, position, joint_name=None,
                  wait=True, ignore_physics=False, *args, **kwargs):
@@ -129,12 +114,11 @@ class SingleArmPybullet(ARM):
                     )
                 success = True
             else:
-                p.setJointMotorControlArray(self.robot_id,
-                                            self.arm_jnt_ids,
-                                            p.POSITION_CONTROL,
-                                            targetPositions=tgt_pos,
-                                            forces=self._max_torques,
-                                            physicsClientId=PB_CLIENT)
+                self._pb.setJointMotorControlArray(self.robot_id,
+                                                   self.arm_jnt_ids,
+                                                   self._pb.POSITION_CONTROL,
+                                                   targetPositions=tgt_pos,
+                                                   forces=self._max_torques)
         else:
             if joint_name not in self.arm_jnt_names:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -149,13 +133,12 @@ class SingleArmPybullet(ARM):
                 self.reset_joint_state(joint_name, tgt_pos)
                 success = True
             else:
-                p.setJointMotorControl2(self.robot_id,
-                                        jnt_id,
-                                        p.POSITION_CONTROL,
-                                        targetPosition=tgt_pos,
-                                        force=max_torque,
-                                        physicsClientId=PB_CLIENT)
-        if not self._step_sim_mode and wait and not ignore_physics:
+                self._pb.setJointMotorControl2(self.robot_id,
+                                               jnt_id,
+                                               self._pb.POSITION_CONTROL,
+                                               targetPosition=tgt_pos,
+                                               force=max_torque)
+        if self._pb.in_realtime_mode() and wait and not ignore_physics:
             success = wait_to_reach_jnt_goal(
                 tgt_pos,
                 get_func=self.get_jpos,
@@ -192,12 +175,11 @@ class SingleArmPybullet(ARM):
                                  'if the joint_name is not '
                                  'provided' % self.arm_dof)
             tgt_vel = velocity
-            p.setJointMotorControlArray(self.robot_id,
-                                        self.arm_jnt_ids,
-                                        p.VELOCITY_CONTROL,
-                                        targetVelocities=tgt_vel,
-                                        forces=self._max_torques,
-                                        physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControlArray(self.robot_id,
+                                               self.arm_jnt_ids,
+                                               self._pb.VELOCITY_CONTROL,
+                                               targetVelocities=tgt_vel,
+                                               forces=self._max_torques)
         else:
             if joint_name not in self.arm_jnt_names:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -207,13 +189,12 @@ class SingleArmPybullet(ARM):
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 max_torque = self._max_torques[arm_jnt_idx]
                 jnt_id = self.jnt_to_id[joint_name]
-            p.setJointMotorControl2(self.robot_id,
-                                    jnt_id,
-                                    p.VELOCITY_CONTROL,
-                                    targetVelocity=tgt_vel,
-                                    force=max_torque,
-                                    physicsClientId=PB_CLIENT)
-        if not self._step_sim_mode:
+            self._pb.setJointMotorControl2(self.robot_id,
+                                           jnt_id,
+                                           self._pb.VELOCITY_CONTROL,
+                                           targetVelocity=tgt_vel,
+                                           force=max_torque)
+        if self._pb.in_realtime_mode():
             if wait:
                 success = wait_to_reach_jnt_goal(
                     tgt_vel,
@@ -261,21 +242,19 @@ class SingleArmPybullet(ARM):
             if len(torque) != self.arm_dof:
                 raise ValueError('Joint torques should contain'
                                  ' %d elements' % self.arm_dof)
-            p.setJointMotorControlArray(self.robot_id,
-                                        self.arm_jnt_ids,
-                                        p.TORQUE_CONTROL,
-                                        forces=torque,
-                                        physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControlArray(self.robot_id,
+                                               self.arm_jnt_ids,
+                                               self._pb.TORQUE_CONTROL,
+                                               forces=torque)
         else:
             if joint_name not in self.arm_jnt_names:
                 raise ValueError('Only torque control on'
                                  ' the arm is supported!')
             jnt_id = self.jnt_to_id[joint_name]
-            p.setJointMotorControl2(self.robot_id,
-                                    jnt_id,
-                                    p.TORQUE_CONTROL,
-                                    force=torque,
-                                    physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControl2(self.robot_id,
+                                           jnt_id,
+                                           self._pb.TORQUE_CONTROL,
+                                           force=torque)
         return True
 
     def set_ee_pose(self, pos=None, ori=None, wait=True, *args, **kwargs):
@@ -319,7 +298,7 @@ class SingleArmPybullet(ARM):
             bool: A boolean variable representing if the action is successful
             at the moment when the function exits
         """
-        if self._step_sim_mode:
+        if not self._pb.in_realtime_mode():
             raise AssertionError('move_ee_xyz() can '
                                  'only be called in realtime'
                                  ' simulation mode')
@@ -354,21 +333,19 @@ class SingleArmPybullet(ARM):
         if joint_name is None:
             tgt_vels = [0.0] * self.arm_dof
             forces = [0.0] * self.arm_dof
-            p.setJointMotorControlArray(self.robot_id,
-                                        self.arm_jnt_ids,
-                                        p.VELOCITY_CONTROL,
-                                        targetVelocities=tgt_vels,
-                                        forces=forces,
-                                        physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControlArray(self.robot_id,
+                                               self.arm_jnt_ids,
+                                               self._pb.VELOCITY_CONTROL,
+                                               targetVelocities=tgt_vels,
+                                               forces=forces)
             self._in_torque_mode = [True] * self.arm_dof
         else:
             jnt_id = self.jnt_to_id[joint_name]
-            p.setJointMotorControl2(self.robot_id,
-                                    jnt_id,
-                                    p.VELOCITY_CONTROL,
-                                    targetVelocity=0,
-                                    force=0.0,
-                                    physicsClientId=PB_CLIENT)
+            self._pb.setJointMotorControl2(self.robot_id,
+                                           jnt_id,
+                                           self._pb.VELOCITY_CONTROL,
+                                           targetVelocity=0,
+                                           force=0.0)
             arm_jnt_id = self.arm_jnt_names.index(joint_name)
             self._in_torque_mode[arm_jnt_id] = True
 
@@ -410,15 +387,13 @@ class SingleArmPybullet(ARM):
               (shape: :math:`[DOF]`)
         """
         if joint_name is None:
-            states = p.getJointStates(self.robot_id,
-                                      self.arm_jnt_ids,
-                                      physicsClientId=PB_CLIENT)
+            states = self._pb.getJointStates(self.robot_id,
+                                             self.arm_jnt_ids)
             pos = [state[0] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
-            pos = p.getJointState(self.robot_id,
-                                  jnt_id,
-                                  physicsClientId=PB_CLIENT)[0]
+            pos = self._pb.getJointState(self.robot_id,
+                                         jnt_id)[0]
         return pos
 
     def get_jvel(self, joint_name=None):
@@ -438,15 +413,13 @@ class SingleArmPybullet(ARM):
               (shape: :math:`[DOF]`)
         """
         if joint_name is None:
-            states = p.getJointStates(self.robot_id,
-                                      self.arm_jnt_ids,
-                                      physicsClientId=PB_CLIENT)
+            states = self._pb.getJointStates(self.robot_id,
+                                             self.arm_jnt_ids)
             vel = [state[1] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
-            vel = p.getJointState(self.robot_id,
-                                  jnt_id,
-                                  physicsClientId=PB_CLIENT)[1]
+            vel = self._pb.getJointState(self.robot_id,
+                                         jnt_id)[1]
         return vel
 
     def get_jtorq(self, joint_name=None):
@@ -472,16 +445,14 @@ class SingleArmPybullet(ARM):
               (shape: :math:`[DOF]`)
         """
         if joint_name is None:
-            states = p.getJointStates(self.robot_id,
-                                      self.arm_jnt_ids,
-                                      physicsClientId=PB_CLIENT)
+            states = self._pb.getJointStates(self.robot_id,
+                                             self.arm_jnt_ids)
             # state[3] is appliedJointMotorTorque
             torque = [state[3] for state in states]
         else:
             jnt_id = self.jnt_to_id[joint_name]
-            torque = p.getJointState(self.robot_id,
-                                     jnt_id,
-                                     physicsClientId=PB_CLIENT)[3]
+            torque = self._pb.getJointState(self.robot_id,
+                                            jnt_id)[3]
         return torque
 
     def get_ee_pose(self):
@@ -500,8 +471,7 @@ class SingleArmPybullet(ARM):
               EE orientation (roll, pitch, yaw with
               static reference frame) (shape: :math:`[3,]`)
         """
-        info = p.getLinkState(self.robot_id, self.ee_link_id,
-                              physicsClientId=PB_CLIENT)
+        info = self._pb.getLinkState(self.robot_id, self.ee_link_id)
         pos = info[4]
         quat = info[5]
 
@@ -519,10 +489,9 @@ class SingleArmPybullet(ARM):
             - np.ndarray: translational velocity (shape: :math:`[3,]`)
             - np.ndarray: rotational velocity (shape: :math:`[3,]`)
         """
-        info = p.getLinkState(self.robot_id,
-                              self.ee_link_id,
-                              computeLinkVelocity=1,
-                              physicsClientId=PB_CLIENT)
+        info = self._pb.getLinkState(self.robot_id,
+                                     self.ee_link_id,
+                                     computeLinkVelocity=1)
         trans_vel = info[6]
         rot_vel = info[7]
         return np.array(trans_vel), np.array(rot_vel)
@@ -545,8 +514,7 @@ class SingleArmPybullet(ARM):
             list: solution to inverse kinematics, joint angles which achieve
             the specified EE pose (shape: :math:`[DOF]`)
         """
-        ex_args = {'jointDamping': self._ik_jds,
-                   'physicsClientId': PB_CLIENT}
+        ex_args = {'jointDamping': self._ik_jds}
         if ns:
             ll, ul, jr, rp = self._get_joint_ranges()
             ex_args['lowerLimits'] = ll
@@ -556,16 +524,16 @@ class SingleArmPybullet(ARM):
 
         if ori is not None:
             ori = arutil.to_quat(ori)
-            jnt_poss = p.calculateInverseKinematics(self.robot_id,
-                                                    self.ee_link_id,
-                                                    pos,
-                                                    ori,
-                                                    **ex_args)
+            jnt_poss = self._pb.calculateInverseKinematics(self.robot_id,
+                                                           self.ee_link_id,
+                                                           pos,
+                                                           ori,
+                                                           **ex_args)
         else:
-            jnt_poss = p.calculateInverseKinematics(self.robot_id,
-                                                    self.ee_link_id,
-                                                    pos,
-                                                    **ex_args)
+            jnt_poss = self._pb.calculateInverseKinematics(self.robot_id,
+                                                           self.ee_link_id,
+                                                           pos,
+                                                           **ex_args)
         jnt_poss = list(map(ang_in_mpi_ppi, jnt_poss))
         arm_jnt_poss = [jnt_poss[i] for i in self.arm_jnt_ik_ids]
         return arm_jnt_poss
@@ -587,18 +555,15 @@ class SingleArmPybullet(ARM):
         """
         ll, ul, jr, rp = [], [], [], []
 
-        for i in range(p.getNumJoints(self.robot_id,
-                                      physicsClientId=PB_CLIENT)):
-            info = p.getJointInfo(self.robot_id, i,
-                                  physicsClientId=PB_CLIENT)
+        for i in range(self._pb.getNumJoints(self.robot_id)):
+            info = self._pb.getJointInfo(self.robot_id, i)
             if info[3] > -1:
                 lower, upper = info[8:10]
                 j_range = upper - lower
 
-                rest_pose = p.getJointState(
+                rest_pose = self._pb.getJointState(
                     self.robot_id,
-                    i,
-                    physicsClientId=PB_CLIENT)[0]
+                    i)[0]
 
                 ll.append(lower)
                 ul.append(upper)
@@ -619,11 +584,10 @@ class SingleArmPybullet(ARM):
             jvel (float): optional, target joint velocity
 
         """
-        p.resetJointState(self.robot_id,
-                          self.jnt_to_id[jnt_name],
-                          targetValue=jpos,
-                          targetVelocity=jvel,
-                          physicsClientId=PB_CLIENT)
+        self._pb.resetJointState(self.robot_id,
+                                 self.jnt_to_id[jnt_name],
+                                 targetValue=jpos,
+                                 targetVelocity=jvel)
 
     def _is_in_torque_mode(self, joint_name=None):
         if joint_name is None:
@@ -655,13 +619,11 @@ class SingleArmPybullet(ARM):
         """
         self.jnt_to_id = {}
         self.non_fixed_jnt_names = []
-        for i in range(p.getNumJoints(self.robot_id,
-                                      physicsClientId=PB_CLIENT)):
-            info = p.getJointInfo(self.robot_id, i,
-                                  physicsClientId=PB_CLIENT)
+        for i in range(self._pb.getNumJoints(self.robot_id)):
+            info = self._pb.getJointInfo(self.robot_id, i)
             jnt_name = info[1].decode('UTF-8')
             self.jnt_to_id[jnt_name] = info[0]
-            if info[2] != p.JOINT_FIXED:
+            if info[2] != self._pb.JOINT_FIXED:
                 self.non_fixed_jnt_names.append(jnt_name)
 
         self._ik_jds = [self._ik_jd] * len(self.non_fixed_jnt_names)

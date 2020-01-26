@@ -10,10 +10,9 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import rospy
-from sklearn.cluster import DBSCAN
-
 from airobot import Robot
 from airobot.utils.ros_util import read_cam_ext
+from sklearn.cluster import DBSCAN
 
 
 def signal_handler(sig, frame):

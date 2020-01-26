@@ -12,6 +12,7 @@ class Logger:
         log_level (str): the following modes are supported:
             `debug`, `info`, `warn`, `error`, `critical`.
     """
+
     def __init__(self, log_level):
         formatter = ColoredFormatter(
             "%(log_color)s[%(levelname)s]%(reset)s[%(asctime)s]: "

@@ -8,16 +8,15 @@ from __future__ import print_function
 import copy
 
 import PyKDL as kdl
+import airobot.utils.common as arutil
 import numpy as np
 import rospy
-from kdl_parser_py.urdf import treeFromParam
-from trac_ik_python import trac_ik
-
-import airobot.utils.common as arutil
 from airobot.arm.arm import ARM
 from airobot.utils.ros_util import joints_to_kdl
 from airobot.utils.ros_util import kdl_array_to_numpy
 from airobot.utils.ros_util import kdl_frame_to_numpy
+from kdl_parser_py.urdf import treeFromParam
+from trac_ik_python import trac_ik
 
 
 class SingleArmReal(ARM):

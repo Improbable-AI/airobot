@@ -1,8 +1,6 @@
 import numpy as np
-import pybullet as p
 
 from airobot.sensor.camera.rgbdcam import RGBDCamera
-from airobot.utils.pb_util import PB_CLIENT
 
 
 class RGBDCameraPybullet(RGBDCamera):
@@ -19,7 +17,8 @@ class RGBDCameraPybullet(RGBDCamera):
             opengl camera (shape: :math:`[4, 4]`)
     """
 
-    def __init__(self, cfgs):
+    def __init__(self, cfgs, pb_client):
+        self._pb = pb_client
         super(RGBDCameraPybullet, self).__init__(cfgs=cfgs)
         self.view_matrix = None
         self.proj_matrix = None
@@ -51,13 +50,12 @@ class RGBDCameraPybullet(RGBDCamera):
             focus_pt = [0, 0, 0]
         if len(focus_pt) != 3:
             raise ValueError('Length of focus_pt should be 3 ([x, y, z]).')
-        vm = p.computeViewMatrixFromYawPitchRoll(focus_pt,
-                                                 dist,
-                                                 yaw,
-                                                 pitch,
-                                                 roll,
-                                                 upAxisIndex=2,
-                                                 physicsClientId=PB_CLIENT)
+        vm = self._pb.computeViewMatrixFromYawPitchRoll(focus_pt,
+                                                        dist,
+                                                        yaw,
+                                                        pitch,
+                                                        roll,
+                                                        upAxisIndex=2)
         self.view_matrix = np.array(vm).reshape(4, 4)
         self.img_height = height if height else self.cfgs.CAM.SIM.HEIGHT
         self.img_width = width if width else self.cfgs.CAM.SIM.WIDTH
@@ -65,11 +63,10 @@ class RGBDCameraPybullet(RGBDCamera):
         znear = self.cfgs.CAM.SIM.ZNEAR
         zfar = self.cfgs.CAM.SIM.ZFAR
         fov = self.cfgs.CAM.SIM.FOV
-        pm = p.computeProjectionMatrixFOV(fov,
-                                          aspect,
-                                          znear,
-                                          zfar,
-                                          physicsClientId=PB_CLIENT)
+        pm = self._pb.computeProjectionMatrixFOV(fov,
+                                                 aspect,
+                                                 znear,
+                                                 zfar)
         self.proj_matrix = np.array(pm).reshape(4, 4)
         rot = np.array([[1, 0, 0, 0],
                         [0, -1, 0, 0],
@@ -112,15 +109,16 @@ class RGBDCameraPybullet(RGBDCamera):
 
         if self.view_matrix is None:
             raise ValueError('Please call setup_camera() first!')
-
-        images = p.getCameraImage(width=self.img_width,
-                                  height=self.img_height,
-                                  viewMatrix=self.view_matrix.flatten(),
-                                  projectionMatrix=self.proj_matrix.flatten(),
-                                  flags=p.ER_NO_SEGMENTATION_MASK,
-                                  renderer=p.ER_BULLET_HARDWARE_OPENGL,
-                                  physicsClientId=PB_CLIENT,
-                                  **kwargs)
+        cam_img_kwargs = {
+            'width': self.img_width,
+            'height': self.img_height,
+            'viewMatrix': self.view_matrix.flatten(),
+            'projectionMatrix': self.proj_matrix.flatten(),
+            'flags': self._pb.ER_NO_SEGMENTATION_MASK,
+            'renderer': self._pb.ER_BULLET_HARDWARE_OPENGL
+        }
+        cam_img_kwargs.update(kwargs)
+        images = self._pb.getCameraImage(**cam_img_kwargs)
         rgb = None
         depth = None
         if get_rgb:
@@ -153,14 +151,13 @@ class RGBDCameraPybullet(RGBDCamera):
         if self.view_matrix is None:
             raise ValueError('Please call setup_camera() first!')
 
-        images = p.getCameraImage(
+        images = self._pb.getCameraImage(
             width=self.img_width,
             height=self.img_height,
             viewMatrix=self.view_matrix.flatten(),
             projectionMatrix=self.proj_matrix.flatten(),
-            flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
-            renderer=p.ER_BULLET_HARDWARE_OPENGL,
-            physicsClientId=PB_CLIENT,
+            flags=self._pb.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
+            renderer=self._pb.ER_BULLET_HARDWARE_OPENGL,
             **kwargs)
 
         seg = np.reshape(images[4], [self.img_height,

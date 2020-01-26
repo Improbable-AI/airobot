@@ -1,6 +1,5 @@
-import numpy as np
-
 import airobot as ar
+import numpy as np
 from airobot import Robot
 
 
@@ -9,7 +8,7 @@ def main():
     This function demonstrates how to get joint information
     such as joint positions/velocities/torques.
     """
-    robot = Robot('ur5e_2f140', arm_cfg={'render': False})
+    robot = Robot('ur5e_2f140', pb_render=False)
     robot.arm.go_home()
     ar.log_info('\nJoint positions for all actuated joints:')
     jpos = robot.arm.get_jpos()

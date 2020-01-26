@@ -8,7 +8,7 @@ def main():
     This function demonstrates how to move the robot arm
     to the desired joint positions
     """
-    robot = Robot('ur5e', arm_cfg={'render': True})
+    robot = Robot('ur5e')
     robot.arm.go_home()
     robot.arm.set_jpos([-0.8, -1.2, -2.2, -1.5, 2.0, 0])
     # sleep statement is not necessary

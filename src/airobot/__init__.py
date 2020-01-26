@@ -40,11 +40,14 @@ class Robot:
         arm (ARM): robot arm
         base (BASE): robot base
         cam (CAMERA): camera
+        pb_client (BulletClient): pybullet client if pb is True, None otherwise
     """
 
     def __init__(self,
                  robot_name,
                  pb=True,
+                 pb_render=True,
+                 pb_realtime=True,
                  use_arm=True,
                  use_eetool=True,
                  use_base=True,
@@ -83,13 +86,20 @@ class Robot:
             raise ValueError('Invalid robot name provided, only the following'
                              ' robots are available: {}'.format(robot_pool))
 
+        self.pb_client = None
         if pb:
             urdfs_root_path = os.path.join(root_path, 'urdfs')
             urdf = os.path.join(urdfs_root_path,
                                 cfgs.PYBULLET_URDF)
             cfgs.PYBULLET_URDF = urdf
-            import airobot.utils.pb_util as pb_util
-            pb_util.load_pb(render=arm_cfg.get('render', False))
+            from airobot.utils.pb_util import create_pybullet_client
+            pb_client = create_pybullet_client(render=pb_render,
+                                               realtime=pb_realtime)
+            arm_cfg['pb_client'] = pb_client
+            base_cfg['pb_client'] = pb_client
+            eetool_cfg['pb_client'] = pb_client
+            cam_cfg['pb_client'] = pb_client
+            self.pb_client = pb_client
         else:
             import rospy
             try:

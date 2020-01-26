@@ -1,6 +1,3 @@
-from yacs.config import CfgNode as CN
-
-from airobot.cfgs.assets.default_configs import get_cfg_defaults
 from airobot.cfgs.assets.pybullet_camera import get_sim_cam_cfg
 from airobot.cfgs.assets.realsense_camera import get_realsense_cam_cfg
 from airobot.cfgs.assets.yumi_dual_arm import get_yumi_dual_arm_cfg
