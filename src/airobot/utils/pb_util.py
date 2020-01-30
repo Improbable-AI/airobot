@@ -6,7 +6,7 @@ import random
 import threading
 import time
 from numbers import Number
-
+import platform
 import cv2
 import numpy as np
 import pybullet as p
@@ -58,7 +58,8 @@ class BulletClient:
             else:
                 connection_mode = p.DIRECT
         self._client = p.connect(connection_mode)
-        if connection_mode == p.DIRECT:
+        is_linux = platform.system() == 'Linux'
+        if connection_mode == p.DIRECT and is_linux:
             # # using the eglRendererPlugin (hardware OpenGL acceleration)
             egl = pkgutil.get_loader('eglRenderer')
             if egl:
