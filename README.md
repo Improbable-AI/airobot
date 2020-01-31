@@ -35,7 +35,7 @@ If you want to use ROS for UR5e robots, please install [ur5e driver](https://git
 If you are using RealSense cameras, please follow the instructions [here](https://github.com/IntelRealSense/realsense-ros#installation-instructions) or [here](https://github.com/Improbable-AI/camera_calibration/tree/qa).
 
 #### Option 2:
-Use the dockerfile provided in this library. Checkout the [instructions](docker) for docker usage. **Docker is not necessary if you just want to use the pybullet simulation environment.**
+Use the dockerfile provided in this library. Checkout the [instructions](docker) for docker usage. **Docker is not needed if you just want to use the pybullet simulation environment.**
 
 ### Install AIRobot
 
