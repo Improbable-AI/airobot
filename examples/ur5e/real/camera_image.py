@@ -6,7 +6,7 @@ from airobot import Robot
 
 if __name__ == "__main__":
     """
-    This script shows how to get RGB and depth images from AIRobot
+    This script shows how to get RGB and depth images from AIRobot.
     """
     robot = Robot('ur5e_2f140',
                   pb=False,
