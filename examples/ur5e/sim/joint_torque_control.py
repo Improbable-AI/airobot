@@ -6,7 +6,7 @@ from airobot import Robot
 def main():
     """
     This function demonstrates how to perform torque
-    control on the simulated UR robot
+    control on the simulated UR robot.
     """
     robot = Robot('ur5e', arm_cfg={'self_collision': True})
     robot.arm.go_home()

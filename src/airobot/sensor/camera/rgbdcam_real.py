@@ -16,23 +16,23 @@ from tf import TransformListener
 
 class RGBDCameraReal(RGBDCamera):
     """
-    Real RGBD camera
+    Real RGBD camera.
 
     Args:
         cfgs (YACS CfgNode): configurations for the camera
-        cam_name (str): camera name
+        cam_name (str): camera name.
 
     Attributes:
-        cfgs (YACS CfgNode): configurations for the end effector
-        img_height (int): height of the image
-        img_width (int): width of the image
+        cfgs (YACS CfgNode): configurations for the end effector.
+        img_height (int): height of the image.
+        img_width (int): width of the image.
         cam_ext_mat (np.ndarray): extrinsic matrix (shape: :math:`[4, 4]`)
-            for the camera
+            for the camera.
         cam_int_mat (np.ndarray): intrinsic matrix (shape: :math:`[3, 3]`)
-            for the camera
-        depth_scale (float): ratio of the depth image value to true depth value
-        depth_min (float): minimum depth value considered in 3D reconstruction
-        depth_max (float): maximum depth value considered in 3D reconstruction
+            for the camera.
+        depth_scale (float): ratio of the depth image value to true depth value.
+        depth_min (float): minimum depth value considered in 3D reconstruction.
+        depth_max (float): maximum depth value considered in 3D reconstruction.
     """
 
     def __init__(self, cfgs, cam_name=None):
@@ -120,15 +120,15 @@ class RGBDCameraReal(RGBDCamera):
 
     def _rp_cam_name(self, topic, cam_name):
         """
-        Replace the camera name in related ROS topics
+        Replace the camera name in related ROS topics.
 
         Args:
-            topic (str): ros topic name
-            cam_name (str): desired camera name
+            topic (str): ros topic name.
+            cam_name (str): desired camera name.
 
         Returns:
             new ros topic name after the replacement
-            of the camera name
+            of the camera name.
         """
         topic = topic.split('/')[1:]
         topic.insert(0, cam_name)
@@ -136,16 +136,16 @@ class RGBDCameraReal(RGBDCamera):
 
     def set_cam_ext(self, pos=None, ori=None, cam_ext=None):
         """
-        Set the camera extrinsic matrix
+        Set the camera extrinsic matrix.
 
         Args:
-            pos (np.ndarray): position of the camera (shape: :math:`[3,]`)
+            pos (np.ndarray): position of the camera (shape: :math:`[3,]`).
             ori (np.ndarray): orientation.
                 It can be rotation matrix (shape: :math:`[3, 3]`)
                 quaternion ([x, y, z, w], shape: :math:`[4]`), or
-                euler angles ([roll, pitch, yaw], shape: :math:`[3]`)
+                euler angles ([roll, pitch, yaw], shape: :math:`[3]`).
             cam_ext (np.ndarray): extrinsic matrix (shape: :math:`[4, 4]`).
-                If this is provided, pos and ori will be ignored
+                If this is provided, pos and ori will be ignored.
         """
         if cam_ext is not None:
             self.cam_ext_mat = cam_ext
@@ -162,17 +162,17 @@ class RGBDCameraReal(RGBDCamera):
 
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
-        Return rgb/depth images
+        Return rgb/depth images.
 
         Args:
-            get_rgb (bool): return rgb image if True, None otherwise
-            get_depth (bool): return depth image if True, None otherwise
+            get_rgb (bool): return rgb image if True, None otherwise.
+            get_depth (bool): return depth image if True, None otherwise.
 
         Returns:
             2-element tuple containing
 
-            - np.ndarray: rgb image (shape: :math:`[H, W, 3]`)
-            - np.ndarray: depth image (shape: :math:`[H, W]`)
+            - np.ndarray: rgb image (shape: :math:`[H, W, 3]`).
+            - np.ndarray: depth image (shape: :math:`[H, W]`).
         """
         rgb_img = None
         depth_img = None

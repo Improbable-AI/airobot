@@ -28,24 +28,24 @@ class SingleArmROS(SingleArmReal):
     A class for single arms with ROS-related functions.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the arm
-        moveit_planner (str): motion planning algorithm
+        cfgs (YACS CfgNode): configurations for the arm.
+        moveit_planner (str): motion planning algorithm.
         eetool_cfg (dict): arguments to pass in the constructor
-            of the end effector tool class
+            of the end effector tool class.
 
     Attributes:
         max_vel (float): Maximum joint velocity, read in from
-            MoveIt config file. Can be scaled with self.scale_motion()
+            MoveIt config file. Can be scaled with self.scale_motion().
         max_acc (float): Maximum joint acceleration, read in from
-            MoveIt config file. Can be scaled with self.scale_motion()
-        tf_listner (tf.TransformListener): ROS subscriber to the /tf topic
+            MoveIt config file. Can be scaled with self.scale_motion().
+        tf_listner (tf.TransformListener): ROS subscriber to the /tf topic.
         moveit_group (MoveGroupCommander): Internal interface to MoveIt!
-            move_group, used to call motion planning functions
+            move_group, used to call motion planning functions.
         moveit_scene (MoveitScene): Internal interface to MoveIt! planning
             scene, used to add objects, remove objects, etc. from the
-            motion planning environment
+            motion planning environment.
         moveit_planner (str): The name of the motion planning algorithm
-            being used for all motion planning requests
+            being used for all motion planning requests.
     """
 
     def __init__(self, cfgs,
@@ -64,12 +64,12 @@ class SingleArmROS(SingleArmReal):
         Args:
             position (float or list or flattened np.ndarray):
                 desired joint position(s)
-                (shape: :math:`[DOF,]` if list, otherwise a single value)
+                (shape: :math:`[DOF,]` if list, otherwise a single value).
             joint_name (str): If not provided, position should be a list and
                 all actuated joints will be moved to specified positions. If
-                provided, only specified joint will move. Defaults to None
+                provided, only specified joint will move. Defaults to None.
             wait (bool): whether position command should be blocking or non
-                blocking. Defaults to True
+                blocking. Defaults to True.
 
         Returns:
             bool: True if command was completed successfully, returns
@@ -100,12 +100,12 @@ class SingleArmROS(SingleArmReal):
     def set_jvel(self, velocity, joint_name=None, wait=False,
                  *args, **kwargs):
         """
-        Set joint velocity command to the robot (units in rad/s)
+        Set joint velocity command to the robot (units in rad/s).
 
         Args:
             velocity (float or list or flattened np.ndarray): list of target
                 joint velocity value(s)
-                (shape: :math:`[6,]` if list, otherwise a single value)
+                (shape: :math:`[6,]` if list, otherwise a single value).
             joint_name (str, optional): If not provided, velocity should be
                 list and all joints will be turned on at specified velocity.
                 Defaults to None.
@@ -120,21 +120,21 @@ class SingleArmROS(SingleArmReal):
 
     def set_ee_pose(self, pos=None, ori=None, wait=True, *args, **kwargs):
         """
-        Set cartesian space pose of end effector
+        Set cartesian space pose of end effector.
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
-                base frame to move to (shape: :math:`[3,]`)
+                base frame to move to (shape: :math:`[3,]`).
             ori (list or np.ndarray, optional): It can be euler angles
                 ([roll, pitch, yaw], shape: :math:`[4,]`),
                 or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
                 or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
-                orientation as the target orientation
-            wait (bool): wait until the motion completes
+                orientation as the target orientation.
+            wait (bool): wait until the motion completes.
 
         Returns:
-            bool: Returns True is robot successfully moves to goal pose
+            bool: Returns True is robot successfully moves to goal pose.
         """
         if ori is None and pos is None:
             return True
@@ -162,11 +162,11 @@ class SingleArmROS(SingleArmReal):
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, wait=True,
                     *args, **kwargs):
         """
-        Move end effector in straight line while maintaining orientation
+        Move end effector in straight line while maintaining orientation.
 
         Args:
             delta_xyz (list or np.ndarray): Goal change in x, y, z position of
-                end effector
+                end effector.
             eef_step (float, optional): Discretization step in cartesian space
                 for computing waypoints along the path. Defaults to 0.005 (m).
             wait (bool, optional): True if robot should not do anything else
@@ -174,7 +174,7 @@ class SingleArmROS(SingleArmReal):
                 Defaults to True.
 
         Returns:
-            bool: True if robot successfully reached the goal pose
+            bool: True if robot successfully reached the goal pose.
         """
         ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
 
@@ -190,20 +190,20 @@ class SingleArmROS(SingleArmReal):
         """
         Gets the current joint position of the robot. Gets the value
         from the internally updated dictionary that subscribes to the ROS
-        topic /joint_states
+        topic /joint_states.
 
         Args:
             joint_name (str, optional): If it's None,
                 it will return joint positions
                 of all the actuated joints. Otherwise, it will
-                return the joint position of the specified joint
+                return the joint position of the specified joint.
 
         Returns:
             One of the following
 
-            - float: joint position given joint_name
+            - float: joint position given joint_name.
             - list: joint positions if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
 
         """
         self._j_state_lock.acquire()
@@ -223,20 +223,20 @@ class SingleArmROS(SingleArmReal):
         """
         Gets the current joint angular velocities of the robot. Gets the value
         from the internally updated dictionary that subscribes to the ROS
-        topic /joint_states
+        topic /joint_states.
 
         Args:
             joint_name (str, optional): If it's None,
                 it will return joint velocities
                 of all the actuated joints. Otherwise, it will
-                return the joint position of the specified joint
+                return the joint position of the specified joint.
 
         Returns:
             One of the following
 
-            - float: joint velocity given joint_name
+            - float: joint velocity given joint_name.
             - list: joint velocities if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
         """
         self._j_state_lock.acquire()
         if joint_name is not None:
@@ -253,19 +253,19 @@ class SingleArmROS(SingleArmReal):
     def get_ee_pose(self):
         """
         Get current cartesian pose of the EE, in the robot's base frame,
-        using ROS subscriber to the tf tree topic
+        using ROS subscriber to the tf tree topic.
 
         Returns:
             4-element tuple containing
 
-            - np.ndarray: x, y, z position of the EE (shape: :math:`[3]`)
+            - np.ndarray: x, y, z position of the EE (shape: :math:`[3]`).
             - np.ndarray: quaternion representation ([x, y, z, w]) of the EE
-              orientation (shape: :math:`[4]`)
+              orientation (shape: :math:`[4]`).
             - np.ndarray: rotation matrix representation of the EE orientation
-              (shape: :math:`[3, 3]`)
+              (shape: :math:`[3, 3]`).
             - np.ndarray: euler angle representation of the EE orientation
               (roll, pitch, yaw with static reference frame)
-              (shape: :math:`[3]`)
+              (shape: :math:`[3]`).
         """
         pos, quat = get_tf_transform(self.tf_listener,
                                      self.cfgs.ARM.ROBOT_BASE_FRAME,
@@ -276,15 +276,15 @@ class SingleArmROS(SingleArmReal):
 
     def get_ee_vel(self):
         """
-        Return the end effector's velocity
+        Return the end effector's velocity.
 
         Returns:
             2-element tuple containing
 
             - np.ndarray: translational velocity (vx, vy, vz)
-              (shape: :math:`[3,]`)
+              (shape: :math:`[3,]`).
             - np.ndarray: rotational velocity
-              (wx, wy, wz) (shape: :math:`[3,]`)
+              (wx, wy, wz) (shape: :math:`[3,]`).
         """
         jpos = self.get_jpos()
         jvel = self.get_jvel()
@@ -300,8 +300,8 @@ class SingleArmROS(SingleArmReal):
         specified in the MoveIt joint limits configuration file.
 
         Args:
-            vel_scale (float): velocity scale, Defaults to 1.0
-            acc_scale (float): acceleration scale, Defaults to 1.0
+            vel_scale (float): velocity scale, Defaults to 1.0.
+            acc_scale (float): acceleration scale, Defaults to 1.0.
         """
         vel_scale = arutil.clamp(vel_scale, 0.0, 1.0)
         acc_scale = arutil.clamp(acc_scale, 0.0, 1.0)
@@ -347,7 +347,7 @@ class SingleArmROS(SingleArmReal):
         ROS subscriber callback for arm joint states
 
         Args:
-            msg (sensor_msgs/JointState): Contains message published in topic
+            msg (sensor_msgs/JointState): Contains message published in topic.
         """
         self._j_state_lock.acquire()
         for idx, name in enumerate(msg.name):

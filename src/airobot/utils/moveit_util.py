@@ -10,11 +10,11 @@ from moveit_commander import conversions
 
 class MoveitScene(object):
     """
-    Use this class to create objects that reside in moveit environments
+    Use this class to create objects that reside in moveit environments.
 
     Attributes:
         scene (moveit_commander.PlanningSceneInterface): interface
-            to the MoveIt! planning scene
+            to the MoveIt! planning scene.
     """
 
     def __init__(self):
@@ -26,13 +26,13 @@ class MoveitScene(object):
                        obj_type='box', ref_frame='/base_link',
                        normal=None):
         """
-        Add static object to the planning scene
+        Add static object to the planning scene.
 
         Args:
-            obj_name (str): object name
-            pos (list): position
+            obj_name (str): object name.
+            pos (list): position.
             ori (list): orientation. It can be quaternion ([qx, qy, qz, qw])
-                or euler angles ([roll, pitch, yaw])
+                or euler angles ([roll, pitch, yaw]).
             size (float or list or tuple): size of the object.
                 if the object is a plane, size should be None
                 if the object is a box, size can be a float
@@ -40,16 +40,16 @@ class MoveitScene(object):
                 size can also be a list or tuple of length 3,
                 that specifies the 3 edge lengths of the cuboid
                 if the object is a sphere, size is a float,
-                (which means the radius)
-            obj_type (str): one of [`sphere`, `box`, `plane`]
+                (which means the radius).
+            obj_type (str): one of [`sphere`, `box`, `plane`].
             ref_frame (str): reference frame on which
-                the pos and ori are specified
+                the pos and ori are specified.
             normal (list or tuple): only used if the
                 object is a plane. It means the
-                normal direction of the plane
+                normal direction of the plane.
 
         Returns:
-            bool: if the object is successfully added
+            bool: if the object is successfully added.
 
         """
         if not isinstance(pos, list):
@@ -108,17 +108,17 @@ class MoveitScene(object):
         Only box is supported for now.
 
         Args:
-            ref_frame (str): which link are you adding object to
-            obj_name (str): object name
-            pos (list): position of the object with respect to the ref_frame
-            ori (list): orientation of the object with respect to the ref_frame
+            ref_frame (str): which link are you adding object to.
+            obj_name (str): object name.
+            pos (list): position of the object with respect to the ref_frame.
+            ori (list): orientation of the object with respect to the ref_frame.
             size (float or list or tuple): size can be a
                 float, which means the edge
                 length of a cube. size can also be a list or tuple of length 3,
-                the it specifies the 3 edge lengths of the cuboid
+                the it specifies the 3 edge lengths of the cuboid.
 
         Returns:
-            bool: if the object is successfully added
+            bool: if the object is successfully added.
 
         """
         if not isinstance(pos, list):
@@ -158,17 +158,17 @@ class MoveitScene(object):
 
     def remove_obj(self, obj_name):
         """
-        Remove the object from the planning scene
+        Remove the object from the planning scene.
 
         Args:
-            obj_name (str): object name
+            obj_name (str): object name.
 
         """
         self.scene.remove_world_object(obj_name)
 
     def remove_all_objs(self):
         """
-        Remove all the added objects in the planning scene
+        Remove all the added objects in the planning scene.
         """
         objs = self.scene.get_objects()
         objs_attached = self.scene.get_attached_objects()
@@ -181,9 +181,13 @@ class MoveitScene(object):
 
     def get_objects(self):
         """
-        Get all the static and dynamic objects in the planning scene
-        Returns:
+        Get all the static and dynamic objects in the planning scene.
 
+        Returns:
+            2-element tuple containing
+
+            - list: static objects.
+            - list: dynamic objects.
         """
         objs = self.scene.get_objects()
         objs_attached = self.scene.get_attached_objects()
@@ -191,11 +195,11 @@ class MoveitScene(object):
 
     def unlink_obj(self, ref_frame, obj_name=None, delete=True):
         """
-        Unlink the attached object from ref_frame
+        Unlink the attached object from ref_frame.
 
         Args:
-            ref_frame (str): the parent link at which the object is attached to
-            obj_name (str): the object name
+            ref_frame (str): the parent link at which the object is attached to.
+            obj_name (str): the object name.
             delete (bool): If True, the object will be deleted from the scene.
                 Otherwise, the object will be unlinked
                 from the parent link only,
@@ -211,15 +215,15 @@ def moveit_cartesian_path(start_pos, start_quat,
                           delta_xyz, moveit_group,
                           eef_step, jump_threshold=0.0):
     """
-    Compute the motion plan for cartesian path
+    Compute the motion plan for cartesian path.
 
     Args:
-        start_pos (list or np.ndarray): start position (shape: :math:`[3]`)
+        start_pos (list or np.ndarray): start position (shape: :math:`[3]`).
         start_quat (list or np.ndarray): start quaternion
-            [x, y, z, w] (shape: :math:`[4]`)
+            [x, y, z, w] (shape: :math:`[4]`).
         delta_xyz (list or np.ndarray): Goal change in x, y, z position of
-            end effector
-        moveit_group (MoveGroupCommander): moveit group commander
+            end effector.
+        moveit_group (MoveGroupCommander): moveit group commander.
         eef_step (float): Discretization step in cartesian space
             for computing waypoints along the path.
         jump_threshold (float): Value indicating the maximum allowable joint
@@ -230,7 +234,7 @@ def moveit_cartesian_path(start_pos, start_quat,
 
     Returns:
         moveit_msgs/RobotTrajectory: motion plan to move the end
-        effector in a straight line
+        effector in a straight line.
 
     """
     start_pos = np.array(start_pos).flatten()

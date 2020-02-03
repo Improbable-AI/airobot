@@ -12,34 +12,34 @@ from gym.utils import seeding
 class DualArmPybullet(ARM):
     """
     Class for the pybullet simulation environment
-    of a dual arm robot
+    of a dual arm robot.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the arm
-        pb_client (BulletClient): pybullet client
-        seed (int): random seed
+        cfgs (YACS CfgNode): configurations for the arm.
+        pb_client (BulletClient): pybullet client.
+        seed (int): random seed.
         self_collision (bool): enable self_collision or
-                               not whiling loading URDF
+                               not whiling loading URDF.
         eetool_cfg (dict): arguments to pass in the constructor
-            of the end effector tool class
+            of the end effector tool class.
 
     Attributes:
-        cfgs (YACS CfgNode): configurations for the robot
-        robot_id (int): pybullet body unique id of the robot
+        cfgs (YACS CfgNode): configurations for the robot.
+        robot_id (int): pybullet body unique id of the robot.
         arms (dict): internal dictionary keyed by the names of each
-            single arm, with values as interfaces to the arms
-        arm_jnt_names (list): names of the arm joints
-        right_arm_jnt_names (list): names of the arm joints on the right arm
-        left_arm_jnt_names (list): names of the arm joints on the left arm
-        arm_jnt_ids (list): pybullet joint ids of the arm joints
-        r_ee_link_jnt (str): name of the end effector link on the right arm
-        l_ee_link_jnt (str): name of the end effector link on the left arm
-        dual_arm_dof (int): total number of arm joints in the robot
-        single_arm_dof (int): number of joints in a single arm of the robot
+            single arm, with values as interfaces to the arms.
+        arm_jnt_names (list): names of the arm joints.
+        right_arm_jnt_names (list): names of the arm joints on the right arm.
+        left_arm_jnt_names (list): names of the arm joints on the left arm.
+        arm_jnt_ids (list): pybullet joint ids of the arm joints.
+        r_ee_link_jnt (str): name of the end effector link on the right arm.
+        l_ee_link_jnt (str): name of the end effector link on the left arm.
+        dual_arm_dof (int): total number of arm joints in the robot.
+        single_arm_dof (int): number of joints in a single arm of the robot.
         jnt_to_id (dict): dictionary with [joint name : pybullet joint] id
-            [key : value] pairs
+            [key : value] pairs.
         non_fixed_jnt_names (list): names of non-fixed joints in the arms,
-            used for returning the correct inverse kinematics solution
+            used for returning the correct inverse kinematics solution.
 
     """
 
@@ -64,8 +64,8 @@ class DualArmPybullet(ARM):
         maintain an internal dictionary interface to them.
 
         Args:
-            right_arm (SingleArmPybullet): Right arm instance
-            left_arm (SingleArmPybullet): Left arm instance
+            right_arm (SingleArmPybullet): Right arm instance.
+            left_arm (SingleArmPybullet): Left arm instance.
         """
         self.arms[self.cfgs.ARM.RIGHT.ARM.NAME] = right_arm
         self.arms[self.cfgs.ARM.LEFT.ARM.NAME] = left_arm
@@ -100,7 +100,7 @@ class DualArmPybullet(ARM):
         Move the arm to the specified joint position(s).
 
         Args:
-            position (float or list): desired joint position(s)
+            position (float or list): desired joint position(s).
             arm (str): If not provided, position should be a list and all
                 actuated joints will be moved. If provided, only half the
                 joints will move, corresponding to which arm was specified.
@@ -113,11 +113,11 @@ class DualArmPybullet(ARM):
                 specified joint name must correspond to joint names for the
                 specified arm.
             wait (bool): whether to block the code and wait
-                for the action to complete
+                for the action to complete.
 
         Returns:
             bool: A boolean variable representing if the action is successful
-            at the moment when the function exits
+            at the moment when the function exits.
         """
         position = copy.deepcopy(position)
         success = False
@@ -222,7 +222,7 @@ class DualArmPybullet(ARM):
             between two set_jtorq() calls must be small enough (like 0.0002s)
 
         Args:
-            torque (float or list): torque value(s) for the joint(s)
+            torque (float or list): torque value(s) for the joint(s).
             arm (str): If not provided, torque should be a list and all
                 actuated joints will be moved. If provided, only half the
                 joints will move, corresponding to which arm was specified.
@@ -235,11 +235,11 @@ class DualArmPybullet(ARM):
                 specified joint name must correspond to joint names for the
                 specified arm.
             wait (bool): Not used in this method, just
-                to keep the method signature consistent
+                to keep the method signature consistent.
 
         Returns:
             bool: Always return True as the torque will be applied as specified
-            in Pybullet
+            in Pybullet.
 
         """
         success = True
@@ -273,21 +273,21 @@ class DualArmPybullet(ARM):
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
-                base frame to move to (shape: :math:`[3,]`)
+                base frame to move to (shape: :math:`[3,]`).
             ori (list or np.ndarray, optional): It can be euler angles
                 ([roll, pitch, yaw], shape: :math:`[4,]`),
                 or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
                 or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
-                orientation as the target orientation
+                orientation as the target orientation.
             wait (bool): Set to True if command should be blocking, otherwise
-                the command can be overwritten before completion
+                the command can be overwritten before completion.
             arm (str): Which arm to move when setting cartesian command, must
-                match arm names in cfg file
+                match arm names in cfg file.
 
         Returns:
             bool: A boolean variable representing if the action is successful
-            at the moment when the function exits
+            at the moment when the function exits.
         """
         if arm is None:
             raise NotImplementedError
@@ -309,16 +309,16 @@ class DualArmPybullet(ARM):
 
         Args:
             delta_xyz (list or np.ndarray): movement in x, y, z
-                directions (shape: :math:`[3,]`)
+                directions (shape: :math:`[3,]`).
             eef_step (float): interpolation interval along delta_xyz.
                 Interpolate a point every eef_step distance
-                between the two end points
+                between the two end points.
             arm (str): Which arm to move when setting cartesian command, must
-                match arm names in cfg file
+                match arm names in cfg file.
 
         Returns:
             bool: A boolean variable representing if the action is successful
-            at the moment when the function exits
+            at the moment when the function exits.
         """
         if not self._pb.in_realtime_mode():
             raise AssertionError('move_ee_xyz() can '
@@ -393,14 +393,14 @@ class DualArmPybullet(ARM):
             joint_name (str, optional): If it's None,
                 it will return joint positions
                 of all the actuated joints. Otherwise, it will
-                return the joint position of the specified joint
+                return the joint position of the specified joint.
 
         Returns:
             One of the following
 
-            - float: joint position given joint_name
+            - float: joint position given joint_name.
             - list: joint positions if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
         """
         if joint_name is None:
             states = self._pb.getJointStates(self.robot_id,
@@ -419,14 +419,14 @@ class DualArmPybullet(ARM):
         Args:
             joint_name (str, optional): If it's None, it will return
                 joint velocities of all the actuated joints. Otherwise,
-                it will return the joint velocity of the specified joint
+                it will return the joint velocity of the specified joint.
 
         Returns:
             One of the following
 
-            - float: joint velocity given joint_name
+            - float: joint velocity given joint_name.
             - list: joint velocities if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
         """
         if joint_name is None:
             states = self._pb.getJointStates(self.robot_id,
@@ -450,14 +450,14 @@ class DualArmPybullet(ARM):
         Args:
             joint_name (str, optional): If it's None, it will return joint
                 torques of all the actuated joints. Otherwise, it will
-                return the joint torque of the specified joint
+                return the joint torque of the specified joint.
 
         Returns:
             One of the following
 
-            - float: joint torque given joint_name
+            - float: joint torque given joint_name.
             - list: joint torques if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
         """
         if joint_name is None:
             states = self._pb.getJointStates(self.robot_id,
@@ -476,19 +476,19 @@ class DualArmPybullet(ARM):
 
         Args:
             arm (str): Returned pose will be for specified arm, must
-                match arm names in cfg file
+                match arm names in cfg file.
 
         Returns:
             4-element tuple containing
 
-            - np.ndarray: x, y, z position of the EE (shape: :math:`[3,]`)
+            - np.ndarray: x, y, z position of the EE (shape: :math:`[3,]`).
             - np.ndarray: quaternion representation of the
-              EE orientation (shape: :math:`[4,]`)
+              EE orientation (shape: :math:`[4,]`).
             - np.ndarray: rotation matrix representation of the
-              EE orientation (shape: :math:`[3, 3]`)
+              EE orientation (shape: :math:`[3, 3]`).
             - np.ndarray: euler angle representation of the
               EE orientation (roll, pitch, yaw with
-              static reference frame) (shape: :math:`[3,]`)
+              static reference frame) (shape: :math:`[3,]`).
         """
         if arm is None:
             raise NotImplementedError
@@ -505,13 +505,13 @@ class DualArmPybullet(ARM):
 
         Args:
             arm (str): Which arm to get velocity for,
-                must match arm names in cfg file
+                must match arm names in cfg file.
 
         Returns:
             2-element tuple containing
 
-            - np.ndarray: translational velocity (shape: :math:`[3,]`)
-            - np.ndarray: rotational velocity (shape: :math:`[3,]`)
+            - np.ndarray: translational velocity (shape: :math:`[3,]`).
+            - np.ndarray: rotational velocity (shape: :math:`[3,]`).
         """
         if arm is None:
             raise NotImplementedError
@@ -540,7 +540,7 @@ class DualArmPybullet(ARM):
 
         Returns:
             list: solution to inverse kinematics, joint angles which achieve
-            the specified EE pose (shape: :math:`[DOF]`)
+            the specified EE pose (shape: :math:`[DOF]`).
         """
         if arm is None:
             raise NotImplementedError

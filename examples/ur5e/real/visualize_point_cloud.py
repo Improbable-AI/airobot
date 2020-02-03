@@ -9,7 +9,7 @@ from airobot.utils.ros_util import read_cam_ext
 
 def signal_handler(sig, frame):
     """
-    Capture exit signal from the keyboard
+    Capture exit signal from the keyboard.
     """
     print('Exit')
     sys.exit(0)
@@ -20,7 +20,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 def main():
     """
-    Visualize the point cloud from the RGBD camera
+    Visualize the point cloud from the RGBD camera.
     """
     robot = Robot('ur5e_2f140',
                   pb=False, use_cam=True, use_arm=False)

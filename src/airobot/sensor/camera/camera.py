@@ -5,13 +5,13 @@ from __future__ import print_function
 
 class Camera(object):
     """
-    Base class for cameras
+    Base class for cameras.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the camera
+        cfgs (YACS CfgNode): configurations for the camera.
 
     Attributes:
-        cfgs (YACS CfgNode): configurations for the camera
+        cfgs (YACS CfgNode): configurations for the camera.
     """
 
     def __init__(self, cfgs):
@@ -22,13 +22,13 @@ class Camera(object):
         Return rgb/depth images.
 
         Args:
-            get_rgb (bool): return rgb image if True, None otherwise
-            get_depth (bool): return depth image if True, None otherwise
+            get_rgb (bool): return rgb image if True, None otherwise.
+            get_depth (bool): return depth image if True, None otherwise.
 
         Returns:
             2-element tuple containing
 
-            - np.ndarray: rgb image
-            - np.ndarray: depth image
+            - np.ndarray: rgb image.
+            - np.ndarray: depth image.
         """
         raise NotImplementedError

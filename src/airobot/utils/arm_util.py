@@ -20,19 +20,19 @@ def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
     It uses the derivative information to make a faster judgement.
 
     Args:
-        goal (float or list): goal positions or velocities
+        goal (float or list): goal positions or velocities.
         get_func (function): name of the function with which we can get
-            the current joint values
+            the current joint values.
         joint_name (str): if it's none, all the actuated
             joints are compared.
-            Otherwise, only the specified joint is compared
+            Otherwise, only the specified joint is compared.
         get_func_derv (function): the name of the function with which we
-            can get the derivative of the joint values
-        timeout (float): maximum waiting time
-        max_error (float): tolerance of error
+            can get the derivative of the joint values.
+        timeout (float): maximum waiting time.
+        max_error (float): tolerance of error.
 
     Returns:
-        bool: if the goal is reached or not
+        bool: if the goal is reached or not.
     """
     success = False
     start_time = time.time()
@@ -76,16 +76,16 @@ def reach_jnt_goal(goal, get_func, joint_name=None, max_error=0.01):
     The goal can be a desired velocity(s) or a desired position(s).
 
     Args:
-        goal (float or list): goal positions or velocities
+        goal (float or list): goal positions or velocities.
         get_func (function): name of the function with which we can get
-            the current joint values
+            the current joint values.
         joint_name (str): if it's none, all the
             actuated joints are compared.
-            Otherwise, only the specified joint is compared
-        max_error (float): tolerance of error
+            Otherwise, only the specified joint is compared.
+        max_error (float): tolerance of error.
 
     Returns:
-        bool: if the goal is reached or not
+        bool: if the goal is reached or not.
     """
     goal = np.array(goal)
     try:
@@ -109,21 +109,21 @@ def wait_to_reach_ee_goal(pos, ori, get_func, get_func_derv=None,
     orientation threshold).
 
     Args:
-        pos (list): goal position
+        pos (list): goal position.
         ori (list or np.ndarray): goal orientation. It can be:
             **quaternion** ([qx, qy, qz, qw], shape: :math:`[4]`)
             **rotation matrix** (shape: :math:`[3, 3]`)
-            **euler angles** ([roll, pitch, yaw], shape: :math:`[3]`)
+            **euler angles** ([roll, pitch, yaw], shape: :math:`[3]`).
         get_func (function): name of the function with which we can get
-            the end effector pose
+            the end effector pose.
         get_func_derv (function): the name of the function with which we
-            can get end effector velocities
-        timeout (float): maximum waiting time
-        pos_tol (float): tolerance of position error
-        ori_tol (float): tolerance of orientation error
+            can get end effector velocities.
+        timeout (float): maximum waiting time.
+        pos_tol (float): tolerance of position error.
+        ori_tol (float): tolerance of orientation error.
 
     Returns:
-        bool: If end effector reached goal or not
+        bool: If end effector reached goal or not.
     """
     success = False
     start_time = time.time()
@@ -161,22 +161,22 @@ def reach_ee_goal(pos, ori, get_func, pos_tol=0.01, ori_tol=0.02):
     """
     Check if end effector reached goal or not. Returns true
     if both position and orientation goals have been reached
-    within specified tolerance
+    within specified tolerance.
 
     Args:
-        pos (list np.ndarray): goal position
+        pos (list np.ndarray): goal position.
         ori (list or np.ndarray): goal orientation. It can be:
             **quaternion** ([qx, qy, qz, qw], shape: :math:`[4]`)
             **rotation matrix** (shape: :math:`[3, 3]`)
-            **euler angles** ([roll, pitch, yaw], shape: :math:`[3]`)
+            **euler angles** ([roll, pitch, yaw], shape: :math:`[3]`).
         get_func (function): name of the function with which we can get
-            the current end effector pose
-        pos_tol (float): tolerance of position error
-        ori_tol (float): tolerance of orientation error
+            the current end effector pose.
+        pos_tol (float): tolerance of position error.
+        ori_tol (float): tolerance of orientation error.
 
 
     Returns:
-        bool: If goal pose is reached or not
+        bool: If goal pose is reached or not.
     """
     if not isinstance(pos, np.ndarray):
         goal_pos = np.array(pos)

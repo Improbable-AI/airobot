@@ -8,7 +8,7 @@ from airobot import Robot
 
 def signal_handler(sig, frame):
     """
-    Capture exit signal from the keyboard
+    Capture exit signal from the keyboard.
     """
     print('Exit')
     sys.exit(0)
@@ -19,7 +19,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 def main():
     """
-    Visualize the point cloud from the RGBD camera
+    Visualize the point cloud from the RGBD camera.
     """
     robot = Robot('ur5e')
     robot.arm.go_home()

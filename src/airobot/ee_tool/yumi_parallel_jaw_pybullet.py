@@ -13,18 +13,18 @@ class YumiParallelJawPybullet(EndEffectorTool):
 
     Args:
         cfgs (YACS CfgNode): configurations for the gripper
-        pb_client (BulletClient): pybullet client
+        pb_client (BulletClient): pybullet client.
 
     Attributes:
-        cfgs (YACS CfgNode): configurations for the gripper
+        cfgs (YACS CfgNode): configurations for the gripper.
         gripper_close_angle (float): position value corresponding to the
-            fully closed position of the gripper
+            fully closed position of the gripper.
         gripper_open_angle (float): position value corresponding to the
-            fully open position of the gripper
-        jnt_names (list): names of the gripper joints
-        gripper_jnt_ids (list): pybullet joint ids of the gripper joints
-        robot_id (int): robot id in Pybullet
-        jnt_to_id (dict): mapping from the joint name to joint id
+            fully open position of the gripper.
+        jnt_names (list): names of the gripper joints.
+        gripper_jnt_ids (list): pybullet joint ids of the gripper joints.
+        robot_id (int): robot id in Pybullet.
+        jnt_to_id (dict): mapping from the joint name to joint id.
     """
 
     def __init__(self, cfgs, pb_client):
@@ -47,8 +47,8 @@ class YumiParallelJawPybullet(EndEffectorTool):
         Setup the gripper, pass the robot info from the arm to the gripper.
 
         Args:
-            robot_id (int): robot id in Pybullet
-            jnt_to_id (dict): mapping from the joint name to joint id
+            robot_id (int): robot id in Pybullet.
+            jnt_to_id (dict): mapping from the joint name to joint id.
 
 
         """
@@ -76,7 +76,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
         Open the gripper.
 
         Returns:
-            bool: return if the action is sucessful or not
+            bool: return if the action is sucessful or not.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
@@ -89,7 +89,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
         Close the gripper.
 
         Returns:
-            bool: return if the action is sucessful or not
+            bool: return if the action is sucessful or not.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
@@ -102,13 +102,13 @@ class YumiParallelJawPybullet(EndEffectorTool):
         Set the gripper position.
 
         Args:
-            pos (float): joint position
+            pos (float): joint position.
             wait (bool): wait until the joint position is set
-                to the target position
+                to the target position.
 
         Returns:
             bool: A boolean variable representing if the action is
-            successful at the moment when the function exits
+            successful at the moment when the function exits.
         """
         joint_name = self.jnt_names[0]
         tgt_pos = arutil.clamp(
@@ -141,7 +141,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
         Return the joint position(s) of the gripper.
 
         Returns:
-            float: joint position
+            float: joint position.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
@@ -154,7 +154,7 @@ class YumiParallelJawPybullet(EndEffectorTool):
         Return the joint velocity of the gripper.
 
         Returns:
-            float: joint velocity
+            float: joint velocity.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')

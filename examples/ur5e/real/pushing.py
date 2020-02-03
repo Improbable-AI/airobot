@@ -17,7 +17,7 @@ from sklearn.cluster import DBSCAN
 
 def signal_handler(sig, frame):
     """
-    Capture keyboard interruption signal
+    Capture keyboard interruption signal.
     """
     print('Exit')
     sys.exit(0)
@@ -37,13 +37,13 @@ def filter_points(pts, colors, z_lowest=0.01):
     Z range only has a lower bound which is z_lowest.
 
     Args:
-        pts (np.ndarray): point cloud (shape: [N, 3])
-        colors (np.ndarray): color of the point cloud (shape: [N, 3])
-        z_lowest (float): the smallest acceptable z coordinate
+        pts (np.ndarray): point cloud (shape: [N, 3]).
+        colors (np.ndarray): color of the point cloud (shape: [N, 3]).
+        z_lowest (float): the smallest acceptable z coordinate.
 
     Returns:
-        np.ndarray: point cloud after filter (shape: [N, 3])
-        np.ndarray: color of the points (shape: [N, 3])
+        np.ndarray: point cloud after filter (shape: [N, 3]).
+        np.ndarray: color of the points (shape: [N, 3]).
     """
     valid = pts[:, 2] > z_lowest
     valid = np.logical_and(valid,
@@ -61,18 +61,20 @@ def filter_points(pts, colors, z_lowest=0.01):
 
 def segment_objects(pts):
     """
-    Use DBSCAN clustering algorithm to cluster the 2D points
+    Use DBSCAN clustering algorithm to cluster the 2D points.
 
     Args:
-        pts (np.ndarray): 2D points [x, y], (shape: [N, 2])
+        pts (np.ndarray): 2D points [x, y], (shape: [N, 2]).
 
     Returns:
-        np.ndarray: Cluster labels for each point in the
-            dataset given to fit(). Noisy samples are given
-             the label -1 (shape: [N])
-        np.ndarray: A binary array that's of the same shape
-            as the labels and it indicates whether the sample
-             point is a core sample (shape: [N])
+        2-element tuple (if `get_seg` is False) containing
+
+        - np.ndarray: Cluster labels for each point in the
+          dataset given to fit(). Noisy samples are given
+          the label -1 (shape: [N]).
+        - np.ndarray: A binary array that's of the same shape
+          as the labels and it indicates whether the sample
+          point is a core sample (shape: [N]).
 
     """
     db = DBSCAN(eps=0.02, min_samples=15).fit(pts)
@@ -84,10 +86,10 @@ def segment_objects(pts):
 
 def draw_segments(pts, labels, core_samples_mask):
     """
-    Draw the 2D clustering result and save it as an image
+    Draw the 2D clustering result and save it as an image.
 
     Also, it filters the labels so that only the labels with
-    the number of samples greater than a threshold will be remained
+    the number of samples greater than a threshold will be remained.
 
     Args:
         pts (np.ndarray): 2D points [x, y], (shape: [N, 2])
@@ -100,7 +102,7 @@ def draw_segments(pts, labels, core_samples_mask):
 
     Returns:
         list: unique and useful labels (labels with
-            the number of samples greater than a threshold will be remained)
+        the number of samples greater than a threshold will be remained).
     """
     num_threshold = 800
     plt.clf()
@@ -144,22 +146,24 @@ def sample_pt(pts, labels, useful_labelset, z_lowest):
     Get the end effector's initial position where the gripper
     will be above the object and the start position on the
     table to push the object, and the center point
-    of the obejct's point cloud
+    of the obejct's point cloud.
 
 
     Args:
-        pts (np.ndarray): 3D point cloud (shape: [N, 3])
+        pts (np.ndarray): 3D point cloud (shape: [N, 3]).
         labels (np.ndarray): Cluster labels for each point in the
-            dataset. Noisy samples are given the label -1 (shape: [N])
-        useful_labelset (list): useful and unique label set
-        z_lowest (float): minimum acceptable z coordinate for the 3D points
+            dataset. Noisy samples are given the label -1 (shape: [N]).
+        useful_labelset (list): useful and unique label set.
+        z_lowest (float): minimum acceptable z coordinate for the 3D points.
 
     Returns:
-        np.ndarray: initial positin for the gripper so that the gripper
-            will be directly above the object (shape: [3,])
-        np.ndarray: start position that's close to the object
-            for pushing (shape: [3,])
-        np.ndarray: center point of the object's point cloud (shape: [3,])
+        3-element tuple (if `get_seg` is False) containing
+
+        - np.ndarray: initial positin for the gripper so that the gripper
+          will be directly above the object (shape: [3,]).
+        - np.ndarray: start position that's close to the object
+          for pushing (shape: [3,]).
+        - np.ndarray: center point of the object's point cloud (shape: [3,]).
 
     """
     tgt_label = np.random.choice(useful_labelset, 1)[0]
@@ -185,13 +189,13 @@ def sample_pt(pts, labels, useful_labelset, z_lowest):
 
 def push(bot, reset_pos, z_lowest=-0.17):
     """
-    Start push objects
+    Start pushing objects.
 
     Args:
-        bot (airobot.robot.Robot): robot instance
-        reset_pos (np.ndarray): reset position of the gripper (shape: [3,])
+        bot (airobot.Robot): robot instance.
+        reset_pos (np.ndarray): reset position of the gripper (shape: [3,]).
         z_lowest (float): minimum acceptable z coordinate
-            for the 3D points of objects
+            for the 3D points of objects.
             This is a simple way to filter out the table.
             Basically, all points with
             z coordinate (e.g., the table) less than
@@ -224,7 +228,7 @@ def push(bot, reset_pos, z_lowest=-0.17):
 
 def main():
     """
-    Push the objects on the table randomly
+    Push the objects on the table randomly.
 
     The robot will first go to a reset position so that the robot
     arm does not block the camera's view. And a clustering alogrithm

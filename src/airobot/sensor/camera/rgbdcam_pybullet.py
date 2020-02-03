@@ -8,13 +8,13 @@ class RGBDCameraPybullet(RGBDCamera):
     RGBD Camera in Pybullet.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the camera
+        cfgs (YACS CfgNode): configurations for the camera.
 
     Attributes:
         view_matrix (np.ndarray): view matrix of opengl
-            camera (shape: :math:`[4, 4]`)
+            camera (shape: :math:`[4, 4]`).
         proj_matrix (np.ndarray): projection matrix of
-            opengl camera (shape: :math:`[4, 4]`)
+            opengl camera (shape: :math:`[4, 4]`).
     """
 
     def __init__(self, cfgs, pb_client):
@@ -31,20 +31,20 @@ class RGBDCameraPybullet(RGBDCamera):
                      height=None, width=None):
         """
         Setup the camera view matrix and projection matrix. Must be called
-        first before images are renderred
+        first before images are renderred.
 
         Args:
             focus_pt (list): position of the target (focus) point,
-                in Cartesian world coordinates
-            dist (float): distance from eye (camera) to the focus point
+                in Cartesian world coordinates.
+            dist (float): distance from eye (camera) to the focus point.
             yaw (float): yaw angle in degrees,
                 left/right around up-axis (z-axis).
             pitch (float): pitch in degrees, up/down.
-            roll (float): roll in degrees around forward vector
+            roll (float): roll in degrees around forward vector.
             height (float): height of image. If None, it will use
-                the default height from the config file
+                the default height from the config file.
             width (float): width of image. If None, it will use
-                the default width from the config file
+                the default width from the config file.
         """
         if focus_pt is None:
             focus_pt = [0, 0, 0]
@@ -95,24 +95,24 @@ class RGBDCameraPybullet(RGBDCamera):
     def get_images(self, get_rgb=True, get_depth=True,
                    get_seg=False, **kwargs):
         """
-        Return rgb, depth, and segmentation images
+        Return rgb, depth, and segmentation images.
 
         Args:
-            get_rgb (bool): return rgb image if True, None otherwise
-            get_depth (bool): return depth image if True, None otherwise
+            get_rgb (bool): return rgb image if True, None otherwise.
+            get_depth (bool): return depth image if True, None otherwise.
             get_seg (bool): return the segmentation mask if True,
-                None otherwise
+                None otherwise.
 
         Returns:
             2-element tuple (if `get_seg` is False) containing
 
-            - np.ndarray: rgb image (shape: [H, W, 3])
-            - np.ndarray: depth image (shape: [H, W])
+            - np.ndarray: rgb image (shape: [H, W, 3]).
+            - np.ndarray: depth image (shape: [H, W]).
 
             3-element tuple (if `get_seg` is True) containing
 
-            - np.ndarray: rgb image (shape: [H, W, 3])
-            - np.ndarray: depth image (shape: [H, W])
+            - np.ndarray: rgb image (shape: [H, W, 3]).
+            - np.ndarray: depth image (shape: [H, W]).
             - np.ndarray: segmentation mask image (shape: [H, W]), with
               pixel values corresponding to object id and link id.
               From the PyBullet documentation, the pixel value
@@ -120,7 +120,7 @@ class RGBDCameraPybullet(RGBDCamera):
               value = objectUniqueId + (linkIndex+1)<<24 ...
               for a free floating body without joints/links, the
               segmentation mask is equal to its body unique id,
-              since its link index is -1."
+              since its link index is -1.".
         """
 
         if self.view_matrix is None:

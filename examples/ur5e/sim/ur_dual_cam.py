@@ -1,3 +1,7 @@
+"""
+An example of UR robot with dual cameras in pybullet.
+"""
+
 from copy import deepcopy
 
 import airobot as ar
@@ -134,18 +138,18 @@ class URRobotGym:
 
     def _scale_gripper_angle(self, command):
         """
-        Convert the command in [-1, 1] to the actual gripper angle
-        command = -1 means open the gripper
-        command = 1 means close the gripper
+        Convert the command in [-1, 1] to the actual gripper angle.
+        command = -1 means open the gripper.
+        command = 1 means close the gripper.
 
         Args:
             command (float): a value between -1 and 1.
                 -1 means open the gripper.
-                1 means close the gripper
+                1 means close the gripper.
 
         Returns:
             float: the actual gripper angle
-            corresponding to the command
+            corresponding to the command.
         """
         command = clamp(command, -1.0, 1.0)
         close_ang = self.robot.arm.eetool.gripper_close_angle

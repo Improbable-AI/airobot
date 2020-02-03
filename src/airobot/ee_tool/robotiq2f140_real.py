@@ -21,11 +21,11 @@ class Robotiq2F140Real(EndEffectorTool):
     is either through ROS over through a TCP/IP socket.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the gripper
+        cfgs (YACS CfgNode): configurations for the gripper.
 
     Attributes:
-        cfgs (YACS CfgNode): configurations for the gripper
-        jnt_names (list): list of joint names of the gripper
+        cfgs (YACS CfgNode): configurations for the gripper.
+        jnt_names (list): list of joint names of the gripper.
     """
 
     def __init__(self, cfgs):
@@ -91,7 +91,7 @@ class Robotiq2F140Real(EndEffectorTool):
         controller.
 
         Args:
-            pos (float): Desired gripper position
+            pos (float): Desired gripper position.
         """
         pos = clamp(
             pos,
@@ -121,7 +121,7 @@ class Robotiq2F140Real(EndEffectorTool):
         Set the default speed which the gripper should move at.
 
         Args:
-            speed (int): Desired gripper speed (0 min, 255 max)
+            speed (int): Desired gripper speed (0 min, 255 max).
         """
         speed = int(clamp(speed, 0, 255))
         if not self._gazebo_sim:
@@ -159,7 +159,7 @@ class Robotiq2F140Real(EndEffectorTool):
 
         Args:
             msg (JointState): Contains the full joint state topic
-                published
+                published.
         """
         if 'finger_joint' in msg.name:
             idx = msg.name.index('finger_joint')

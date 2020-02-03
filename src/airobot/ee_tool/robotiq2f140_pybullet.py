@@ -12,19 +12,19 @@ class Robotiq2F140Pybullet(EndEffectorTool):
     it is attached to UR5e arm in pybullet.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the gripper
-        pb_client (BulletClient): pybullet client
+        cfgs (YACS CfgNode): configurations for the gripper.
+        pb_client (BulletClient): pybullet client.
 
     Attributes:
-        cfgs (YACS CfgNode): configurations for the gripper
+        cfgs (YACS CfgNode): configurations for the gripper.
         gripper_close_angle (float): position value corresponding to the
-            fully closed position of the gripper
+            fully closed position of the gripper.
         gripper_open_angle (float): position value corresponding to the
-            fully open position of the gripper
-        jnt_names (list): names of the gripper joints
-        gripper_jnt_ids (list): pybullet joint ids of the gripper joints
-        robot_id (int): robot id in Pybullet
-        jnt_to_id (dict): mapping from the joint name to joint id
+            fully open position of the gripper.
+        jnt_names (list): names of the gripper joints.
+        gripper_jnt_ids (list): pybullet joint ids of the gripper joints.
+        robot_id (int): robot id in Pybullet.
+        jnt_to_id (dict): mapping from the joint name to joint id.
     """
 
     def __init__(self, cfgs, pb_client):
@@ -48,8 +48,8 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Setup the gripper, pass the robot info from the arm to the gripper.
 
         Args:
-            robot_id (int): robot id in Pybullet
-            jnt_to_id (dict): mapping from the joint name to joint id
+            robot_id (int): robot id in Pybullet.
+            jnt_to_id (dict): mapping from the joint name to joint id.
 
         """
 
@@ -86,7 +86,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Open the gripper.
 
         Returns:
-            bool: return if the action is sucessful or not
+            bool: return if the action is sucessful or not.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
@@ -99,7 +99,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Close the gripper.
 
         Returns:
-            bool: return if the action is sucessful or not
+            bool: return if the action is sucessful or not.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
@@ -112,13 +112,13 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Set the gripper position.
 
         Args:
-            pos (float): joint position
+            pos (float): joint position.
             wait (bool): wait until the joint position is set
-                to the target position
+                to the target position.
 
         Returns:
             bool: A boolean variable representing if the action is
-            successful at the moment when the function exits
+            successful at the moment when the function exits.
         """
         joint_name = self.jnt_names[0]
         tgt_pos = arutil.clamp(pos,
@@ -150,7 +150,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Return the joint position(s) of the gripper.
 
         Returns:
-            float: joint position
+            float: joint position.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
@@ -163,7 +163,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
         Return the joint velocity of the gripper.
 
         Returns:
-            float: joint velocity
+            float: joint velocity.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
@@ -173,7 +173,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
 
     def disable_gripper_self_collision(self):
         """
-        Disable the gripper collision checking in Pybullet
+        Disable the gripper collision checking in Pybullet.
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
@@ -190,7 +190,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
     def _mimic_gripper(self, joint_val):
         """
         Given the value for the first joint,
-        mimic the joint values for the rest joints
+        mimic the joint values for the rest joints.
         """
         jnt_vals = [joint_val]
         for i in range(1, len(self.jnt_names)):
@@ -200,7 +200,7 @@ class Robotiq2F140Pybullet(EndEffectorTool):
     def _th_mimic_gripper(self):
         """
         Make all the other joints of the gripper
-        follow the motion of the first joint of the gripper
+        follow the motion of the first joint of the gripper.
         """
         while True:
             if self._is_activated and self._pb.in_realtime_mode():

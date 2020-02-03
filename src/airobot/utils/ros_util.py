@@ -10,13 +10,13 @@ import tf
 
 def kdl_array_to_numpy(kdl_data):
     """
-    Convert KDL array data into numpy array
+    Convert KDL array data into numpy array.
 
     Args:
-        kdl_data (PyKDL.JntArray): data in KDL format
+        kdl_data (PyKDL.JntArray): data in KDL format.
 
     Returns:
-        np.ndarray: numpy array of the kdl_data
+        np.ndarray: numpy array of the kdl_data.
     """
     np_array = np.zeros((kdl_data.rows(), kdl_data.columns()))
     for i in range(kdl_data.rows()):
@@ -27,13 +27,13 @@ def kdl_array_to_numpy(kdl_data):
 
 def kdl_frame_to_numpy(frame):
     """
-    Convert KDL Frame data into numpy array
+    Convert KDL Frame data into numpy array.
 
     Args:
-        frame (PyKDL.Frame): data of KDL Frame
+        frame (PyKDL.Frame): data of KDL Frame.
 
     Returns:
-        np.ndarray: transformation matrix in numpy (shape: :math:`[4, 4]`)
+        np.ndarray: transformation matrix in numpy (shape: :math:`[4, 4]`).
     """
     p = frame.p
     M = frame.M
@@ -45,13 +45,13 @@ def kdl_frame_to_numpy(frame):
 
 def joints_to_kdl(joint_values):
     """
-    Convert the numpy array into KDL data format
+    Convert the numpy array into KDL data format.
 
     Args:
-        joint_values (np.ndarray): values for the joints
+        joint_values (np.ndarray): values for the joints.
 
     Returns:
-        PyKDL.JntArray: joint values in the form of PyKDL.JntArray
+        PyKDL.JntArray: joint values in the form of PyKDL.JntArray.
     """
     num_jts = joint_values.size
     kdl_array = kdl.JntArray(num_jts)
@@ -64,18 +64,18 @@ def get_tf_transform(tf_listener, tgt_frame, src_frame):
     """
     Uses ROS TF to lookup the current transform from tgt_frame to src_frame,
     If the returned transform is applied to data, it will transform data in
-    the src_frame into the tgt_frame
+    the src_frame into the tgt_frame.
 
     Args:
-        tf_listener (tf.TransformListener): ros tf transformlistener
-        tgt_frame (str): target frame
-        src_frame: source frame
+        tf_listener (tf.TransformListener): ros tf transformlistener.
+        tgt_frame (str): target frame.
+        src_frame: source frame.
 
     Returns:
         2-element tuple containing
 
-        - list: translation ([x, y, z], shape: :math:`[3,]`)
-        - list: quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`)
+        - list: translation ([x, y, z], shape: :math:`[3,]`).
+        - list: quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`).
     """
 
     try:
@@ -95,17 +95,17 @@ def get_tf_transform(tf_listener, tgt_frame, src_frame):
 
 def read_cam_ext(robot_name):
     """
-    Read the camera extrinsic information from calibration result
+    Read the camera extrinsic information from calibration result.
 
     Args:
-        robot_name (str): robot name
+        robot_name (str): robot name.
 
     Returns:
         2-element tuple containing
 
-        - np.ndarray: position of the camera (shape: :math:`[3]`)
+        - np.ndarray: position of the camera (shape: :math:`[3]`).
         - np.ndarray: orientation (quaternion) of
-          the camera (shape: :math:`[4]`)
+          the camera (shape: :math:`[4]`).
     """
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')

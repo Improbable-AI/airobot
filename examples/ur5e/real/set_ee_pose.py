@@ -6,10 +6,10 @@ from airobot import Robot
 
 def print_pose(robot):
     """
-    print the robot pose information
+    print the robot pose information.
 
     Args:
-        robot (AIRobot): a robot instance of AIRobot
+        robot (AIRobot): a robot instance of AIRobot.
 
     """
     pos, quat, rot, euler = robot.arm.get_ee_pose()
@@ -22,25 +22,25 @@ def print_pose(robot):
 
 def main():
     """
-    Move the robot end effector to the desired pose
+    Move the robot end effector to the desired pose.
 
     The pb=False flag is set because we are using the real robot
-    (pb -- pybullet)
+    (pb -- pybullet).
 
     The robot starts at home, and moves to two new cartesian
     poses for the end effector -- one with the orientation fixed,
     and one with a new orientation, both with
     comm_mode use_urscript=False, so the robot will use ROS and MoveIt
-    to plan a collision free path
+    to plan a collision free path.
 
     The robot then switches comm_mode to use_urscript=True,
-    which means it won't use ROS or MoveIt to execute it's commands
+    which means it won't use ROS or MoveIt to execute it's commands.
 
     The robot then repeats the pattern of moving to two new cartesian
     end effector poses using direct end effector pose control with
     urscript commands. These final two movements have been verified
     to be collision free (change the goal poses when use_urscript=True
-    at your own risk)
+    at your own risk).
     """
     robot = Robot('ur5e_2f140', pb=False, use_cam=False)
     robot.arm.go_home()

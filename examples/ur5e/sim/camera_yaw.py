@@ -8,7 +8,7 @@ def main():
     """
     This function demonstrates how the yaw angle (
      the yaw angle that is defined in robot.setup_camera) changes
-    the camera view
+    the camera view.
     """
     robot = Robot('ur5e')
     focus_pt = [0, 0, 1]  # ([x, y, z])

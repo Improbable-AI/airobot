@@ -21,21 +21,21 @@ class CompliantYumiArm(SingleArmPybullet):
     specified to behave like springs.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the arm
-        pb_client (BulletClient): pybullet client
-        seed (int): random seed
+        cfgs (YACS CfgNode): configurations for the arm.
+        pb_client (BulletClient): pybullet client.
+        seed (int): random seed.
         self_collision (bool): enable self_collision or
-                               not whiling loading URDF
+            not whiling loading URDF.
         eetool_cfg (dict): arguments to pass in the constructor
-            of the end effector tool class
+            of the end effector tool class.
 
     Attributes:
-        comp_jnt_names (list): Names of the spring-like compliant joints
-        comp_dof (list): Number of spring-like compliant joints
-        comp_jnt_gains (list): Stiffness of spring-like compliant joints
-        comp_jnt_ids (list): PyBullet joint ids of compliant joints
+        comp_jnt_names (list): Names of the spring-like compliant joints.
+        comp_dof (list): Number of spring-like compliant joints.
+        comp_jnt_gains (list): Stiffness of spring-like compliant joints.
+        comp_jnt_ids (list): PyBullet joint ids of compliant joints.
         max_force_comp (list): Maximum force that can be applied at
-            the compliant joints
+            the compliant joints.
     """
 
     def __init__(self,
@@ -54,20 +54,20 @@ class CompliantYumiArm(SingleArmPybullet):
         """
         Move the arm to the specified joint position(s). Applies regulation
         position command to the compliant joints after sending driven
-        joint commands
+        joint commands.
 
         Args:
-            position (float or list): desired joint position(s)
+            position (float or list): desired joint position(s).
             joint_name (str): If not provided, position should be a list
                 and all the actuated joints will be moved to the specified
                 positions. If provided, only the specified joint will
-                be moved to the desired joint position
+                be moved to the desired joint position.
             wait (bool): whether to block the code and wait
-                for the action to complete
+                for the action to complete.
 
         Returns:
             bool: A boolean variable representing if the action is successful
-            at the moment when the function exits
+            at the moment when the function exits.
         """
         position = copy.deepcopy(position)
         success = False
@@ -111,20 +111,20 @@ class CompliantYumiArm(SingleArmPybullet):
     def set_jvel(self, velocity, joint_name=None, wait=False, *args, **kwargs):
         """
         Move the arm with the specified joint velocity(ies). Applies regulation
-        position command to the compliant joints after sending driven commands
+        position command to the compliant joints after sending driven commands.
 
         Args:
-            velocity (float or list): desired joint velocity(ies)
+            velocity (float or list): desired joint velocity(ies).
             joint_name (str): If not provided, velocity should be a list
                 and all the actuated joints will be moved in the specified
                 velocities. If provided, only the specified joint will
-                be moved in the desired joint velocity
+                be moved in the desired joint velocity.
             wait (bool): whether to block the code and wait
-                for the action to complete
+                for the action to complete.
 
         Returns:
             bool: A boolean variable representing if the action is successful
-            at the moment when the function exits
+            at the moment when the function exits.
         """
         velocity = copy.deepcopy(velocity)
         success = False
@@ -170,7 +170,7 @@ class CompliantYumiArm(SingleArmPybullet):
         Apply torque(s) to the joint(s), call enable_torque_control()
         or enable_torque_control(joint_name) before doing torque control.
         Applies regulation position command to the compliant joints after
-        sending driven commands
+        sending driven commands.
 
         Note:
             call to this function is only effective in this simulation step.
@@ -178,20 +178,20 @@ class CompliantYumiArm(SingleArmPybullet):
             the torque control. It's easier to use torque control
             in step_simulation mode instead of realtime_simulation mode.
             If you are using realtime_simulation mode, the time interval
-            between two set_jtorq() calls must be small enough (like 0.0002s)
+            between two set_jtorq() calls must be small enough (like 0.0002s).
 
         Args:
-            torque (float or list): torque value(s) for the joint(s)
+            torque (float or list): torque value(s) for the joint(s).
             joint_name (str): specify the joint on which the torque is applied.
                 If it's not provided(None), it will apply the torques on
                 the six joints on the arm. Otherwise, only the specified joint
                 will be applied with the given torque.
             wait (bool): Not used in this method, just
-                to keep the method signature consistent
+                to keep the method signature consistent.
 
         Returns:
             bool: Always return True as the torque will be applied as specified
-            in Pybullet
+            in Pybullet.
 
         """
         torque = copy.deepcopy(torque)
@@ -220,7 +220,7 @@ class CompliantYumiArm(SingleArmPybullet):
 
     def set_compliant_jpos(self):
         """
-        Regulate compliant/spring like joints about nominal position
+        Regulate compliant/spring like joints about nominal position.
         """
         self._pb.setJointMotorControlArray(
             self.robot_id,
@@ -232,7 +232,7 @@ class CompliantYumiArm(SingleArmPybullet):
 
     def _init_compliant_consts(self):
         """
-        Initialize additional constants relevant to compliant joints
+        Initialize additional constants relevant to compliant joints.
         """
         self.comp_jnt_names = self.cfgs.ARM.COMPLIANT_JOINT_NAMES
 
@@ -249,23 +249,23 @@ class YumiPalmsPybullet(DualArmPybullet):
     Class for pybullet simulation of ABB Yumi robot with
     separate functionality for both arms, with two Gelslim
     Palms attached as end effectors instead of parallel jaw
-    grippers
+    grippers.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the arm
-        pb_client (BulletClient): pybullet client
-        seed (int): random seed
+        cfgs (YACS CfgNode): configurations for the arm.
+        pb_client (BulletClient): pybullet client.
+        seed (int): random seed.
         self_collision (bool): enable self_collision or
-                               not whiling loading URDF
+            not whiling loading URDF.
         eetool_cfg (dict): arguments to pass in the constructor
-            of the end effector tool class
+            of the end effector tool class.
 
     Attributes:
         arms (dict): internal dictioanry keyed by the single arm names,
-            values are interfaces to the single arm instances
-        robot_id (int): pybullet unique body id of the robot
-        left_arm (CompliantYumiArm): left arm interface
-        right_arm (CompliantYumiArm): right arm interface
+            values are interfaces to the single arm instances.
+        robot_id (int): pybullet unique body id of the robot.
+        left_arm (CompliantYumiArm): left arm interface.
+        right_arm (CompliantYumiArm): right arm interface.
     """
 
     def __init__(self, cfgs, pb_client, seed=None,
@@ -317,9 +317,9 @@ class YumiPalmsPybullet(DualArmPybullet):
 
         Args:
             right_arm (CompliantYumiArm): Instance of a single
-                yumi arm with compliant joints
+                yumi arm with compliant joints.
             left_arm (CompliantYumiArm): Instance of a single
-                yumi arm with compliant joints
+                yumi arm with compliant joints.
         """
         self.arms[self.cfgs.ARM.RIGHT.ARM.NAME] = right_arm
         self.arms[self.cfgs.ARM.LEFT.ARM.NAME] = left_arm

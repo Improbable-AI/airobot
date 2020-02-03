@@ -24,10 +24,10 @@ def create_pybullet_client(gui=True,
     Create a pybullet simulation client.
 
     Args:
-        gui (bool): use GUI mode or non-GUI mode
-        realtime: use realtime simulation or step simuation
+        gui (bool): use GUI mode or non-GUI mode.
+        realtime: use realtime simulation or step simuation.
         opengl_render (bool): use OpenGL (hardware renderer) to render
-                RGB images
+            RGB images.
     """
     if gui:
         mode = p.GUI
@@ -51,9 +51,9 @@ class BulletClient:
             `pybullet.GUI` creates a new simulation with a GUI,
             `pybullet.DIRECT` creates a headless simulation,
             `pybullet.SHARED_MEMORY` connects to an existing simulation.
-        realtime (bool): whether to use realtime mode or not
+        realtime (bool): whether to use realtime mode or not.
         opengl_render (bool): use OpenGL (hardware renderer) to render
-            RGB images
+            RGB images.
 
     """
 
@@ -107,22 +107,22 @@ class BulletClient:
 
     def get_client_id(self):
         """
-        Return the pybullet client id
+        Return the pybullet client id.
 
         Returns:
-            int: pybullet client id
+            int: pybullet client id.
 
         """
         return self._client
 
     def set_step_sim(self, step_mode=True):
         """
-        Turn on/off the realtime simulation mode
+        Turn on/off the realtime simulation mode.
 
         Args:
             step_mode (bool): run the simulation in step mode if
                 it is True. Otherwise, the simulation will be
-                in realtime
+                in realtime.
         """
         self._set_realtime_var(not step_mode)
         if self._gui_mode:
@@ -155,16 +155,16 @@ class BulletClient:
         Get the body state.
 
         Args:
-            body_id (int): body index
+            body_id (int): body index.
 
         Returns:
             4-element tuple containing
 
-            - np.ndarray: x, y, z position of the body (shape: :math:`[3,]`)
+            - np.ndarray: x, y, z position of the body (shape: :math:`[3,]`).
             - np.ndarray: quaternion representation ([qx, qy, qz, qw]) of the
-              body orientation (shape: :math:`[4,]`)
-            - np.ndarray: linear velocity of the body (shape: :math:`[3,]`)
-            - np.ndarray: angular velocity of the body (shape: :math:`[3,]`)
+              body orientation (shape: :math:`[4,]`).
+            - np.ndarray: linear velocity of the body (shape: :math:`[3,]`).
+            - np.ndarray: angular velocity of the body (shape: :math:`[3,]`).
 
         """
         pos, quat = self.getBasePositionAndOrientation(body_id)
@@ -182,12 +182,12 @@ class BulletClient:
         Reset body to the specified pose and specified initial velocity.
 
         Args:
-            body_id (int): body index
-            base_pos (list or np.ndarray): position [x,y,z] of the body base
+            body_id (int): body index.
+            base_pos (list or np.ndarray): position [x,y,z] of the body base.
             base_ori (list or np.ndarray): quaternion [qx, qy, qz, qw]
-                of the body base
-            lin_vel (list or np.ndarray): initial linear velocity if provided
-            ang_vel (list or np.ndarray): initial angular velocity if provided
+                of the body base.
+            lin_vel (list or np.ndarray): initial linear velocity if provided.
+            ang_vel (list or np.ndarray): initial angular velocity if provided.
 
         Returns:
 
@@ -205,10 +205,10 @@ class BulletClient:
         Delete body from the simulation.
 
         Args:
-            body_id (int): body index
+            body_id (int): body index.
 
         Returns:
-            bool: whether the body is removed
+            bool: whether the body is removed.
 
         """
         self.removeBody(body_id)
@@ -233,7 +233,7 @@ class BulletClient:
             base_ori (list or np.ndarray): create the base of the object
                 at the specified orientation as world space
                 quaternion [X,Y,Z,W].
-            scaling (float): apply a scale factor to the URDF model
+            scaling (float): apply a scale factor to the URDF model.
 
         Returns:
             int: a body unique id, a non-negative integer value.
@@ -262,7 +262,7 @@ class BulletClient:
         Args:
             filename (str): a relative or absolute path to the SDF
                 file on the file system of the physics server.
-            scaling (float): apply a scale factor to the SDF model
+            scaling (float): apply a scale factor to the SDF model.
 
         Returns:
             int: a body unique id, a non-negative integer value.
@@ -316,7 +316,7 @@ class BulletClient:
 
         Args:
             shape_type (str): one of [`sphere`, `box`, `capsule`, `cylinder`,
-                `mesh`]
+                `mesh`].
 
             size (float or list): Defaults to None.
 
@@ -347,19 +347,19 @@ class BulletClient:
                 If it's a list, then it should contain 3 elements
                 (scales along 3 dimensions).
             rgba (list): color components for red, green, blue and alpha,
-                each in range [0, 1] (shape: :math:`[4,]`)
+                each in range [0, 1] (shape: :math:`[4,]`).
             specular(list): specular reflection color components
                 for red, green, blue and alpha, each in
-                range [0, 1] (shape: :math:`[4,]`)
+                range [0, 1] (shape: :math:`[4,]`).
             shift_pos (list): translational offset of collision
-                shape, visual shape, and inertial frame (shape: :math:`[3,]`)
+                shape, visual shape, and inertial frame (shape: :math:`[3,]`).
             shift_ori (list): rotational offset (quaternion [x, y, z, w])
                 of collision shape, visual shape, and inertial
-                frame (shape: :math:`[4,]`)
+                frame (shape: :math:`[4,]`).
             base_pos (list): cartesian world position of
-                the base (shape: :math:`[3,]`)
+                the base (shape: :math:`[3,]`).
             base_ori (list): cartesian world orientation of the base as
-                quaternion [x, y, z, w] (shape: :math:`[4,]`)
+                quaternion [x, y, z, w] (shape: :math:`[4,]`).
 
         Returns:
             int: a body unique id, a non-negative integer
@@ -492,15 +492,15 @@ class BulletClient:
 
 class TextureModder:
     """
-    Modify textures in model
+    Modify textures in model.
 
     Args:
-        pb_client_id (int): pybullet client id
+        pb_client_id (int): pybullet client id.
 
     Attributes:
         texture_dict (dict): a dictionary that tells the texture
-            of a link on a body
-        texture_files (list): a list of texture files (usuallly images)
+            of a link on a body.
+        texture_files (list): a list of texture files (usuallly images).
     """
 
     def __init__(self, pb_client_id):
@@ -512,13 +512,13 @@ class TextureModder:
     def set_texture(self, body_id, link_id, texture_file):
         """
         Apply texture to a link. You can download texture files from:
-        https://www.robots.ox.ac.uk/~vgg/data/dtd/index.html
+        https://www.robots.ox.ac.uk/~vgg/data/dtd/index.html.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
+            body_id (int): body index.
+            link_id (int): link index in the body.
             texture_file (str): path to the texture files (image, supported
-                format: `jpg`, `png`, `jpeg`, `tga`, or `gif` etc.)
+                format: `jpg`, `png`, `jpeg`, `tga`, or `gif` etc.).
 
         """
         img = cv2.imread(texture_file)
@@ -539,7 +539,7 @@ class TextureModder:
         `.png`, `jpg`, `jpeg`, `tga`, or `gif`.
 
         Args:
-            path (str): root path to the texture files
+            path (str): root path to the texture files.
 
         """
         self.texture_files = []
@@ -556,8 +556,8 @@ class TextureModder:
         to set the root path to the texture files.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
+            body_id (int): body index.
+            link_id (int): link index in the body.
 
         """
         if len(self.texture_files) < 1:
@@ -569,11 +569,11 @@ class TextureModder:
 
     def rand_rgb(self, body_id, link_id):
         """
-        Randomize the color of the link
+        Randomize the color of the link.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
+            body_id (int): body index.
+            link_id (int): link index in the body.
 
         """
         rgb = np.random.uniform(size=3).flatten()
@@ -582,11 +582,11 @@ class TextureModder:
 
     def rand_gradient(self, body_id, link_id):
         """
-        Randomize the gradient of the color of the link
+        Randomize the gradient of the color of the link.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
+            body_id (int): body index.
+            link_id (int): link index in the body.
 
         """
         rgb1, rgb2 = self._get_rand_rgb(2)
@@ -595,11 +595,11 @@ class TextureModder:
 
     def rand_noise(self, body_id, link_id):
         """
-        Randomly add noise to the foreground
+        Randomly add noise to the foreground.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
+            body_id (int): body index.
+            link_id (int): link index in the body.
 
         """
         fraction = 0.1 + np.random.uniform() * 0.8
@@ -608,11 +608,11 @@ class TextureModder:
 
     def rand_all(self, body_id, link_id):
         """
-        Randomize color, gradient, noise, texture of the specified link
+        Randomize color, gradient, noise, texture of the specified link.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
+            body_id (int): body index.
+            link_id (int): link index in the body.
 
         """
         choices = [
@@ -626,7 +626,7 @@ class TextureModder:
 
     def randomize(self, mode='all', exclude=None):
         """
-        Randomize all the links in the scene
+        Randomize all the links in the scene.
 
         Args:
             mode (str): one of `all`, `rgb`, `noise`, `gradient`.
@@ -668,13 +668,13 @@ class TextureModder:
 
     def set_rgba(self, body_id, link_id, rgba):
         """
-        Set color to the link
+        Set color to the link.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
+            body_id (int): body index.
+            link_id (int): link index in the body.
             rgba (list or np.ndarray): red, green, blue, alpha channel
-                (opacity of the color), (shape: :math:`[4,]`)
+                (opacity of the color), (shape: :math:`[4,]`).
 
         """
         p.changeVisualShape(body_id, link_id, rgbaColor=rgba,
@@ -682,13 +682,13 @@ class TextureModder:
 
     def set_gradient(self, body_id, link_id, rgb1, rgb2, vertical=True):
         """
-        Creates a linear gradient from rgb1 to rgb2
+        Creates a linear gradient from rgb1 to rgb2.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
-            rgb1 (list or np.ndarray): first rgb color (shape: :math:`[3,]`)
-            rgb2 (list or np.ndarray): second rgb color (shape: :math:`[3,]`)
+            body_id (int): body index.
+            link_id (int): link index in the body.
+            rgb1 (list or np.ndarray): first rgb color (shape: :math:`[3,]`).
+            rgb2 (list or np.ndarray): second rgb color (shape: :math:`[3,]`).
             vertical (bool): if True, the gradient in the vertical direction,
                 if False it's in the horizontal direction.
         """
@@ -720,17 +720,17 @@ class TextureModder:
 
     def set_noise(self, body_id, link_id, rgb1, rgb2, fraction=0.9):
         """
-        Apply noise to the texture
+        Apply noise to the texture.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
+            body_id (int): body index.
+            link_id (int): link index in the body.
             rgb1 (list or np.ndarray): background rgb color
-                (shape: :math:`[3,]`)
+                (shape: :math:`[3,]`).
             rgb2 (list or np.ndarray): color of random noise
-                foreground color (shape: :math:`[3,]`)
+                foreground color (shape: :math:`[3,]`).
             fraction (float): fraction of pixels with
-                foreground color
+                foreground color.
 
         """
         if not self._check_link_has_tex(body_id, link_id):
@@ -751,7 +751,7 @@ class TextureModder:
 
     def whiten_materials(self, body_id=None, link_id=None):
         """
-        Helper method for setting all material colors to white
+        Helper method for setting all material colors to white.
 
         Args:
             body_id (int): unique body id when you load the body. If body_id
@@ -785,16 +785,16 @@ class TextureModder:
 
     def _get_rand_rgb(self, n=1):
         """
-        Get random rgb color in range of [0, 255)
+        Get random rgb color in range of [0, 255).
 
         Args:
-            n (int): number of rgb color combinations to be returned
+            n (int): number of rgb color combinations to be returned.
 
         Returns:
             One of the following
 
-            - np.ndarray: rgb color (shape: :math:`[3]`)
-            - tuple: tuple containing n groups of rgb colors
+            - np.ndarray: rgb color (shape: :math:`[3]`).
+            - tuple: tuple containing n groups of rgb colors.
 
         """
 
@@ -809,14 +809,14 @@ class TextureModder:
 
     def _check_link_has_tex(self, body_id, link_id):
         """
-        Check if the link has texture
+        Check if the link has texture.
 
         Args:
-            body_id (int): body index
-            link_id (int): link index in the body
+            body_id (int): body index.
+            link_id (int): link index in the body.
 
         Returns:
-            bool: True if the link has texture, False otherwise
+            bool: True if the link has texture, False otherwise.
 
         """
         if body_id not in self.texture_dict or \
@@ -826,13 +826,13 @@ class TextureModder:
 
     def _check_body_exist(self, body_id):
         """
-        Check if the body exist in the pybullet client
+        Check if the body exist in the pybullet client.
 
         Args:
-            body_id (int): body index
+            body_id (int): body index.
 
         Returns:
-            bool: True if the body exists, False otherwise
+            bool: True if the body exists, False otherwise.
 
         """
         exist = True

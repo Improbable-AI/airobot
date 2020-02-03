@@ -9,7 +9,7 @@ from airobot.utils.common import euler2quat
 def main():
     """
     This function demonstrates how to load different kinds of
-    objects and get state information of objects
+    objects and get state information of objects.
     """
     np.set_printoptions(precision=3, suppress=True)
     robot = Robot('ur5e_stick')

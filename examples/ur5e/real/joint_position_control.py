@@ -7,21 +7,21 @@ from airobot import Robot
 def main():
     """
     This function demonstrates how to move the robot arm
-    to the desired joint positions
+    to the desired joint positions.
 
     The pb=False flag (in ar.create_robot())is set because
-    we are using the real robot (pb -- pybullet)
+    we are using the real robot (pb -- pybullet).
 
     The robot starts at home, and moves to a new set of joint
-    angles with comm_mode use_urscript=False
+    angles with comm_mode use_urscript=False.
 
     The robot then switches comm_mode to use_urscript=True,
-    which means it won't use ROS or MoveIt to execute it's commands
+    which means it won't use ROS or MoveIt to execute it's commands.
 
     The robot finally moves to a new position using direct joint
     position control. This second movement has been verified to be
     collision free (change the goal positions when use_urscript=True
-    at your own risk)
+    at your own risk).
     """
     robot = Robot('ur5e_2f140', pb=False, use_cam=False)
     robot.arm.go_home()

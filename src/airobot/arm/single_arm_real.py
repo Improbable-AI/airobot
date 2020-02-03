@@ -22,18 +22,18 @@ from trac_ik_python import trac_ik
 class SingleArmReal(ARM):
     """
     This class contains methods that are common for most single-arm robots
-    and do not depend on ROS
+    and do not depend on ROS.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the arm
+        cfgs (YACS CfgNode): configurations for the arm.
         eetool_cfg (dict): arguments to pass in the constructor
-            of the end effector tool class
+            of the end effector tool class.
 
     Attributes:
-        arm_jnt_names (list): Names of the joints in the arm
-        arm_link_names (list): Names of the links in the arm
-        arm_dof (int): Number of degrees of freedom in the arm
-        ee_link (str): Name of the arms end-effector link
+        arm_jnt_names (list): Names of the joints in the arm.
+        arm_link_names (list): Names of the links in the arm.
+        arm_dof (int): Number of degrees of freedom in the arm.
+        ee_link (str): Name of the arms end-effector link.
     """
 
     def __init__(self, cfgs,
@@ -55,12 +55,12 @@ class SingleArmReal(ARM):
         Args:
             position (float or list or flattened np.ndarray):
                 desired joint position(s)
-                (shape: :math:`[6,]` if list, otherwise a single value)
+                (shape: :math:`[6,]` if list, otherwise a single value).
             joint_name (str): If not provided, position should be a list and
                 all actuated joints will be moved to specified positions. If
-                provided, only specified joint will move. Defaults to None
+                provided, only specified joint will move. Defaults to None.
             wait (bool): whether position command should be blocking or non
-                blocking. Defaults to True
+                blocking. Defaults to True.
 
         Returns:
             bool: True if command was completed successfully, returns
@@ -76,7 +76,7 @@ class SingleArmReal(ARM):
         Args:
             velocity (float or list or flattened np.ndarray): list of target
                 joint velocity value(s)
-                (shape: :math:`[6,]` if list, otherwise a single value)
+                (shape: :math:`[6,]` if list, otherwise a single value).
             joint_name (str, optional): If not provided, velocity should be
                 list and all joints will be turned on at specified velocity.
                 Defaults to None.
@@ -95,17 +95,17 @@ class SingleArmReal(ARM):
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
-                base frame to move to (shape: :math:`[3,]`)
+                base frame to move to (shape: :math:`[3,]`).
             ori (list or np.ndarray, optional): It can be euler angles
                 ([roll, pitch, yaw], shape: :math:`[4,]`),
                 or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
                 or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
-                orientation as the target orientation
-            wait (bool): wait until the motion completes
+                orientation as the target orientation.
+            wait (bool): wait until the motion completes.
 
         Returns:
-            bool: Returns True is robot successfully moves to goal pose
+            bool: Returns True is robot successfully moves to goal pose.
         """
         raise NotImplementedError
 
@@ -116,7 +116,7 @@ class SingleArmReal(ARM):
 
         Args:
             delta_xyz (list or np.ndarray): Goal change in x, y, z position of
-                end effector
+                end effector.
             eef_step (float, optional): Discretization step in cartesian space
                 for computing waypoints along the path. Defaults to 0.005 (m).
             wait (bool, optional): True if robot should not do anything else
@@ -138,14 +138,14 @@ class SingleArmReal(ARM):
             joint_name (str, optional): If it's None,
                 it will return joint positions
                 of all the actuated joints. Otherwise, it will
-                return the joint position of the specified joint
+                return the joint position of the specified joint.
 
         Returns:
             One of the following
 
-            - float: joint position given joint_name
+            - float: joint position given joint_name.
             - list: joint positions if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
 
         """
         raise NotImplementedError
@@ -160,14 +160,14 @@ class SingleArmReal(ARM):
             joint_name (str, optional): If it's None,
                 it will return joint velocities
                 of all the actuated joints. Otherwise, it will
-                return the joint position of the specified joint
+                return the joint position of the specified joint.
 
         Returns:
             One of the following
 
-            - float: joint velocity given joint_name
+            - float: joint velocity given joint_name.
             - list: joint velocities if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
         """
         raise NotImplementedError
 
@@ -179,14 +179,14 @@ class SingleArmReal(ARM):
         Returns:
             4-element tuple containing
 
-            - np.ndarray: x, y, z position of the EE (shape: :math:`[3]`)
+            - np.ndarray: x, y, z position of the EE (shape: :math:`[3]`).
             - np.ndarray: quaternion representation ([x, y, z, w]) of the EE
-              orientation (shape: :math:`[4]`)
+              orientation (shape: :math:`[4]`).
             - np.ndarray: rotation matrix representation of the EE orientation
-              (shape: :math:`[3, 3]`)
+              (shape: :math:`[3, 3]`).
             - np.ndarray: euler angle representation of the EE orientation
               (roll, pitch, yaw with static reference frame)
-              (shape: :math:`[3]`)
+              (shape: :math:`[3]`).
         """
         raise NotImplementedError
 
@@ -198,9 +198,9 @@ class SingleArmReal(ARM):
             2-element tuple containing
 
             - np.ndarray: translational velocity (vx, vy, vz)
-              (shape: :math:`[3,]`)
+              (shape: :math:`[3,]`).
             - np.ndarray: rotational velocity
-              (wx, wy, wz) (shape: :math:`[3,]`)
+              (wx, wy, wz) (shape: :math:`[3,]`).
         """
         raise NotImplementedError
 
@@ -210,10 +210,10 @@ class SingleArmReal(ARM):
         Refer to P112 in "Robotics: Modeling, Planning, and Control".
 
         Args:
-            joint_angles (list or flattened np.ndarray): joint angles
+            joint_angles (list or flattened np.ndarray): joint angles.
 
         Returns:
-            np.ndarray: jacobian (shape: :math:`[6, DOF]`)
+            np.ndarray: jacobian (shape: :math:`[6, DOF]`).
         """
         q = kdl.JntArray(self._urdf_chain.getNrOfJoints())
         for i in range(q.rows()):
@@ -232,14 +232,14 @@ class SingleArmReal(ARM):
         must be in self.arm_link_names.
 
         Args:
-            jpos (list or flattened np.ndarray): joint angles
-            tgt_frame (str): target link frame
+            jpos (list or flattened np.ndarray): joint angles.
+            tgt_frame (str): target link frame.
 
         Returns:
             2-element tuple containing
 
-            - np.ndarray: translational vector (shape: :math:`[3,]`)
-            - np.ndarray: rotational matrix (shape: :math:`[3, 3]`)
+            - np.ndarray: translational vector (shape: :math:`[3,]`).
+            - np.ndarray: rotational matrix (shape: :math:`[3, 3]`).
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -269,13 +269,13 @@ class SingleArmReal(ARM):
         to the base frame.
 
         Args:
-            jpos (list or flattened np.ndarray): joint positions
-            jvel (list or flattened np.ndarray): joint velocities
-            tgt_frame (str): target link frame
+            jpos (list or flattened np.ndarray): joint positions.
+            jvel (list or flattened np.ndarray): joint velocities.
+            tgt_frame (str): target link frame.
 
         Returns:
             np.ndarray: translational velocity and rotational velocity
-            (vx, vy, vz, wx, wy, wz) (shape: :math:`[6,]`)
+            (vx, vy, vz, wx, wy, wz) (shape: :math:`[6,]`).
         """
         if isinstance(jpos, list):
             jpos = np.array(jpos)
@@ -302,15 +302,15 @@ class SingleArmReal(ARM):
         (self.cfgs.ARM.ROBOT_EE_FRAME).
 
         Args:
-            pos (list or np.ndarray): position (shape: :math:`[3,]`)
+            pos (list or np.ndarray): position (shape: :math:`[3,]`).
             ori (list or np.ndarray): orientation. It can be euler angles
                 ([roll, pitch, yaw], shape: :math:`[4,]`),
                 or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
                 or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
-                orientation as the target orientation
+                orientation as the target orientation.
             qinit (list or np.ndarray): initial joint positions for numerical
-                IK (shape: :math:`[6,]`)
+                IK (shape: :math:`[6,]`).
 
         Returns:
             list: inverse kinematics solution (joint angles)
@@ -378,7 +378,7 @@ class SingleArmReal(ARM):
         Internal method to get the link names from the KDL URDF chain.
 
         Returns:
-            list: List of link names
+            list: List of link names.
         """
         num_links = self._urdf_chain.getNrOfSegments()
         link_names = []
@@ -391,7 +391,7 @@ class SingleArmReal(ARM):
         Internal method to get the joint names from the KDL URDF chain.
 
         Returns:
-            list: List of joint names
+            list: List of joint names.
         """
         num_links = self._urdf_chain.getNrOfSegments()
         num_joints = self._urdf_chain.getNrOfJoints()

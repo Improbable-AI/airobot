@@ -6,7 +6,7 @@ from airobot import Robot
 
 def sin_wave(t, f, A):
     """
-    Return the sine-wave value at time step t
+    Return the sine-wave value at time step t.
 
     Args:
         t (float): time
@@ -22,7 +22,7 @@ def sin_wave(t, f, A):
 
 def main():
     """
-    Move all the joints of the robot in a sine-wave fashion
+    Move all the joints of the robot in a sine-wave fashion.
     """
 
     robot = Robot('yumi')

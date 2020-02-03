@@ -6,7 +6,7 @@ from airobot import Robot
 def main():
     """
     This function demonstrates how to move the robot arm
-    to the desired joint positions
+    to the desired joint positions.
     """
     robot = Robot('ur5e')
     robot.arm.go_home()

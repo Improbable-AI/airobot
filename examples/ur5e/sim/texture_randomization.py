@@ -10,7 +10,7 @@ from airobot.utils.pb_util import TextureModder
 def main():
     """
     This function demonstrates how to move the robot arm
-    to the desired joint positions
+    to the desired joint positions.
     """
     dir_path = os.path.dirname(os.path.realpath(__file__))
     texture_path = os.path.join(dir_path, 'textures')

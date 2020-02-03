@@ -8,21 +8,21 @@ class RGBDCamera(Camera):
     A RGBD camera.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the camera
+        cfgs (YACS CfgNode): configurations for the camera.
 
     Attributes:
-        cfgs (YACS CfgNode): configurations for the end effector
-        img_height (int): height of the image
-        img_width (int): width of the image
+        cfgs (YACS CfgNode): configurations for the end effector.
+        img_height (int): height of the image.
+        img_width (int): width of the image.
         cam_ext_mat (np.ndarray): extrinsic matrix (shape: :math:`[4, 4]`)
             for the camera (source frame: base frame.
-            target frame: camera frame)
+            target frame: camera frame).
         cam_int_mat (np.ndarray): intrinsic matrix (shape: :math:`[3, 3]`)
-            for the camera
-        cam_int_mat_inv (np.ndarray): inverse of the intrinsic matrix
-        depth_scale (float): ratio of the depth image value to true depth value
-        depth_min (float): minimum depth value considered in 3D reconstruction
-        depth_max (float): maximum depth value considered in 3D reconstruction
+            for the camera.
+        cam_int_mat_inv (np.ndarray): inverse of the intrinsic matrix.
+        depth_scale (float): ratio of the depth image value to true depth value.
+        depth_min (float): minimum depth value considered in 3D reconstruction.
+        depth_max (float): maximum depth value considered in 3D reconstruction.
     """
 
     def __init__(self, cfgs):
@@ -66,29 +66,29 @@ class RGBDCamera(Camera):
                 which means all columns.
             in_world (bool): if True, return the 3D position in
                 the world frame,
-                Otherwise, return the 3D position in the camera frame
+                Otherwise, return the 3D position in the camera frame.
             filter_depth (bool): if True, only pixels with depth values
                 between [depth_min, depth_max]
-                will remain
+                will remain.
             k (int): kernel size. A kernel (slicing window) will be used
                to get the neighboring depth values of the pixels specified
                by rs and cs. And depending on the ktype, a corresponding
                method will be applied to use some statistical value
                (such as minimum, maximum, median, mean) of all the depth
                values in the slicing window as a more robust estimate of
-               the depth value of the specified pixels
+               the depth value of the specified pixels.
             ktype (str): what kind of statistical value of all the depth
                values in the sliced kernel
                to use as a proxy of the depth value at specified pixels.
                It can be `median`, `min`, `max`, `mean`.
             depth_min (float): minimum depth value. If None, it will use the
-                default minimum depth value defined in the config file
+                default minimum depth value defined in the config file.
             depth_max (float): maximum depth value. If None, it will use the
-                default maximum depth value defined in the config file
+                default maximum depth value defined in the config file.
 
         Returns:
             np.ndarray: 3D point coordinates of the pixels in
-            camera frame (shape: :math:`[N, 3]`)
+            camera frame (shape: :math:`[N, 3]`).
         """
         if not isinstance(rs, int) and not isinstance(rs, list) and \
                 not isinstance(rs, np.ndarray):
@@ -167,19 +167,19 @@ class RGBDCamera(Camera):
 
         Args:
             in_world (bool): return point cloud in the world frame, otherwise,
-                return point cloud in the camera frame
+                return point cloud in the camera frame.
             filter_depth (bool): only return the point cloud with depth values
-                lying in [depth_min, depth_max]
+                lying in [depth_min, depth_max].
             depth_min (float): minimum depth value. If None, it will use the
-                default minimum depth value defined in the config file
+                default minimum depth value defined in the config file.
             depth_max (float): maximum depth value. If None, it will use the
-                default maximum depth value defined in the config file
+                default maximum depth value defined in the config file.
 
         Returns:
             2-element tuple containing
 
-            - np.ndarray: point coordinates (shape: :math:`[N, 3]`)
-            - np.ndarray: rgb values (shape: :math:`[N, 3]`)
+            - np.ndarray: point coordinates (shape: :math:`[N, 3]`).
+            - np.ndarray: rgb values (shape: :math:`[N, 3]`).
         """
         rgb_im, depth_im = self.get_images(get_rgb=True, get_depth=True)
         # pcd in camera from depth

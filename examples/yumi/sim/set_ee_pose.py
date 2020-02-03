@@ -6,7 +6,7 @@ from airobot import Robot
 
 def main():
     """
-    Move the robot end effector to the desired pose
+    Move the robot end effector to the desired pose.
     """
     robot = Robot('yumi_grippers')
     robot.arm.go_home()

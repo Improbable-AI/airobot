@@ -8,7 +8,7 @@ from airobot.utils.common import euler2quat
 
 def main():
     """
-    This function shows an example of block stacking
+    This function shows an example of block stacking.
     """
     np.set_printoptions(precision=4, suppress=True)
     robot = Robot('ur5e_2f140')

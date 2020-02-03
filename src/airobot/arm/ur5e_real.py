@@ -29,20 +29,20 @@ class UR5eReal(SingleArmROS):
     A Class for interfacing with real UR5e robot.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the arm
-        moveit_planner (str): motion planning algorithm
+        cfgs (YACS CfgNode): configurations for the arm.
+        moveit_planner (str): motion planning algorithm.
         eetool_cfg (dict): arguments to pass in the constructor
-            of the end effector tool class
+            of the end effector tool class.
         wrist_cam (bool): whether the robot has a wrist camera
             mounted. If so, a box will be placed around the camera
             so that moveit is aware of the wrist camera when it's
-            doing motion planning
+            doing motion planning.
 
     Attributes:
         gripper_tip_pos (list): Position of the end effector link frame
-            w.r.t. to its parent link frame, shape: :math:`[3,]` ([x, y, z])
+            w.r.t. to its parent link frame, shape: :math:`[3,]` ([x, y, z]).
         gripper_tip_ori (list): Orientation of the end effector link frame
-            w.r.t. to its parent link frame, shape: :math:`[4,]` ([x, y, z, w])
+            w.r.t. to its parent link frame, shape: :math:`[4,]` ([x, y, z, w]).
     """
 
     def __init__(self, cfgs,
@@ -66,10 +66,10 @@ class UR5eReal(SingleArmROS):
 
     def is_jpos_in_good_range(self):
         """
-        Check if the joint angles lie in (-pi, pi]
+        Check if the joint angles lie in (-pi, pi].
 
         Returns:
-            bool: whether the joint angles are in (-pi, pi]
+            bool: whether the joint angles are in (-pi, pi].
 
         """
         jposs = self.get_jpos()
@@ -91,7 +91,7 @@ class UR5eReal(SingleArmROS):
 
         Args:
             use_urscript (bool): True we should use urscript
-                False if we should use ros and moveit
+                False if we should use ros and moveit.
         """
         if self._gazebo_sim:
             self._use_urscript = False
@@ -106,12 +106,12 @@ class UR5eReal(SingleArmROS):
         Args:
             position (float or list or flattened np.ndarray):
                 desired joint position(s)
-                (shape: :math:`[6,]` if list, otherwise a single value)
+                (shape: :math:`[6,]` if list, otherwise a single value).
             joint_name (str): If not provided, position should be a list and
                 all actuated joints will be moved to specified positions. If
-                provided, only specified joint will move. Defaults to None
+                provided, only specified joint will move. Defaults to None.
             wait (bool): whether position command should be blocking or non
-                blocking. Defaults to True
+                blocking. Defaults to True.
 
         Returns:
             bool: True if command was completed successfully, returns
@@ -241,14 +241,14 @@ class UR5eReal(SingleArmROS):
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
-                base frame to move to (shape: :math:`[3,]`)
+                base frame to move to (shape: :math:`[3,]`).
             ori (list or np.ndarray, optional): It can be euler angles
                 ([roll, pitch, yaw], shape: :math:`[4,]`),
                 or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
                 or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
-                orientation as the target orientation
-            wait (bool): wait until the motion completes
+                orientation as the target orientation.
+            wait (bool): wait until the motion completes.
             ik_first (bool, optional): Whether to use the solution computed
                 by IK, or to use UR built in movel function which moves
                 linearly in tool space (movel may sometimes fail due to
@@ -256,7 +256,7 @@ class UR5eReal(SingleArmROS):
                 self._use_urscript is True. Defaults to False.
 
         Returns:
-            bool: Returns True is robot successfully moves to goal pose
+            bool: Returns True is robot successfully moves to goal pose.
         """
         if ori is None and pos is None:
             return True
@@ -323,7 +323,7 @@ class UR5eReal(SingleArmROS):
 
         Args:
             delta_xyz (list or np.ndarray): Goal change in x, y, z position of
-                end effector
+                end effector.
             eef_step (float, optional): Discretization step in cartesian space
                 for computing waypoints along the path. Defaults to 0.005 (m).
             wait (bool, optional): True if robot should not do anything else
@@ -331,7 +331,7 @@ class UR5eReal(SingleArmROS):
                 Defaults to True.
 
         Returns:
-            bool: True if robot successfully reached the goal pose
+            bool: True if robot successfully reached the goal pose.
         """
         ee_pos, ee_quat, ee_rot_mat, ee_euler = self.get_ee_pose()
 
@@ -352,7 +352,7 @@ class UR5eReal(SingleArmROS):
 
     def _init_ur_consts(self):
         """
-        Initialize constants
+        Initialize constants.
         """
 
         self.gripper_tip_pos, self.gripper_tip_ori = self._get_tip_transform()
@@ -413,7 +413,7 @@ class UR5eReal(SingleArmROS):
 
         Args:
             prog (str): URScript program which will be sent and run on
-                the UR5e machine
+                the UR5e machine.
 
         """
         # TODO return the status info
@@ -427,7 +427,7 @@ class UR5eReal(SingleArmROS):
         Method to display a text message on the UR5e teach pendant.
 
         Args:
-            msg (str): message to display
+            msg (str): message to display.
 
         """
         prog = 'textmsg(%s)' % msg
@@ -442,9 +442,9 @@ class UR5eReal(SingleArmROS):
             2-element tuple containing
 
             - list: Translation component of the gripper tip transform
-              (shape :math:`[3,]`)
+              (shape :math:`[3,]`).
             - list: Euler angle orientation component of the gripper
-              tip transform. (shape :math:`[3,]`)
+              tip transform. (shape :math:`[3,]`).
         """
         ee_frame = self.cfgs.ARM.ROBOT_EE_FRAME
         gripper_tip_id = self.arm_link_names.index(ee_frame)
@@ -458,7 +458,7 @@ class UR5eReal(SingleArmROS):
     def _set_tool_offset(self):
         """
         Internal method to send a URScript command to the robot so that
-        it updates it tool center point variable to match the URDF
+        it updates it tool center point variable to match the URDF.
         """
         tool_offset_prog = 'set_tcp(p[%f, %f, %f, %f, %f, %f])' % (
             self.gripper_tip_pos[0],
@@ -480,7 +480,7 @@ class UR5eReal(SingleArmROS):
 
         Args:
             velocity (list): List of desired joint velocities
-                (length and order have already been checked)
+                (length and order have already been checked).
         """
         goal_speed_msg = JointTrajectory()
         goal_speed_msg.points.append(

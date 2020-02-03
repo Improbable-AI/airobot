@@ -14,30 +14,30 @@ from gym.utils import seeding
 
 class SingleArmPybullet(ARM):
     """
-    Base class for a single arm simulated in pybullet
+    Base class for a single arm simulated in pybullet.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the arm
-        pb_client (BulletClient): pybullet client
-        seed (int): random seed
+        cfgs (YACS CfgNode): configurations for the arm.
+        pb_client (BulletClient): pybullet client.
+        seed (int): random seed.
         self_collision (bool): enable self_collision or
-                               not whiling loading URDF
+            not whiling loading URDF.
         eetool_cfg (dict): arguments to pass in the constructor
-            of the end effector tool class
+            of the end effector tool class.
 
     Attributes:
-        cfgs (YACS CfgNode): configurations for the arm
-        robot_id (int): pybullet body unique id of the robot
-        arm_jnt_names (list): names of the arm joints
-        arm_dof (int): degrees of freedom of the arm
-        arm_jnt_ids (list): pybullet joint ids of the arm joints
-        arm_jnt_ik_ids (list): joint indices of the non-fixed arm joints
-        ee_link_jnt (str): joint name of the end-effector link
-        ee_link_id (int): joint id of the end-effector link
+        cfgs (YACS CfgNode): configurations for the arm.
+        robot_id (int): pybullet body unique id of the robot.
+        arm_jnt_names (list): names of the arm joints.
+        arm_dof (int): degrees of freedom of the arm.
+        arm_jnt_ids (list): pybullet joint ids of the arm joints.
+        arm_jnt_ik_ids (list): joint indices of the non-fixed arm joints.
+        ee_link_jnt (str): joint name of the end-effector link.
+        ee_link_id (int): joint id of the end-effector link.
         jnt_to_id (dict): dictionary with [joint name : pybullet joint] id
-            [key : value] pairs
+            [key : value] pairs.
         non_fixed_jnt_names (list): names of non-fixed joints in the arms,
-            used for returning the correct inverse kinematics solution
+            used for returning the correct inverse kinematics solution.
 
     """
 
@@ -78,13 +78,13 @@ class SingleArmPybullet(ARM):
         Move the arm to the specified joint position(s).
 
         Args:
-            position (float or list): desired joint position(s)
+            position (float or list): desired joint position(s).
             joint_name (str): If not provided, position should be a list
                 and all the actuated joints will be moved to the specified
                 positions. If provided, only the specified joint will
-                be moved to the desired joint position
+                be moved to the desired joint position.
             wait (bool): whether to block the code and wait
-                for the action to complete
+                for the action to complete.
             ignore_physics (bool): hard reset the joints to the target joint
                 positions. It's best only to do this at the start,
                 while not running the simulation. It will overrides
@@ -92,7 +92,7 @@ class SingleArmPybullet(ARM):
 
         Returns:
             bool: A boolean variable representing if the action is successful
-            at the moment when the function exits
+            at the moment when the function exits.
         """
         position = copy.deepcopy(position)
         success = False
@@ -154,17 +154,17 @@ class SingleArmPybullet(ARM):
         Move the arm with the specified joint velocity(ies).
 
         Args:
-            velocity (float or list): desired joint velocity(ies)
+            velocity (float or list): desired joint velocity(ies).
             joint_name (str): If not provided, velocity should be a list
                 and all the actuated joints will be moved in the specified
                 velocities. If provided, only the specified joint will
-                be moved in the desired joint velocity
+                be moved in the desired joint velocity.
             wait (bool): whether to block the code and wait
-                for the action to complete
+                for the action to complete.
 
         Returns:
             bool: A boolean variable representing if the action is successful
-            at the moment when the function exits
+            at the moment when the function exits.
         """
         velocity = copy.deepcopy(velocity)
         success = False
@@ -221,17 +221,17 @@ class SingleArmPybullet(ARM):
             between two set_jtorq() calls must be small enough (like 0.0002s)
 
         Args:
-            torque (float or list): torque value(s) for the joint(s)
+            torque (float or list): torque value(s) for the joint(s).
             joint_name (str): specify the joint on which the torque is applied.
                 If it's not provided(None), it will apply the torques on
                 the six joints on the arm. Otherwise, only the specified joint
                 will be applied with the given torque.
             wait (bool): Not used in this method, just
-                to keep the method signature consistent
+                to keep the method signature consistent.
 
         Returns:
             bool: Always return True as the torque will be applied as specified
-            in Pybullet
+            in Pybullet.
 
         """
         torque = copy.deepcopy(torque)
@@ -259,21 +259,21 @@ class SingleArmPybullet(ARM):
 
     def set_ee_pose(self, pos=None, ori=None, wait=True, *args, **kwargs):
         """
-        Move the end effector to the specifed pose
+        Move the end effector to the specifed pose.
 
         Args:
             pos (list or np.ndarray): Desired x, y, z positions in the robot's
-                base frame to move to (shape: :math:`[3,]`)
+                base frame to move to (shape: :math:`[3,]`).
             ori (list or np.ndarray, optional): It can be euler angles
                 ([roll, pitch, yaw], shape: :math:`[4,]`),
                 or quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
                 or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
-                orientation as the target orientation
+                orientation as the target orientation.
 
         Returns:
             bool: A boolean variable representing if the action is successful
-            at the moment when the function exits
+            at the moment when the function exits.
         """
         if pos is None:
             pose = self.get_ee_pose()
@@ -285,18 +285,18 @@ class SingleArmPybullet(ARM):
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, *args, **kwargs):
         """
         Move the end-effector in a straight line without changing the
-        orientation
+        orientation.
 
         Args:
             delta_xyz (list or np.ndarray): movement in x, y, z
-                directions (shape: :math:`[3,]`)
+                directions (shape: :math:`[3,]`).
             eef_step (float): interpolation interval along delta_xyz.
                 Interpolate a point every eef_step distance
-                between the two end points
+                between the two end points.
 
         Returns:
             bool: A boolean variable representing if the action is successful
-            at the moment when the function exits
+            at the moment when the function exits.
         """
         if not self._pb.in_realtime_mode():
             raise AssertionError('move_ee_xyz() can '
@@ -321,7 +321,7 @@ class SingleArmPybullet(ARM):
 
     def enable_torque_control(self, joint_name=None):
         """
-        Enable the torque control mode in Pybullet
+        Enable the torque control mode in Pybullet.
 
         Args:
             joint_name (str): If it's none, then all the six joints
@@ -351,7 +351,7 @@ class SingleArmPybullet(ARM):
 
     def disable_torque_control(self, joint_name=None):
         """
-        Disable the torque control mode in Pybullet
+        Disable the torque control mode in Pybullet.
 
         Args:
             joint_name (str): If it's none, then all the six joints
@@ -371,20 +371,20 @@ class SingleArmPybullet(ARM):
 
     def get_jpos(self, joint_name=None):
         """
-        Return the joint position(s) of the arm
+        Return the joint position(s) of the arm.
 
         Args:
             joint_name (str, optional): If it's None,
                 it will return joint positions
                 of all the actuated joints. Otherwise, it will
-                return the joint position of the specified joint
+                return the joint position of the specified joint.
 
         Returns:
             One of the following
 
-            - float: joint position given joint_name
+            - float: joint position given joint_name.
             - list: joint positions if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
         """
         if joint_name is None:
             states = self._pb.getJointStates(self.robot_id,
@@ -398,19 +398,19 @@ class SingleArmPybullet(ARM):
 
     def get_jvel(self, joint_name=None):
         """
-        Return the joint velocity(ies) of the arm
+        Return the joint velocity(ies) of the arm.
 
         Args:
             joint_name (str, optional): If it's None, it will return
                 joint velocities of all the actuated joints. Otherwise,
-                it will return the joint velocity of the specified joint
+                it will return the joint velocity of the specified joint.
 
         Returns:
             One of the following
 
-            - float: joint velocity given joint_name
+            - float: joint velocity given joint_name.
             - list: joint velocities if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
         """
         if joint_name is None:
             states = self._pb.getJointStates(self.robot_id,
@@ -435,14 +435,14 @@ class SingleArmPybullet(ARM):
             joint_name (str, optional): If it's None,
                 it will return joint torques
                 of all the actuated joints. Otherwise, it will
-                return the joint torque of the specified joint
+                return the joint torque of the specified joint.
 
         Returns:
             One of the following
 
             - float: joint torque given joint_name
             - list: joint torques if joint_name is None
-              (shape: :math:`[DOF]`)
+              (shape: :math:`[DOF]`).
         """
         if joint_name is None:
             states = self._pb.getJointStates(self.robot_id,
@@ -457,19 +457,19 @@ class SingleArmPybullet(ARM):
 
     def get_ee_pose(self):
         """
-        Return the end effector pose
+        Return the end effector pose.
 
         Returns:
             4-element tuple containing
 
-            - np.ndarray: x, y, z position of the EE (shape: :math:`[3,]`)
+            - np.ndarray: x, y, z position of the EE (shape: :math:`[3,]`).
             - np.ndarray: quaternion representation of the
-              EE orientation (shape: :math:`[4,]`)
+              EE orientation (shape: :math:`[4,]`).
             - np.ndarray: rotation matrix representation of the
-              EE orientation (shape: :math:`[3, 3]`)
+              EE orientation (shape: :math:`[3, 3]`).
             - np.ndarray: euler angle representation of the
               EE orientation (roll, pitch, yaw with
-              static reference frame) (shape: :math:`[3,]`)
+              static reference frame) (shape: :math:`[3,]`).
         """
         info = self._pb.getLinkState(self.robot_id, self.ee_link_id)
         pos = info[4]
@@ -481,13 +481,13 @@ class SingleArmPybullet(ARM):
 
     def get_ee_vel(self):
         """
-        Return the end effector's velocity
+        Return the end effector's velocity.
 
         Returns:
             2-element tuple containing
 
-            - np.ndarray: translational velocity (shape: :math:`[3,]`)
-            - np.ndarray: rotational velocity (shape: :math:`[3,]`)
+            - np.ndarray: translational velocity (shape: :math:`[3,]`).
+            - np.ndarray: rotational velocity (shape: :math:`[3,]`).
         """
         info = self._pb.getLinkState(self.robot_id,
                                      self.ee_link_id,
@@ -499,10 +499,10 @@ class SingleArmPybullet(ARM):
     def compute_ik(self, pos, ori=None, ns=False, *args, **kwargs):
         """
         Compute the inverse kinematics solution given the
-        position and orientation of the end effector
+        position and orientation of the end effector.
 
         Args:
-            pos (list or np.ndarray): position (shape: :math:`[3,]`)
+            pos (list or np.ndarray): position (shape: :math:`[3,]`).
             ori (list or np.ndarray): orientation. It can be euler angles
                 ([roll, pitch, yaw], shape: :math:`[3,]`), or
                 quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
@@ -512,7 +512,7 @@ class SingleArmPybullet(ARM):
 
         Returns:
             list: solution to inverse kinematics, joint angles which achieve
-            the specified EE pose (shape: :math:`[DOF]`)
+            the specified EE pose (shape: :math:`[DOF]`).
         """
         ex_args = {'jointDamping': self._ik_jds}
         if ns:
@@ -543,15 +543,15 @@ class SingleArmPybullet(ARM):
         Return a default set of values for the arguments to IK
         with nullspace turned on. Returns joint ranges from the
         URDF and the current value of each joint angle for the
-        rest poses
+        rest poses.
 
         Returns:
             4-element tuple containing:
 
-            - list: list of lower limits for each joint (shape: :math:`[DOF]`)
-            - list: list of upper limits for each joint (shape: :math:`[DOF]`)
-            - list: list of joint ranges for each joint (shape: :math:`[DOF]`)
-            - list: list of rest poses (shape: :math:`[DOF]`)
+            - list: list of lower limits for each joint (shape: :math:`[DOF]`).
+            - list: list of upper limits for each joint (shape: :math:`[DOF]`).
+            - list: list of joint ranges for each joint (shape: :math:`[DOF]`).
+            - list: list of rest poses (shape: :math:`[DOF]`).
         """
         ll, ul, jr, rp = [], [], [], []
 
@@ -579,9 +579,9 @@ class SingleArmPybullet(ARM):
         It will overrides all physics simulation.
 
         Args:
-            jnt_name (str): joint name
-            jpos (float): target joint position
-            jvel (float): optional, target joint velocity
+            jnt_name (str): joint name.
+            jpos (float): target joint position.
+            jvel (float): optional, target joint velocity.
 
         """
         self._pb.resetJointState(self.robot_id,
@@ -615,7 +615,7 @@ class SingleArmPybullet(ARM):
 
     def _build_jnt_id(self):
         """
-        Build the mapping from the joint name to joint index
+        Build the mapping from the joint name to joint index.
         """
         self.jnt_to_id = {}
         self.non_fixed_jnt_names = []

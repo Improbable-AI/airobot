@@ -1,6 +1,6 @@
 """
 Pybullet simulation environment of an ABB Yumi
-robot
+robot.
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -14,16 +14,16 @@ from airobot.arm.single_arm_pybullet import SingleArmPybullet
 class YumiPybullet(DualArmPybullet):
     """
     Class for pybullet simulation of ABB Yumi robot with
-    separate functionality for both arms
+    separate functionality for both arms.
 
     Args:
-        cfgs (YACS CfgNode): configurations for the arm
-        pb_client (BulletClient): pybullet client
-        seed (int): random seed
+        cfgs (YACS CfgNode): configurations for the arm.
+        pb_client (BulletClient): pybullet client.
+        seed (int): random seed.
         self_collision (bool): enable self_collision or
-                               not whiling loading URDF
+            not whiling loading URDF.
         eetool_cfg (dict): arguments to pass in the constructor
-            of the end effector tool class
+            of the end effector tool class.
 
     Attributes:
         right_arm (SingleArmPybullet): Right arm instance

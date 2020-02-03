@@ -9,11 +9,11 @@ from airobot.utils.common import euler2quat
 def main():
     """
     This function demonstrates how to load a custom
-    end effector to the UR5e robot in pybullet
+    end effector to the UR5e robot in pybullet.
 
     NOTE: This implementation using PyBullet's createConstraint
     function is known to have issues with fixed joints (fixed joints
-    are not actually rigidly fixed)
+    are not actually rigidly fixed).
     """
     robot = Robot('ur5e',
                   pb=True,

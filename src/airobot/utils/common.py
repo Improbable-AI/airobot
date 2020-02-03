@@ -14,13 +14,13 @@ from scipy.spatial.transform import Rotation as R
 
 def ang_in_mpi_ppi(angle):
     """
-    Convert the angle to the range [-pi, pi)
+    Convert the angle to the range [-pi, pi).
 
     Args:
-        angle (float): angle in radians
+        angle (float): angle in radians.
 
     Returns:
-        float: equivalent angle in [-pi, pi)
+        float: equivalent angle in [-pi, pi).
     """
 
     angle = (angle + np.pi) % (2 * np.pi) - np.pi
@@ -29,28 +29,28 @@ def ang_in_mpi_ppi(angle):
 
 def clamp(n, minn, maxn):
     """
-    Clamp the input value to be in [minn, maxn]
+    Clamp the input value to be in [minn, maxn].
 
     Args:
-        n (float or int): input value
-        minn (float or int): minimum value
-        maxn (float or int): maximum value
+        n (float or int): input value.
+        minn (float or int): minimum value.
+        maxn (float or int): maximum value.
 
     Returns:
-        float or int: clamped value
+        float or int: clamped value.
     """
     return max(min(maxn, n), minn)
 
 
 def quat2rot(quat):
     """
-    Convert quaternion to rotation matrix
+    Convert quaternion to rotation matrix.
 
     Args:
-        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: :math:`[4,]`)
+        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: :math:`[4,]`).
 
     Returns:
-        np.ndarray: rotation matrix (shape: :math:`[3, 3]`)
+        np.ndarray: rotation matrix (shape: :math:`[3, 3]`).
 
     """
     r = R.from_quat(quat)
@@ -59,10 +59,10 @@ def quat2rot(quat):
 
 def quat2euler(quat, axes='xyz'):
     """
-    Convert quaternion to euler angles
+    Convert quaternion to euler angles.
 
     Args:
-        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: :math:`[4,]`)
+        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: :math:`[4,]`).
         axes (str): Specifies sequence of axes for rotations.
             3 characters belonging to the set {'X', 'Y', 'Z'}
             for intrinsic rotations (rotation about the axes of a
@@ -71,7 +71,7 @@ def quat2euler(quat, axes='xyz'):
             the axes of the fixed coordinate system).
 
     Returns:
-        np.ndarray: euler angles (shape: :math:`[3,]`)
+        np.ndarray: euler angles (shape: :math:`[3,]`).
     """
     r = R.from_quat(quat)
     return r.as_euler(axes)
@@ -79,13 +79,13 @@ def quat2euler(quat, axes='xyz'):
 
 def quat2rotvec(quat):
     """
-    Convert quaternion to rotation vector
+    Convert quaternion to rotation vector.
 
     Arguments:
-        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: :math:`[4,]`)
+        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: :math:`[4,]`).
 
     Returns:
-        np.ndarray: rotation vector (shape: :math:`[3,]`)
+        np.ndarray: rotation vector (shape: :math:`[3,]`).
     """
     r = R.from_quat(quat)
     return r.as_rotvec()
@@ -93,13 +93,13 @@ def quat2rotvec(quat):
 
 def quat_inverse(quat):
     """
-    Return the quaternion inverse
+    Return the quaternion inverse.
 
     Args:
-        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: :math:`[4,]`)
+        quat (list or np.ndarray): quaternion [x,y,z,w] (shape: :math:`[4,]`).
 
     Returns:
-        np.ndarray: inverse quaternion (shape: :math:`[4,]`)
+        np.ndarray: inverse quaternion (shape: :math:`[4,]`).
     """
     r = R.from_quat(quat)
     return r.inv().as_quat()
@@ -107,16 +107,16 @@ def quat_inverse(quat):
 
 def quat_multiply(quat1, quat2):
     """
-    Quaternion mulitplication
+    Quaternion mulitplication.
 
     Args:
         quat1 (list or np.ndarray): first quaternion [x,y,z,w]
-            (shape: :math:`[4,]`)
+            (shape: :math:`[4,]`).
         quat2 (list or np.ndarray): second quaternion [x,y,z,w]
-            (shape: :math:`[4,]`)
+            (shape: :math:`[4,]`).
 
     Returns:
-        np.ndarray: quat1 * quat2 (shape: :math:`[4,]`)
+        np.ndarray: quat1 * quat2 (shape: :math:`[4,]`).
     """
     r1 = R.from_quat(quat1)
     r2 = R.from_quat(quat2)
@@ -128,14 +128,14 @@ def rotvec2rot(vec):
     """
     A rotation vector is a 3 dimensional vector which is
     co-directional to the axis of rotation and whose
-    norm gives the angle of rotation (in radians)
+    norm gives the angle of rotation (in radians).
 
     Args:
         vec (list or np.ndarray): a rotational vector. Its norm
             represents the angle of rotation.
 
     Returns:
-        np.ndarray: rotation matrix (shape: :math:`[3, 3]`)
+        np.ndarray: rotation matrix (shape: :math:`[3, 3]`).
     """
     r = R.from_rotvec(vec)
     return r.as_dcm()
@@ -145,14 +145,14 @@ def rotvec2quat(vec):
     """
     A rotation vector is a 3 dimensional vector which is
     co-directional to the axis of rotation and whose
-    norm gives the angle of rotation (in radians)
+    norm gives the angle of rotation (in radians).
 
     Args:
         vec (list or np.ndarray): a rotational vector. Its norm
             represents the angle of rotation.
 
     Returns:
-        np.ndarray: quaternion [x,y,z,w] (shape: :math:`[4,]`)
+        np.ndarray: quaternion [x,y,z,w] (shape: :math:`[4,]`).
     """
     r = R.from_rotvec(vec)
     return r.as_quat()
@@ -162,7 +162,7 @@ def rotvec2euler(vec, axes='xyz'):
     """
     A rotation vector is a 3 dimensional vector which is
     co-directional to the axis of rotation and whose
-    norm gives the angle of rotation (in radians)
+    norm gives the angle of rotation (in radians).
 
     Args:
         vec (list or np.ndarray): a rotational vector. Its norm
@@ -175,7 +175,7 @@ def rotvec2euler(vec, axes='xyz'):
             the axes of the fixed coordinate system).
 
     Returns:
-        np.ndarray: euler angles (shape: :math:`[3,]`)
+        np.ndarray: euler angles (shape: :math:`[3,]`).
     """
     r = R.from_rotvec(vec)
     return r.as_euler(axes)
@@ -183,10 +183,10 @@ def rotvec2euler(vec, axes='xyz'):
 
 def euler2rot(euler, axes='xyz'):
     """
-    Convert euler angles to rotation matrix
+    Convert euler angles to rotation matrix.
 
     Args:
-        euler (list or np.ndarray): euler angles (shape: :math:`[3,]`)
+        euler (list or np.ndarray): euler angles (shape: :math:`[3,]`).
         axes (str): Specifies sequence of axes for rotations.
             3 characters belonging to the set {'X', 'Y', 'Z'}
             for intrinsic rotations (rotation about the axes of a
@@ -195,7 +195,7 @@ def euler2rot(euler, axes='xyz'):
             the axes of the fixed coordinate system).
 
     Returns:
-        np.ndarray: rotation matrix (shape: :math:`[3, 3]`)
+        np.ndarray: rotation matrix (shape: :math:`[3, 3]`).
     """
     r = R.from_euler(axes, euler)
     return r.as_dcm()
@@ -203,10 +203,10 @@ def euler2rot(euler, axes='xyz'):
 
 def euler2quat(euler, axes='xyz'):
     """
-    Convert euler angles to quaternion
+    Convert euler angles to quaternion.
 
     Args:
-        euler (list or np.ndarray): euler angles (shape: :math:`[3,]`)
+        euler (list or np.ndarray): euler angles (shape: :math:`[3,]`).
         axes (str): Specifies sequence of axes for rotations.
             3 characters belonging to the set {'X', 'Y', 'Z'}
             for intrinsic rotations (rotation about the axes of a
@@ -215,7 +215,7 @@ def euler2quat(euler, axes='xyz'):
             the axes of the fixed coordinate system).
 
     Returns:
-        np.ndarray: quaternion [x,y,z,w] (shape: :math:`[4,]`)
+        np.ndarray: quaternion [x,y,z,w] (shape: :math:`[4,]`).
     """
     r = R.from_euler(axes, euler)
     return r.as_quat()
@@ -223,13 +223,13 @@ def euler2quat(euler, axes='xyz'):
 
 def rot2quat(rot):
     """
-    Convert rotation matrix to quaternion
+    Convert rotation matrix to quaternion.
 
     Args:
-        rot (np.ndarray): rotation matrix (shape: :math:`[3, 3]`)
+        rot (np.ndarray): rotation matrix (shape: :math:`[3, 3]`).
 
     Returns:
-        np.ndarray: quaternion [x,y,z,w] (shape: :math:`[4,]`)
+        np.ndarray: quaternion [x,y,z,w] (shape: :math:`[4,]`).
     """
     r = R.from_dcm(rot)
     return r.as_quat()
@@ -237,10 +237,10 @@ def rot2quat(rot):
 
 def rot2euler(rot, axes='xyz'):
     """
-    Convert rotation matrix to euler angles
+    Convert rotation matrix to euler angles.
 
     Args:
-        rot (np.ndarray): rotation matrix (shape: :math:`[3, 3]`)
+        rot (np.ndarray): rotation matrix (shape: :math:`[3, 3]`).
         axes (str): Specifies sequence of axes for rotations.
             3 characters belonging to the set {'X', 'Y', 'Z'}
             for intrinsic rotations (rotation about the axes of a
@@ -249,7 +249,7 @@ def rot2euler(rot, axes='xyz'):
             the axes of the fixed coordinate system).
 
     Returns:
-        np.ndarray: euler angles (shape: :math:`[3,]`)
+        np.ndarray: euler angles (shape: :math:`[3,]`).
     """
     r = R.from_dcm(rot)
     return r.as_euler(axes)
@@ -257,70 +257,70 @@ def rot2euler(rot, axes='xyz'):
 
 def print_red(skk):
     """
-    print the text in red color
+    print the text in red color.
 
     Args:
-        skk (str): text to be printed
+        skk (str): text to be printed.
     """
     print("\033[91m {}\033[00m".format(skk))
 
 
 def print_green(skk):
     """
-    print the text in green color
+    print the text in green color.
 
     Args:
-        skk (str): text to be printed
+        skk (str): text to be printed.
     """
     print("\033[92m {}\033[00m".format(skk))
 
 
 def print_yellow(skk):
     """
-    print the text in yellow color
+    print the text in yellow color.
 
     Args:
-        skk (str): text to be printed
+        skk (str): text to be printed.
     """
     print("\033[93m {}\033[00m".format(skk))
 
 
 def print_blue(skk):
     """
-    print the text in blue color
+    print the text in blue color.
 
     Args:
-        skk (str): text to be printed
+        skk (str): text to be printed.
     """
     print("\033[94m {}\033[00m".format(skk))
 
 
 def print_purple(skk):
     """
-    print the text in purple color
+    print the text in purple color.
 
     Args:
-        skk (str): text to be printed
+        skk (str): text to be printed.
     """
     print("\033[95m {}\033[00m".format(skk))
 
 
 def print_cyan(skk):
     """
-    print the text in cyan color
+    print the text in cyan color.
 
     Args:
-        skk (str): text to be printed
+        skk (str): text to be printed.
     """
     print("\033[96m {}\033[00m".format(skk))
 
 
 def create_folder(path, delete=True):
     """
-    Create a new folder
+    Create a new folder.
 
     Args:
-        path (str): path of the folder
+        path (str): path of the folder.
         delete (bool): if delete=True, then if the path already
             exists, the folder will be deleted and recreated.
     """
@@ -333,14 +333,14 @@ def create_folder(path, delete=True):
 def list_class_names(dir_path):
     """
     Return the mapping of class names in all files
-    in dir_path to their file path
+    in dir_path to their file path.
 
     Args:
-        dir_path (str): absolute path of the folder
+        dir_path (str): absolute path of the folder.
 
     Returns:
         dict: mapping from the class names in all python files in the
-        folder to their file path
+        folder to their file path.
 
     """
 
@@ -360,16 +360,16 @@ def list_class_names(dir_path):
 
 def load_class_from_path(cls_name, path):
     """
-    Load a class from the file path
+    Load a class from the file path.
 
     Args:
-        cls_name (str): class name
-        path (str): python file path
+        cls_name (str): class name.
+        path (str): python file path.
 
     Returns:
         Python Class: return the class A which is named as cls_name.
         You can call A() to create an instance of this class using
-        the return value
+        the return value.
 
     """
     mod_name = 'MOD%s' % cls_name
@@ -395,19 +395,19 @@ def load_class_from_path(cls_name, path):
 
 def linear_interpolate_path(start_pos, delta_xyz, interval):
     """
-    Linear interpolation in a path
+    Linear interpolation in a path.
 
     Args:
         start_pos (list or np.ndarray): start position
-            ([x, y, z], shape: :math:`[3]`)
+            ([x, y, z], shape: :math:`[3]`).
         delta_xyz (list or np.ndarray): movement in x, y, z
-            directions (shape: :math:`[3,]`)
+            directions (shape: :math:`[3,]`).
         interval (float): interpolation interval along delta_xyz.
             Interpolate a point every `interval` distance
-            between the two end points
+            between the two end points.
 
     Returns:
-        np.ndarray: waypoints along the path (shape: :math:`[N, 3]`)
+        np.ndarray: waypoints along the path (shape: :math:`[N, 3]`).
 
     """
     start_pos = np.array(start_pos).flatten()
@@ -424,16 +424,16 @@ def linear_interpolate_path(start_pos, delta_xyz, interval):
 def to_rot_mat(ori):
     """
     Convert orientation in any form (rotation matrix,
-    quaternion, or euler angles) to rotation matrix
+    quaternion, or euler angles) to rotation matrix.
 
     Args:
         ori (list or np.ndarray): orientation in any following form:
             rotation matrix (shape: :math:`[3, 3]`)
             quaternion (shape: :math:`[4]`)
-            euler angles (shape: :math:`[3]`)
+            euler angles (shape: :math:`[3]`).
 
     Returns:
-        np.ndarray: orientation matrix (shape: :math:`[3, 3]`)
+        np.ndarray: orientation matrix (shape: :math:`[3, 3]`).
     """
 
     ori = np.array(ori)
@@ -451,16 +451,16 @@ def to_rot_mat(ori):
 def to_euler_angles(ori):
     """
     Convert orientation in any form (rotation matrix,
-    quaternion, or euler angles) to euler angles (roll, pitch, yaw)
+    quaternion, or euler angles) to euler angles (roll, pitch, yaw).
 
     Args:
         ori (list or np.ndarray): orientation in any following form:
             rotation matrix (shape: :math:`[3, 3]`)
             quaternion (shape: :math:`[4]`)
-            euler angles (shape: :math:`[3]`)
+            euler angles (shape: :math:`[3]`).
 
     Returns:
-        np.ndarray: euler angles [roll, pitch, yaw] (shape: :math:`[3,]`)
+        np.ndarray: euler angles [roll, pitch, yaw] (shape: :math:`[3,]`).
 
     """
     ori = np.array(ori)
@@ -477,16 +477,16 @@ def to_euler_angles(ori):
 def to_quat(ori):
     """
     Convert orientation in any form (rotation matrix,
-    quaternion, or euler angles) to quaternion
+    quaternion, or euler angles) to quaternion.
 
     Args:
         ori (list or np.ndarray): orientation in any following form:
             rotation matrix (shape: :math:`[3, 3]`)
             quaternion (shape: :math:`[4]`)
-            euler angles (shape: :math:`[3]`)
+            euler angles (shape: :math:`[3]`).
 
     Returns:
-        np.ndarray: quaternion [x, y, z, w](shape: :math:`[4, ]`)
+        np.ndarray: quaternion [x, y, z, w](shape: :math:`[4, ]`).
     """
     ori = np.array(ori)
     if ori.size == 3:

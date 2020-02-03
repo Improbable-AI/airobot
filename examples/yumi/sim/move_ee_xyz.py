@@ -5,7 +5,7 @@ from airobot import Robot
 
 def main():
     """
-    Move the robot end effector in a straight line
+    Move the robot end effector in a straight line.
     """
     robot = Robot('yumi_grippers')
     robot.arm.go_home()
