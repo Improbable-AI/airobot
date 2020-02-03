@@ -5,13 +5,13 @@ from airobot import Robot
 
 def main():
     """
-    Move the robot end effector in a straight line
+    Move the robot end effector in a straight line.
 
     The pb=False flag is set because we are using the real robot
-    (pb -- pybullet)
+    (pb -- pybullet).
 
     First movement is executed with MoveIt!, and second movement
-    is executed using urscript commands
+    is executed using urscript commands.
     """
     robot = Robot('ur5e_2f140',
                   pb=False,
