@@ -27,6 +27,8 @@ class Robot:
             if the robot has an base class
         use_cam (bool): whether to create the robot camera instance
             if the robot has an camera class
+        pb_cfg (dict): arguments to pass int when creating
+            the pybullet client
         arm_cfg (dict): arguments to pass in the constructor
             of the arm class
         base_cfg (dict): arguments to pass in the constructor
@@ -46,12 +48,11 @@ class Robot:
     def __init__(self,
                  robot_name,
                  pb=True,
-                 pb_render=True,
-                 pb_realtime=True,
                  use_arm=True,
                  use_eetool=True,
                  use_base=True,
                  use_cam=True,
+                 pb_cfg=None,
                  arm_cfg=None,
                  base_cfg=None,
                  cam_cfg=None,
@@ -93,8 +94,7 @@ class Robot:
                                 cfgs.PYBULLET_URDF)
             cfgs.PYBULLET_URDF = urdf
             from airobot.utils.pb_util import create_pybullet_client
-            pb_client = create_pybullet_client(render=pb_render,
-                                               realtime=pb_realtime)
+            pb_client = create_pybullet_client(**pb_cfg)
             arm_cfg['pb_client'] = pb_client
             base_cfg['pb_client'] = pb_client
             eetool_cfg['pb_client'] = pb_client

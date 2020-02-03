@@ -2,11 +2,12 @@ import functools
 import inspect
 import os
 import pkgutil
+import platform
 import random
 import threading
 import time
 from numbers import Number
-import platform
+
 import cv2
 import numpy as np
 import pybullet as p
@@ -16,20 +17,25 @@ from airobot.utils.common import clamp
 GRAVITY_CONST = -9.8
 
 
-def create_pybullet_client(render=False, realtime=True):
+def create_pybullet_client(render=False,
+                           realtime=True,
+                           opengl_render=True):
     """
     Create a pybullet simulation client.
 
     Args:
         render (bool): use GUI mode or non-GUI mode
         realtime: use realtime simulation or step simuation
+        opengl_render (bool): use OpenGL (hardware renderer) to render
+                RGB images
     """
     if render:
         mode = p.GUI
     else:
         mode = p.DIRECT
     pb_client = BulletClient(connection_mode=mode,
-                             realtime=realtime)
+                             realtime=realtime,
+                             opengl_render=opengl_render)
     pb_client.setAdditionalSearchPath(pybullet_data.getDataPath())
     return pb_client
 
@@ -46,10 +52,17 @@ class BulletClient:
             `pybullet.DIRECT` creates a headless simulation,
             `pybullet.SHARED_MEMORY` connects to an existing simulation.
         realtime (bool): whether to use realtime mode or not
+        opengl_render (bool): use OpenGL (hardware renderer) to render
+            RGB images
+
     """
 
-    def __init__(self, connection_mode=None, realtime=False):
+    def __init__(self,
+                 connection_mode=None,
+                 realtime=False,
+                 opengl_render=True):
         self._in_realtime_mode = realtime
+        self.opengl_render = opengl_render
         self._realtime_lock = threading.RLock()
         if connection_mode is None:
             self._client = p.connect(p.SHARED_MEMORY)
@@ -59,7 +72,7 @@ class BulletClient:
                 connection_mode = p.DIRECT
         self._client = p.connect(connection_mode)
         is_linux = platform.system() == 'Linux'
-        if connection_mode == p.DIRECT and is_linux:
+        if connection_mode == p.DIRECT and is_linux and opengl_render:
             # # using the eglRendererPlugin (hardware OpenGL acceleration)
             egl = pkgutil.get_loader('eglRenderer')
             if egl:

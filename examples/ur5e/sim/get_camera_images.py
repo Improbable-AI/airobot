@@ -9,7 +9,8 @@ def main():
     This function demonstrates how to setup camera
     and get rgb/depth images and segmentation mask.
     """
-    robot = Robot('ur5e', pb_render=False)
+    robot = Robot('ur5e', pb_cfg={'render': True,
+                                  'opengl_render': False})
     focus_pt = [0, 0, 1]  # ([x, y, z])
     robot.cam.setup_camera(focus_pt=focus_pt,
                            dist=3,
@@ -17,9 +18,9 @@ def main():
                            pitch=0,
                            roll=0)
     robot.arm.go_home()
-    rgb, depth = robot.cam.get_images(get_rgb=True,
-                                      get_depth=True)
-    seg = robot.cam.get_segmentation_mask()
+    rgb, depth, seg = robot.cam.get_images(get_rgb=True,
+                                           get_depth=True,
+                                           get_seg=True)
     plt.figure()
     plt.imshow(rgb)
     plt.figure()

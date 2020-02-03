@@ -92,35 +92,55 @@ class RGBDCameraPybullet(RGBDCamera):
     def get_cam_int(self):
         return self.cam_int_mat
 
-    def get_images(self, get_rgb=True, get_depth=True, **kwargs):
+    def get_images(self, get_rgb=True, get_depth=True,
+                   get_seg=False, opengl_render=True, **kwargs):
         """
-        Return rgb/depth images
+        Return rgb, depth, and segmentation images
 
         Args:
             get_rgb (bool): return rgb image if True, None otherwise
             get_depth (bool): return depth image if True, None otherwise
+            get_seg (bool): return the segmentation mask if True,
+                None otherwise
 
         Returns:
-            2-element tuple containing
+            3-element tuple containing
 
             - np.ndarray: rgb image (shape: [H, W, 3])
             - np.ndarray: depth image (shape: [H, W])
+            - np.ndarray: segmentation mask image (shape: [H, W]), with
+                pixel values corresponding to object id and link id.
+                From the PyBullet documentation, the pixel value
+                "combines the object unique id and link index as follows:
+                value = objectUniqueId + (linkIndex+1)<<24 ...
+                for a free floating body without joints/links, the
+                segmentation mask is equal to its body unique id,
+                since its link index is -1."
         """
 
         if self.view_matrix is None:
             raise ValueError('Please call setup_camera() first!')
+        if self._pb.opengl_render:
+            renderer = self._pb.ER_BULLET_HARDWARE_OPENGL
+        else:
+            renderer = self._pb.ER_TINY_RENDERER
         cam_img_kwargs = {
             'width': self.img_width,
             'height': self.img_height,
             'viewMatrix': self.view_matrix.flatten(),
             'projectionMatrix': self.proj_matrix.flatten(),
             'flags': self._pb.ER_NO_SEGMENTATION_MASK,
-            'renderer': self._pb.ER_BULLET_HARDWARE_OPENGL
+            'renderer': renderer
         }
+        if get_seg:
+            pb_seg_flag = self._pb.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX
+            cam_img_kwargs['flags'] = pb_seg_flag
+
         cam_img_kwargs.update(kwargs)
         images = self._pb.getCameraImage(**cam_img_kwargs)
         rgb = None
         depth = None
+        seg = None
         if get_rgb:
             rgb = np.reshape(images[2],
                              (self.img_height,
@@ -131,35 +151,7 @@ class RGBDCameraPybullet(RGBDCamera):
             znear = self.cfgs.CAM.SIM.ZNEAR
             zfar = self.cfgs.CAM.SIM.ZFAR
             depth = zfar * znear / (zfar - (zfar - znear) * depth_buffer)
-        return rgb, depth
-
-    def get_segmentation_mask(self, **kwargs):
-        """
-        Return segmentation mask from PyBullet's builtin
-        segmentation mask functionality.
-
-        Returns:
-            np.ndarray: segmentation mask image (shape: [H, W]), with
-                pixel values corresponding to object id and link id.
-                From the PyBullet documentation, the pixel value
-                "combines the object unique id and link index as follows:
-                value = objectUniqueId + (linkIndex+1)<<24 ...
-                for a free floating body without joints/links, the
-                segmentation mask is equal to its body unique id,
-                since its link index is -1."
-        """
-        if self.view_matrix is None:
-            raise ValueError('Please call setup_camera() first!')
-
-        images = self._pb.getCameraImage(
-            width=self.img_width,
-            height=self.img_height,
-            viewMatrix=self.view_matrix.flatten(),
-            projectionMatrix=self.proj_matrix.flatten(),
-            flags=self._pb.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
-            renderer=self._pb.ER_BULLET_HARDWARE_OPENGL,
-            **kwargs)
-
-        seg = np.reshape(images[4], [self.img_height,
-                                     self.img_width])
-        return seg
+        if get_seg:
+            seg = np.reshape(images[4], [self.img_height,
+                                         self.img_width])
+        return rgb, depth, seg

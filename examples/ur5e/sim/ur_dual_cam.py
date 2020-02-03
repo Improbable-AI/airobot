@@ -18,8 +18,8 @@ class URRobotGym:
     def __init__(self, action_repeat=10, render=True):
         self._action_repeat = action_repeat
         self.robot = Robot('ur5e_2f140',
-                           pb_render=render,
-                           pb_realtime=False)
+                           pb_cfg={'render': render,
+                                   'realtime': False})
 
         self._ee_pos_scale = 0.02
         self._ee_ori_scale = np.pi / 36.0

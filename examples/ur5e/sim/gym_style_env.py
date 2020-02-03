@@ -17,8 +17,9 @@ from gym import spaces
 class URRobotGym:
     def __init__(self, action_repeat=10, render=True):
         self._action_repeat = action_repeat
-        self.robot = Robot('ur5e_2f140', pb_render=render,
-                           pb_realtime=False)
+        self.robot = Robot('ur5e_2f140',
+                           pb_cfg={'render': render,
+                                   'realtime': False})
         self.ee_ori = [-np.sqrt(2) / 2, np.sqrt(2) / 2, 0, 0]
         self._action_bound = 1.0
         self._ee_pos_scale = 0.02
