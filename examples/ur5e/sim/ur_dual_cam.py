@@ -15,10 +15,10 @@ from yacs.config import CfgNode as CN
 
 
 class URRobotGym:
-    def __init__(self, action_repeat=10, render=True):
+    def __init__(self, action_repeat=10, gui=True):
         self._action_repeat = action_repeat
         self.robot = Robot('ur5e_2f140',
-                           pb_cfg={'render': render,
+                           pb_cfg={'gui': gui,
                                    'realtime': False})
 
         self._ee_pos_scale = 0.02
@@ -167,7 +167,7 @@ class URRobotGym:
 
 
 def main():
-    env = URRobotGym(render=False)
+    env = URRobotGym(gui=False)
     ob = env.reset()
     ar.log_info('\nThe action is a 5-dim vector A. \n'
                 'The range of each element is [-1, 1].\n'

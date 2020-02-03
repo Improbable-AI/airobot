@@ -17,19 +17,19 @@ from airobot.utils.common import clamp
 GRAVITY_CONST = -9.8
 
 
-def create_pybullet_client(render=False,
+def create_pybullet_client(gui=True,
                            realtime=True,
                            opengl_render=True):
     """
     Create a pybullet simulation client.
 
     Args:
-        render (bool): use GUI mode or non-GUI mode
+        gui (bool): use GUI mode or non-GUI mode
         realtime: use realtime simulation or step simuation
         opengl_render (bool): use OpenGL (hardware renderer) to render
                 RGB images
     """
-    if render:
+    if gui:
         mode = p.GUI
     else:
         mode = p.DIRECT

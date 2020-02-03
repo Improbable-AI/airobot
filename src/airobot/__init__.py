@@ -58,6 +58,8 @@ class Robot:
                  cam_cfg=None,
                  eetool_cfg=None
                  ):
+        if pb_cfg is None:
+            pb_cfg = {}
         if arm_cfg is None:
             arm_cfg = {}
         if base_cfg is None:

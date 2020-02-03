@@ -15,10 +15,10 @@ from gym import spaces
 
 
 class URRobotGym:
-    def __init__(self, action_repeat=10, render=True):
+    def __init__(self, action_repeat=10, gui=True):
         self._action_repeat = action_repeat
         self.robot = Robot('ur5e_2f140',
-                           pb_cfg={'render': render,
+                           pb_cfg={'gui': gui,
                                    'realtime': False})
         self.ee_ori = [-np.sqrt(2) / 2, np.sqrt(2) / 2, 0, 0]
         self._action_bound = 1.0
@@ -121,7 +121,7 @@ class URRobotGym:
 
 
 def main():
-    env = URRobotGym(render=True)
+    env = URRobotGym(gui=True)
     for i in range(10):
         env.step([1, 0, 0, 0, -1])
         time.sleep(0.1)

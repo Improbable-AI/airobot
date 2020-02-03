@@ -93,7 +93,7 @@ class RGBDCameraPybullet(RGBDCamera):
         return self.cam_int_mat
 
     def get_images(self, get_rgb=True, get_depth=True,
-                   get_seg=False, opengl_render=True, **kwargs):
+                   get_seg=False, **kwargs):
         """
         Return rgb, depth, and segmentation images
 
@@ -104,18 +104,23 @@ class RGBDCameraPybullet(RGBDCamera):
                 None otherwise
 
         Returns:
-            3-element tuple containing
+            2-element tuple (if `get_seg` is False) containing
+
+            - np.ndarray: rgb image (shape: [H, W, 3])
+            - np.ndarray: depth image (shape: [H, W])
+
+            3-element tuple (if `get_seg` is True) containing
 
             - np.ndarray: rgb image (shape: [H, W, 3])
             - np.ndarray: depth image (shape: [H, W])
             - np.ndarray: segmentation mask image (shape: [H, W]), with
-                pixel values corresponding to object id and link id.
-                From the PyBullet documentation, the pixel value
-                "combines the object unique id and link index as follows:
-                value = objectUniqueId + (linkIndex+1)<<24 ...
-                for a free floating body without joints/links, the
-                segmentation mask is equal to its body unique id,
-                since its link index is -1."
+              pixel values corresponding to object id and link id.
+              From the PyBullet documentation, the pixel value
+              "combines the object unique id and link index as follows:
+              value = objectUniqueId + (linkIndex+1)<<24 ...
+              for a free floating body without joints/links, the
+              segmentation mask is equal to its body unique id,
+              since its link index is -1."
         """
 
         if self.view_matrix is None:
@@ -140,7 +145,6 @@ class RGBDCameraPybullet(RGBDCamera):
         images = self._pb.getCameraImage(**cam_img_kwargs)
         rgb = None
         depth = None
-        seg = None
         if get_rgb:
             rgb = np.reshape(images[2],
                              (self.img_height,
@@ -154,4 +158,6 @@ class RGBDCameraPybullet(RGBDCamera):
         if get_seg:
             seg = np.reshape(images[4], [self.img_height,
                                          self.img_width])
-        return rgb, depth, seg
+            return rgb, depth, seg
+        else:
+            return rgb, depth
