@@ -66,7 +66,7 @@ from airobot import Robot
 # create a UR5e robot in pybullet
 robot = Robot('ur5e',
               pb=True,
-              arm_cfg={'render': True})
+              pb_cfg={'gui': True})
 robot.arm.go_home()
 robot.arm.move_ee_xyz([0.1, 0.1, 0.1])
 ```
