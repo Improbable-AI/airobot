@@ -50,6 +50,27 @@ class RGBDCamera(Camera):
                                        np.ones((1, img_pixs.shape[1]))))
         self._uv_one_in_cam = np.dot(self.cam_int_mat_inv, self._uv_one)
 
+    def get_cam_ext(self):
+        """
+        Return the camera's extrinsic matrix.
+
+        Returns:
+            np.ndarray: extrinsic matrix (shape: :math:`[4, 4]`)
+            for the camera (source frame: base frame.
+            target frame: camera frame).
+        """
+        return self.cam_ext_mat
+
+    def get_cam_int(self):
+        """
+        Return the camera's intrinsic matrix.
+
+        Returns:
+            np.ndarray: intrinsic matrix (shape: :math:`[3, 3]`)
+            for the camera.
+        """
+        return self.cam_int_mat
+
     def get_pix_3dpt(self, rs, cs, in_world=True, filter_depth=False,
                      k=1, ktype='median', depth_min=None, depth_max=None):
         """
