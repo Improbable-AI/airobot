@@ -6,8 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+docker/requirements.txt
+
+docs/build/*
 # Distribution / packaging
 .Python
+examples/**/*.png
 build/
 develop-eggs/
 dist/
@@ -21,6 +25,7 @@ sdist/
 var/
 wheels/
 *.egg-info/
+.idea/
 .installed.cfg
 *.egg
 MANIFEST
@@ -30,6 +35,9 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+
+*.patch
+*.pth
 
 # Installer logs
 pip-log.txt
@@ -102,3 +110,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# local cudnn resources (large deb file)
+docker/cudnn    
