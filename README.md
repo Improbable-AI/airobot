@@ -1,5 +1,8 @@
 # AIRobot
 
+[![Documentation Status](https://readthedocs.org/projects/airobot/badge/?version=latest)](https://airobot.readthedocs.io/en/latest/?badge=latest)
+
+
 AIRobot is a python library to interface with robots. It follows a similar architecture from [PyRobot](https://pyrobot.org).
 - [Citation](#citation)
 - [Installation](#installation)
