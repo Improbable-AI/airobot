@@ -262,7 +262,6 @@ def main():
             push(bot, reset_pos, z_lowest=args.z_min)
         except Exception as e:
             print(e)
-            pass
         time.sleep(1)
 
 
