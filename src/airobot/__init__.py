@@ -2,9 +2,9 @@ import importlib
 import os
 import time
 
-from airobot.utils.ai_logger import Logger
-from airobot.utils.common import load_class_from_path
-from airobot.version import __version__
+from .utils.ai_logger import Logger
+from .utils.common import load_class_from_path
+from .version import __version__
 
 
 class Robot:
