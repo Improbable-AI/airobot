@@ -1,8 +1,8 @@
 import time
 
-import airobot as ar
 import numpy as np
 from airobot import Robot
+from airobot import log_warn
 from airobot.utils.common import euler2quat
 
 
@@ -14,7 +14,7 @@ def main():
     robot = Robot('ur5e_2f140')
     success = robot.arm.go_home()
     if not success:
-        ar.log_warn('Robot go_home failed!!!')
+        log_warn('Robot go_home failed!!!')
     ori = euler2quat([0, 0, np.pi / 2])
     robot.pb_client.load_urdf('table/table.urdf',
                               [.5, 0, 0.4],

@@ -1,7 +1,7 @@
-import airobot as ar
 import matplotlib.pyplot as plt
 import numpy as np
 from airobot import Robot
+from airobot import log_info
 
 
 def main():
@@ -25,8 +25,8 @@ def main():
     plt.imshow(rgb)
     plt.figure()
     plt.imshow(depth * 25, cmap='gray', vmin=0, vmax=255)
-    ar.log_info('Maximum Depth (m): %f' % np.max(depth))
-    ar.log_info('Minimum Depth (m): %f' % np.min(depth))
+    log_info('Maximum Depth (m): %f' % np.max(depth))
+    log_info('Minimum Depth (m): %f' % np.min(depth))
     plt.figure()
     plt.imshow(seg)
     plt.show()

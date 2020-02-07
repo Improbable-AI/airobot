@@ -1,8 +1,8 @@
 import time
 
-import airobot as ar
 import numpy as np
 from airobot import Robot
+from airobot import log_info
 from airobot.utils.common import euler2quat
 
 
@@ -47,19 +47,19 @@ def main():
                                         base_pos=[0.9, -0.4, 1.0],
                                         rgba=[0.5, 0.2, 1, 1])
     pos, quat, lin_vel, ang_vel = robot.pb_client.get_body_state(cylinder_id)
-    ar.log_info('Cylinder:')
-    ar.log_info('         position: %s' % np.array2string(pos,
+    log_info('Cylinder:')
+    log_info('         position: %s' % np.array2string(pos,
+                                                       precision=2))
+    log_info('         quaternion: %s' % np.array2string(quat,
+                                                         precision=2))
+    log_info('         linear vel: %s' % np.array2string(lin_vel,
+                                                         precision=2))
+    log_info('         angular vel: %s' % np.array2string(ang_vel,
                                                           precision=2))
-    ar.log_info('         quaternion: %s' % np.array2string(quat,
-                                                            precision=2))
-    ar.log_info('         linear vel: %s' % np.array2string(lin_vel,
-                                                            precision=2))
-    ar.log_info('         angular vel: %s' % np.array2string(ang_vel,
-                                                             precision=2))
-    ar.log_info('Removing sphere')
+    log_info('Removing sphere')
     robot.pb_client.remove_body(sphere_id)
     time.sleep(2)
-    ar.log_info('Reset duck')
+    log_info('Reset duck')
     robot.pb_client.reset_body(duck_id, base_pos=[0.9, -0.4, 1.0],
                                base_quat=[0, 0, 0, 1],
                                lin_vel=[0, 2, 0],
