@@ -95,7 +95,7 @@ class Robot:
             urdf = os.path.join(urdfs_root_path,
                                 cfgs.PYBULLET_URDF)
             cfgs.PYBULLET_URDF = urdf
-            from airobot.utils.pb_util import create_pybullet_client
+            from .utils.pb_util import create_pybullet_client
             pb_client = create_pybullet_client(**pb_cfg)
             arm_cfg['pb_client'] = pb_client
             base_cfg['pb_client'] = pb_client
@@ -116,7 +116,7 @@ class Robot:
                 cls_name = cfgs.ARM.CLASS
             else:
                 cls_name = cfgs.ARM.CLASS + class_suffix
-            from airobot.arm import cls_name_to_path as arm_cls_name_to_path
+            from .arm import cls_name_to_path as arm_cls_name_to_path
             arm_class = load_class_from_path(cls_name,
                                              arm_cls_name_to_path[cls_name])
             if not use_eetool:
@@ -127,13 +127,13 @@ class Robot:
             self.arm = arm_class(cfgs, **arm_cfg)
         if cfgs.HAS_BASE and use_base:
             cls_name = cfgs.BASE.CLASS + class_suffix
-            from airobot.base import cls_name_to_path as base_cls_name_to_path
+            from .base import cls_name_to_path as base_cls_name_to_path
             base_class = load_class_from_path(cls_name,
                                               base_cls_name_to_path[cls_name])
             self.base = base_class(cfgs, **base_cfg)
         if cfgs.HAS_CAMERA and use_cam:
             cls_name = cfgs.CAM.CLASS + class_suffix
-            from airobot.sensor.camera import cls_name_to_path \
+            from .sensor.camera import cls_name_to_path \
                 as cam_cls_name_to_path
             camera_class = load_class_from_path(cls_name,
                                                 cam_cls_name_to_path[cls_name])
