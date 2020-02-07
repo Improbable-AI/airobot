@@ -16,25 +16,25 @@ def main():
     robot.arm.go_home()
 
     ori = euler2quat([0, 0, np.pi / 2])
-    table_id = robot.pb_client.load_urdf('table/table.urdf',
-                                         [1, 0, 0.4],
-                                         ori,
-                                         scaling=0.9)
+    robot.pb_client.load_urdf('table/table.urdf',
+                              [1, 0, 0.4],
+                              ori,
+                              scaling=0.9)
     sphere_id = robot.pb_client.load_geom('sphere',
                                           size=0.05,
                                           mass=1,
                                           base_pos=[1, 0, 1.0],
                                           rgba=[0, 1, 0, 1])
-    box_id = robot.pb_client.load_geom('box',
-                                       size=0.05,
-                                       mass=1,
-                                       base_pos=[1, 0.12, 1.0],
-                                       rgba=[1, 0, 0, 1])
-    box_id2 = robot.pb_client.load_geom('box',
-                                        size=[0.06, 0.02, 0.03],
-                                        mass=1,
-                                        base_pos=[1.3, 0.12, 1.0],
-                                        rgba=[0, 0, 1, 1])
+    robot.pb_client.load_geom('box',
+                              size=0.05,
+                              mass=1,
+                              base_pos=[1, 0.12, 1.0],
+                              rgba=[1, 0, 0, 1])
+    robot.pb_client.load_geom('box',
+                              size=[0.06, 0.02, 0.03],
+                              mass=1,
+                              base_pos=[1.3, 0.12, 1.0],
+                              rgba=[0, 0, 1, 1])
     cylinder_id = robot.pb_client.load_geom('cylinder',
                                             size=[0.06, 0.08],
                                             mass=1,
@@ -57,7 +57,7 @@ def main():
     ar.log_info('         angular vel: %s' % np.array2string(ang_vel,
                                                              precision=2))
     ar.log_info('Removing sphere')
-    res = robot.pb_client.remove_body(sphere_id)
+    robot.pb_client.remove_body(sphere_id)
     time.sleep(2)
     ar.log_info('Reset duck')
     robot.pb_client.reset_body(duck_id, base_pos=[0.9, -0.4, 1.0],

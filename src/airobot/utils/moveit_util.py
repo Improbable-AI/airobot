@@ -111,7 +111,8 @@ class MoveitScene(object):
             ref_frame (str): which link are you adding object to.
             obj_name (str): object name.
             pos (list): position of the object with respect to the ref_frame.
-            ori (list): orientation of the object with respect to the ref_frame.
+            ori (list): orientation of the object with
+                respect to the ref_frame.
             size (float or list or tuple): size can be a
                 float, which means the edge
                 length of a cube. size can also be a list or tuple of length 3,
@@ -198,7 +199,8 @@ class MoveitScene(object):
         Unlink the attached object from ref_frame.
 
         Args:
-            ref_frame (str): the parent link at which the object is attached to.
+            ref_frame (str): the parent link at which the
+                object is attached to.
             obj_name (str): the object name.
             delete (bool): If True, the object will be deleted from the scene.
                 Otherwise, the object will be unlinked

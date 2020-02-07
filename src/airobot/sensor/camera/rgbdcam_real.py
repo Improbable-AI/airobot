@@ -30,7 +30,8 @@ class RGBDCameraReal(RGBDCamera):
             for the camera.
         cam_int_mat (np.ndarray): intrinsic matrix (shape: :math:`[3, 3]`)
             for the camera.
-        depth_scale (float): ratio of the depth image value to true depth value.
+        depth_scale (float): ratio of the depth image value
+            to true depth value.
         depth_min (float): minimum depth value considered in 3D reconstruction.
         depth_max (float): maximum depth value considered in 3D reconstruction.
     """
