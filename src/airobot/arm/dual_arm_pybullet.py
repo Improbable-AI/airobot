@@ -84,7 +84,7 @@ class DualArmPybullet(ARM):
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
-                                 % self._arm_names[0], self._arm_names[1])
+                                 % (self._arm_names[0], self._arm_names[1]))
             success = self.arms[arm].go_home()
         return success
 
@@ -145,7 +145,7 @@ class DualArmPybullet(ARM):
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
-                                 % self._arm_names[0], self._arm_names[1])
+                                 % (self._arm_names[0], self._arm_names[1]))
             success = self.arms[arm].set_jpos(position,
                                               joint_name=joint_name,
                                               wait=wait)
@@ -201,7 +201,7 @@ class DualArmPybullet(ARM):
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
-                                 % self._arm_names[0], self._arm_names[1])
+                                 % (self._arm_names[0], self._arm_names[1]))
             success = self.arms[arm].set_jvel(velocity,
                                               joint_name=joint_name,
                                               wait=wait)
@@ -260,7 +260,7 @@ class DualArmPybullet(ARM):
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
-                                 % self._arm_names[0], self._arm_names[1])
+                                 % (self._arm_names[0], self._arm_names[1]))
             success = self.arms[arm].set_jtorq(torque,
                                                joint_name=joint_name,
                                                wait=wait)
@@ -295,7 +295,7 @@ class DualArmPybullet(ARM):
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
-                                 % self._arm_names[0], self._arm_names[1])
+                                 % (self._arm_names[0], self._arm_names[1]))
             success = self.arms[arm].set_ee_pose(pos=pos,
                                                  ori=ori,
                                                  wait=wait)
@@ -330,7 +330,7 @@ class DualArmPybullet(ARM):
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
-                                 % self._arm_names[0], self._arm_names[1])
+                                 % (self._arm_names[0], self._arm_names[1]))
             success = self.arms[arm].move_ee_xyz(delta_xyz=delta_xyz,
                                                  eef_step=eef_step)
         return success
@@ -347,21 +347,12 @@ class DualArmPybullet(ARM):
 
         """
         if joint_name is None:
-            tgt_vels = [0.0] * self.dual_arm_dof
-            forces = [0.0] * self.dual_arm_dof
-            self._pb.setJointMotorControlArray(self.robot_id,
-                                               self.arm_jnt_ids,
-                                               self._pb.VELOCITY_CONTROL,
-                                               targetVelocities=tgt_vels,
-                                               forces=forces)
-            self._in_torque_mode = [True] * self.dual_arm_dof
+            for arm in self.arms.values():
+                arm.enable_torque_control()
+                self._in_torque_mode = [True] * self.dual_arm_dof
         else:
-            jnt_id = self.jnt_to_id[joint_name]
-            self._pb.setJointMotorControl2(self.robot_id,
-                                           jnt_id,
-                                           self._pb.VELOCITY_CONTROL,
-                                           targetVelocity=0,
-                                           force=0.0)
+            arm = self._check_arm(joint_name)
+            self.arms[arm].enable_torque_control(joint_name)
             arm_jnt_id = self.arm_jnt_names.index(joint_name)
             self._in_torque_mode[arm_jnt_id] = True
 
@@ -378,10 +369,12 @@ class DualArmPybullet(ARM):
 
         """
         if joint_name is None:
-            self.set_jvel([0.0] * self.dual_arm_dof)
-            self._in_torque_mode = [False] * self.dual_arm_dof
+            for arm in self.arms.values():
+                arm.disable_torque_control()
+                self._in_torque_mode = [False] * self.dual_arm_dof
         else:
-            self.set_jvel(0.0, joint_name)
+            arm = self._check_arm(joint_name)
+            self.arms[arm].disable_torque_control(joint_name)
             arm_jnt_id = self.arm_jnt_names.index(joint_name)
             self._in_torque_mode[arm_jnt_id] = False
 
@@ -496,7 +489,7 @@ class DualArmPybullet(ARM):
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
-                                 % self._arm_names[0], self._arm_names[1])
+                                 % (self._arm_names[0], self._arm_names[1]))
             return self.arms[arm].get_ee_pose()
 
     def get_ee_vel(self, arm=None):
@@ -519,7 +512,7 @@ class DualArmPybullet(ARM):
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
-                                 % self._arm_names[0], self._arm_names[1])
+                                 % (self._arm_names[0], self._arm_names[1]))
             return self.arms[arm].get_ee_vel()
 
     def compute_ik(self, pos, ori=None, arm=None, ns=False, *args, **kwargs):
@@ -548,8 +541,26 @@ class DualArmPybullet(ARM):
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
-                                 % self._arm_names[0], self._arm_names[1])
+                                 % (self._arm_names[0], self._arm_names[1]))
             return self.arms[arm].compute_ik(pos=pos, ori=ori, ns=ns)
+
+    def _check_arm(self, joint_name):
+        """
+        Checks which arm a joint is part of
+
+        Args:
+            joint_name (str): Name of the joint to check
+
+        Returns:
+            str: Name of the arm that has the specified joint
+        """
+        if joint_name in self.right_arm_jnt_names:
+            arm_name = self._r_arm_name
+        elif joint_name in self.left_arm_jnt_names:
+            arm_name = self._l_arm_name
+        else:
+            raise ValueError('Joint name not recognized')
+        return arm_name
 
     def _is_in_torque_mode(self, joint_name=None):
         if joint_name is None:
