@@ -13,6 +13,7 @@ AIRobot is a python library to interface with robots. It follows a similar archi
 - [Run Tests](#run-tests)
 - [License](#license)
 - [Coding Style](#coding-style)
+- [Acknowledgement](#acknowledgement)
 
 ## Citation
 
@@ -107,6 +108,8 @@ MIT license
 
 AIRobot uses [Google style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) for formatting docstrings. We use [Flake8](https://pypi.org/project/flake8/) to perform additional formatting and semantic checking of code.
 
+## Acknowledgement
 
+We gratefully acknowledge the support from Sony Research Grant and DARPA Machine Common Sense Program.
 
 
