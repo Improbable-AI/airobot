@@ -1,14 +1,13 @@
 import time
 
 import airobot as ar
-from airobot import Robot
 
 
 def main():
     """
     Move the robot end effector to the desired pose.
     """
-    robot = Robot('yumi_grippers')
+    robot = ar.Robot('yumi_grippers')
     robot.arm.go_home()
     tgt_pos = [0.35, 0.0, 0.2]
     robot.arm.set_ee_pose(tgt_pos, arm='right')

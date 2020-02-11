@@ -1,7 +1,6 @@
 import time
 
 import airobot as ar
-from airobot import Robot
 
 
 def main():
@@ -23,7 +22,7 @@ def main():
     collision free (change the goal positions when use_urscript=True
     at your own risk).
     """
-    robot = Robot('ur5e_2f140', pb=False, use_cam=False)
+    robot = ar.Robot('ur5e_2f140', pb=False, use_cam=False)
     robot.arm.go_home()
 
     goal_pos = [0.5, -2, -1.1, -0.95, 1.7, -0.1]

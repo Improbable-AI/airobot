@@ -1,5 +1,8 @@
 # AIRobot
 
+[![Documentation Status](https://readthedocs.org/projects/airobot/badge/?version=latest)](https://airobot.readthedocs.io/en/latest/?badge=latest)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Improbable-AI/airobot/blob/master/LICENSE)
+
 AIRobot is a python library to interface with robots. It follows a similar architecture from [PyRobot](https://pyrobot.org).
 - [Citation](#citation)
 - [Installation](#installation)
@@ -10,6 +13,7 @@ AIRobot is a python library to interface with robots. It follows a similar archi
 - [Run Tests](#run-tests)
 - [License](#license)
 - [Coding Style](#coding-style)
+- [Acknowledgement](#acknowledgement)
 
 ## Citation
 
@@ -104,6 +108,8 @@ MIT license
 
 AIRobot uses [Google style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) for formatting docstrings. We use [Flake8](https://pypi.org/project/flake8/) to perform additional formatting and semantic checking of code.
 
+## Acknowledgement
 
+We gratefully acknowledge the support from Sony Research Grant and DARPA Machine Common Sense Program.
 
 

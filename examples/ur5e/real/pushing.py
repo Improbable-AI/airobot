@@ -121,8 +121,6 @@ def draw_segments(pts, labels, core_samples_mask):
     print('Estimated number of clusters: %d' % n_clusters_)
     for k, col in zip(unique_labels, colors):
         if k == -1:
-            # Black used for noise.
-            col = [0, 0, 0, 1]
             continue
         class_member_mask = (labels == k)
 
@@ -262,7 +260,6 @@ def main():
             push(bot, reset_pos, z_lowest=args.z_min)
         except Exception as e:
             print(e)
-            pass
         time.sleep(1)
 
 

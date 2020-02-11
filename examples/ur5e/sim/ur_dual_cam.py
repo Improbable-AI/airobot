@@ -4,10 +4,10 @@ An example of UR robot with dual cameras in pybullet.
 
 from copy import deepcopy
 
-import airobot as ar
 import matplotlib.pyplot as plt
 import numpy as np
 from airobot import Robot
+from airobot import log_info
 from airobot.sensor.camera.rgbdcam_pybullet import RGBDCameraPybullet
 from airobot.utils.common import ang_in_mpi_ppi
 from airobot.utils.common import clamp
@@ -173,13 +173,13 @@ class URRobotGym:
 def main():
     env = URRobotGym(gui=False)
     ob = env.reset()
-    ar.log_info('\nThe action is a 5-dim vector A. \n'
-                'The range of each element is [-1, 1].\n'
-                'A[0] is dx, A[1] is dy, A[2] is dz;\n'
-                'A[3] is the delta of the gripper orientation;\n'
-                'A[4] is the gripper opening angle, \n'
-                '-1 means opening the gripper, \n'
-                '1 means closing the gripper.\n')
+    log_info('\nThe action is a 5-dim vector A. \n'
+             'The range of each element is [-1, 1].\n'
+             'A[0] is dx, A[1] is dy, A[2] is dz;\n'
+             'A[3] is the delta of the gripper orientation;\n'
+             'A[4] is the gripper opening angle, \n'
+             '-1 means opening the gripper, \n'
+             '1 means closing the gripper.\n')
     image = plt.imshow(ob, interpolation='none',
                        animated=True, label="cam")
     ax = plt.gca()

@@ -86,12 +86,6 @@ class RGBDCameraPybullet(RGBDCamera):
                                      [0, 0, 1]])
         self._init_pers_mat()
 
-    def get_cam_ext(self):
-        return self.cam_ext_mat
-
-    def get_cam_int(self):
-        return self.cam_int_mat
-
     def get_images(self, get_rgb=True, get_depth=True,
                    get_seg=False, **kwargs):
         """

@@ -1,7 +1,6 @@
 import time
 
 import airobot as ar
-from airobot import Robot
 
 
 def print_pose(robot):
@@ -42,7 +41,7 @@ def main():
     to be collision free (change the goal poses when use_urscript=True
     at your own risk).
     """
-    robot = Robot('ur5e_2f140', pb=False, use_cam=False)
+    robot = ar.Robot('ur5e_2f140', pb=False, use_cam=False)
     robot.arm.go_home()
     max_iter = 5
 
@@ -84,7 +83,7 @@ def main():
     robot.arm.set_comm_mode(use_urscript=True)
 
     goal_pos = [0.6, -0.4, 0.2]
-    success = robot.arm.set_ee_pose(goal_pos, wait=True)
+    robot.arm.set_ee_pose(goal_pos, wait=True)
     print_pose(robot)
 
 
