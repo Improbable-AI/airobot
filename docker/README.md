@@ -72,12 +72,6 @@ In the first terminal, from within this directory (```/path/to/airobot/docker/``
 ./run_image.bash
 ```
 
-then setup ```airobot``` from within the container
-```
-cd /home/improbable/airobot/
-pip install -e .
-```
-
 #### Termainal 2
 From the second terminal, run the following bash script to allow the container access to your local X server for visualization (there are better ways to do this, but we keep this relatively secure by only providing access to xhost to the specific system we want)
 
@@ -91,11 +85,6 @@ on your host screen (i.e. Gazebo, RViz, PyBullet)
 First, enter the container by starting a new interactive terminal session (```$CONTAINER_ID``` can usually be found by tab completing the below command, or viewing the information about the running containers by running ```docker ps```) and source the catkin workspace that has been built with the following commands
 ```
 docker exec -it $CONTAINER_ID bash
-```
-(now inside of the container)
-```
-cd /root/catkin_ws/
-source devel/setup.bash
 ```
 
 ### Run the simulated UR robot in Gazebo
