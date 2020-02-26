@@ -1,6 +1,6 @@
 IMAGE=anthonysimeonov/airobot-cuda-dev:latest
 XAUTH=/tmp/.docker.xauth
-CAMERA_CALIB_DIR=$PWD/../../camera_calibration
+CAMERA_CALIB_DIR=/root/catkin_ws/src/camera_calibration
 if [ ! -f $XAUTH ]
 then
     xauth_list=$(xauth nlist :0 | sed -e 's/^..../ffff/')
