@@ -74,18 +74,19 @@ class DualArmPybullet(ARM):
             arm.robot_id = self.robot_id
             arm._build_jnt_id()
 
-    def go_home(self, arm=None):
+    def go_home(self, arm=None, ignore_physics=False):
         """
         Move the robot to a pre-defined home pose.
         """
         if arm is None:
-            success = self.set_jpos(self._home_position)
+            success = self.set_jpos(self._home_position,
+                                    ignore_physics=ignore_physics)
         else:
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
                                  '("%s" or "%s")'
                                  % (self._arm_names[0], self._arm_names[1]))
-            success = self.arms[arm].go_home()
+            success = self.arms[arm].go_home(ignore_physics=ignore_physics)
         return success
 
     def reset(self):
@@ -94,8 +95,8 @@ class DualArmPybullet(ARM):
         """
         raise NotImplementedError
 
-    def set_jpos(self, position, arm=None, joint_name=None, wait=True,
-                 *args, **kwargs):
+    def set_jpos(self, position, arm=None, joint_name=None, 
+                 wait=True, ignore_physics=False, *args, **kwargs):
         """
         Move the arm to the specified joint position(s).
 
@@ -127,12 +128,21 @@ class DualArmPybullet(ARM):
                                  'elements if arm is not provided'
                                  % self.dual_arm_dof)
             tgt_pos = position
-            self._pb.setJointMotorControlArray(self.robot_id,
-                                               self.arm_jnt_ids,
-                                               self._pb.POSITION_CONTROL,
-                                               targetPositions=tgt_pos,
-                                               forces=self._max_torques)
-            if self._pb.in_realtime_mode() and wait:
+            if ignore_physics:
+                self.set_jvel([0.] * self.dual_arm_dof)
+                for idx, jnt in enumerate(self.arm_jnt_names):
+                    self.reset_joint_state(
+                        jnt,
+                        tgt_pos[idx]
+                    )
+                success = True
+            else:
+                self._pb.setJointMotorControlArray(self.robot_id,
+                                                   self.arm_jnt_ids,
+                                                   self._pb.POSITION_CONTROL,
+                                                   targetPositions=tgt_pos,
+                                                   forces=self._max_torques)
+            if self._pb.in_realtime_mode() and wait and not ignore_physics:
                 success = wait_to_reach_jnt_goal(
                     tgt_pos,
                     get_func=self.get_jpos,
@@ -148,6 +158,7 @@ class DualArmPybullet(ARM):
                                  % (self._arm_names[0], self._arm_names[1]))
             success = self.arms[arm].set_jpos(position,
                                               joint_name=joint_name,
+                                              ignore_physics=ignore_physics,
                                               wait=wait)
         return success
 
@@ -561,6 +572,23 @@ class DualArmPybullet(ARM):
         else:
             raise ValueError('Joint name not recognized')
         return arm_name
+
+    def reset_joint_state(self, jnt_name, jpos, jvel=0):
+        """
+        Reset the state of the joint. It's best only to do
+        this at the start, while not running the simulation.
+        It will overrides all physics simulation.
+
+        Args:
+            jnt_name (str): joint name.
+            jpos (float): target joint position.
+            jvel (float): optional, target joint velocity.
+
+        """
+        self._pb.resetJointState(self.robot_id,
+                                 self.jnt_to_id[jnt_name],
+                                 targetValue=jpos,
+                                 targetVelocity=jvel)
 
     def _is_in_torque_mode(self, joint_name=None):
         if joint_name is None:
