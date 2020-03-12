@@ -279,10 +279,12 @@ class YumiPalmsPybullet(DualArmPybullet):
         right_cfg = cfgs.ARM.RIGHT
         left_cfg = cfgs.ARM.LEFT
         self.right_arm = CompliantYumiArm(cfgs=right_cfg,
+                                          pb_client=pb_client,
                                           seed=seed,
                                           self_collision=self_collision,
                                           eetool_cfg=eetool_cfg)
         self.left_arm = CompliantYumiArm(cfgs=left_cfg,
+                                         pb_client=pb_client,
                                          seed=seed,
                                          self_collision=self_collision,
                                          eetool_cfg=eetool_cfg)
