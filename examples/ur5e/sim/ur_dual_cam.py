@@ -6,6 +6,9 @@ from copy import deepcopy
 
 import matplotlib.pyplot as plt
 import numpy as np
+from gym import spaces
+from yacs.config import CfgNode as CN
+
 from airobot import Robot
 from airobot import log_info
 from airobot.sensor.camera.rgbdcam_pybullet import RGBDCameraPybullet
@@ -14,8 +17,6 @@ from airobot.utils.common import clamp
 from airobot.utils.common import euler2quat
 from airobot.utils.common import quat_multiply
 from airobot.utils.common import rotvec2quat
-from gym import spaces
-from yacs.config import CfgNode as CN
 
 
 class URRobotGym:

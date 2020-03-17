@@ -4,9 +4,10 @@ from __future__ import print_function
 
 import copy
 
+from gym.utils import seeding
+
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
-from gym.utils import seeding
 
 
 class DualArmPybullet(ARM):

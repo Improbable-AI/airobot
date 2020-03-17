@@ -1,7 +1,8 @@
 import time
 
-import airobot as ar
 import numpy as np
+
+import airobot as ar
 
 
 def main():
