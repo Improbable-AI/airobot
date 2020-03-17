@@ -8,7 +8,6 @@ import airobot.utils.common as arutil
 import numpy as np
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
-from airobot.utils.common import ang_in_mpi_ppi
 from gym.utils import seeding
 
 
@@ -534,7 +533,7 @@ class SingleArmPybullet(ARM):
                                                            self.ee_link_id,
                                                            pos,
                                                            **ex_args)
-        jnt_poss = list(map(ang_in_mpi_ppi, jnt_poss))
+        jnt_poss = list(map(arutil.ang_in_mpi_ppi, jnt_poss))
         arm_jnt_poss = [jnt_poss[i] for i in self.arm_jnt_ik_ids]
         return arm_jnt_poss
 

@@ -9,19 +9,19 @@ import copy
 import numbers
 import time
 
-import airobot as ar
-import airobot.utils.common as arutil
 import numpy as np
 import rospy
-from airobot.arm.single_arm_ros import SingleArmROS
-from airobot.utils.arm_util import wait_to_reach_ee_goal
-from airobot.utils.arm_util import wait_to_reach_jnt_goal
-from airobot.utils.common import print_red
-from airobot.utils.moveit_util import moveit_cartesian_path
-from airobot.utils.ros_util import kdl_frame_to_numpy
 from std_msgs.msg import String
 from trajectory_msgs.msg import JointTrajectory
 from trajectory_msgs.msg import JointTrajectoryPoint
+
+import airobot as ar
+import airobot.utils.common as arutil
+from airobot.arm.single_arm_ros import SingleArmROS
+from airobot.utils.arm_util import wait_to_reach_ee_goal
+from airobot.utils.arm_util import wait_to_reach_jnt_goal
+from airobot.utils.moveit_util import moveit_cartesian_path
+from airobot.utils.ros_util import kdl_frame_to_numpy
 
 
 class UR5eReal(SingleArmROS):
@@ -375,9 +375,11 @@ class UR5eReal(SingleArmROS):
                 break
             time.sleep(1)
         if not ur_base_attached:
-            print_red('Fail to add the UR base support as a collision object. '
-                      'Be careful when you use moveit to plan the path! You '
-                      'can try again to add the base manually.')
+            arutil.print_red('Fail to add the UR base support as '
+                             'a collision object. '
+                             'Be careful when you use moveit to '
+                             'plan the path! You '
+                             'can try again to add the base manually.')
 
         if self._has_wrist_cam:
             # add a virtual bounding box for the wrist mounted camera
@@ -401,10 +403,11 @@ class UR5eReal(SingleArmROS):
                     break
                 time.sleep(1)
             if not wrist_cam_attached:
-                print_red('Fail to add the wrist camera bounding '
-                          'box as collision object. Be careful when '
-                          'you use moveit to plan paths!'
-                          'You can try again to add the camera box manually.')
+                arutil.print_red('Fail to add the wrist camera bounding '
+                                 'box as collision object. Be careful when '
+                                 'you use moveit to plan paths!'
+                                 'You can try again to add the camera '
+                                 'box manually.')
 
         self._max_torques = self.cfgs.ARM.MAX_TORQUES
 

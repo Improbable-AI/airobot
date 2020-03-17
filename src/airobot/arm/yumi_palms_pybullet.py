@@ -50,7 +50,7 @@ class CompliantYumiArm(SingleArmPybullet):
                                                self_collision=self_collision,
                                                eetool_cfg=eetool_cfg)
 
-    def set_jpos(self, position, joint_name=None, 
+    def set_jpos(self, position, joint_name=None,
                  wait=True, ignore_physics=False, *args, **kwargs):
         """
         Move the arm to the specified joint position(s). Applies regulation
