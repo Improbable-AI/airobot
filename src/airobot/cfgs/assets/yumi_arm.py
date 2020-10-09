@@ -35,6 +35,56 @@ _C.PYBULLET_IK_DAMPING = 0.0005
 # _C.MAX_TORQUES = [14, 30, 13, 14, 1, 3.5, 0.2]
 _C.MAX_TORQUES = [42, 90, 39, 42, 3, 12, 1]
 
+# ros services
+_C.SET_JOINTS_SRV = '_SetJoints'
+_C.SET_CARTESIAN_SRV = '_SetCartesian'
+
+_C.GET_JOINTS_SRV = '_GetJoints'
+_C.GET_CARTESIAN_SRV = '_GetCartesian'
+
+_C.SET_SPEED_SRV = '_SetMaxSpeed'
+_C.EGM_MODE_SRV = '_SetEGMMode'
+_C.ADD_BUFF_SRV = '_AddToJointBuffer'
+_C.CLEAR_BUFF_SRV = '_ClearJointBuffer'
+_C.EXEC_BUFF_SRV = '_ExecuteJointBuffer'
+_C.EXEC_BUFF_SYNC_SRV = '_ExecuteSynchroJointBuffer'
+
+# _C.SERVICES = {
+#     'set_joints': _C.SET_JOINTS_SRV,
+#     'set_cartesian': _C.SET_CARTESIAN_SRV,
+#     'get_joints': _C.GET_JOINTS_SRV,
+#     'get_cartesian': _C.GET_CARTESIAN_SRV,
+#     'set_speed': _C.SET_SPEED_SRV,
+#     'egm_mode': _C.EGM_MODE_SRV,
+#     'add_buffer': _C.ADD_BUFF_SRV,
+#     'clear_buffer': _C.CLEAR_BUFF_SRV,
+#     'execute_buffer': _C.EXEC_BUFF_SRV,
+#     'execute_buffer_sync': _C.EXEC_BUFF_SYNC_SRV
+# }
+_C.SERVICES = [
+    _C.SET_JOINTS_SRV,
+    _C.SET_CARTESIAN_SRV,
+    _C.GET_JOINTS_SRV,
+    _C.GET_CARTESIAN_SRV,
+    _C.SET_SPEED_SRV,
+    _C.EGM_MODE_SRV,
+    _C.ADD_BUFF_SRV,
+    _C.CLEAR_BUFF_SRV,
+    _C.EXEC_BUFF_SRV,
+    _C.EXEC_BUFF_SYNC_SRV
+]
+
+_C.EGM_TARGET_JOINTS_TOPIC = '_TargetJoints'
+
+_C.SERVICE_TIMEOUT_DEFAULT = 0.5
+
+# prefix of the class name of the ARM
+# if it's for pybullet simulation, the name will
+# be augemented to be '<Prefix>Pybullet'
+# if it's for the real robot, the name will be
+# augmented to be '<Prefix>Real'
+_C.ROSTOPIC_JOINT_STATES = '/joint_states'
+
 
 def get_yumi_arm_cfg():
     return _C.clone()

@@ -1,0 +1,5 @@
+# Returns size of joints buffer
+---
+int64 size
+bool success
+string msg

@@ -1,0 +1,8 @@
+# Service to Set the Motion Supervision of the robot
+# Accepts a value between 1 and 300
+# Recommended is around 50
+
+float64 supervision
+---
+bool success
+string msg

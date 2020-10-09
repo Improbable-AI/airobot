@@ -1,0 +1,4 @@
+# Clears cartesian pose buffer
+---
+bool success
+string msg

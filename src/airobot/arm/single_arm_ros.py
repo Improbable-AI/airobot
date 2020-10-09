@@ -54,7 +54,11 @@ class SingleArmROS(SingleArmReal):
         super(SingleArmROS, self).__init__(cfgs=cfgs, eetool_cfg=eetool_cfg)
 
         self.moveit_planner = moveit_planner
-        self._gazebo_sim = rospy.get_param('sim')
+        try:
+            self._gazebo_sim = rospy.get_param('sim')
+        except KeyError:
+            print('Not using Gazebo sim, as not available in rosparam')
+            self._gazebo_sim = False
         self._init_ros_consts()
 
     def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
@@ -85,7 +89,7 @@ class SingleArmROS(SingleArmReal):
             if not isinstance(position, numbers.Number):
                 raise TypeError('position should be individual float value'
                                 ' if joint_name is provided')
-            if joint_name not in self.arm_jnt_names_set:
+            if joint_name not in self.arm_jnt_names:
                 raise TypeError('Joint name [%s] is not in the arm'
                                 ' joint list!' % joint_name)
             else:

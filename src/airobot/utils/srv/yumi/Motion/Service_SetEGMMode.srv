@@ -1,0 +1,5 @@
+# Set EGM mode
+int64 mode
+---
+bool success
+string msg

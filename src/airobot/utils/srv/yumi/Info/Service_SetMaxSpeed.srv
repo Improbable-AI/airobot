@@ -1,0 +1,8 @@
+# Service to set the max speed of the robot.
+
+float64 tcp     # Tool Center Point max speed (mm/s), used in both EGM and non-EGM
+float64 ori     # Tool Center Point max reorientation speed (deg/s), used in non-EGM
+float64 joints  # Joint max speed (deg/s), used in EGM only
+---
+bool success
+string msg

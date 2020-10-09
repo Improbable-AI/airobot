@@ -1,0 +1,6 @@
+# Get current gripper position
+
+---
+float64 position
+bool success
+string msg

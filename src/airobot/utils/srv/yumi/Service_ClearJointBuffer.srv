@@ -1,0 +1,4 @@
+# Clears joints buffer
+---
+bool success
+string msg

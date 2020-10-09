@@ -1,0 +1,4 @@
+# Stop the robot
+---
+bool success
+string msg

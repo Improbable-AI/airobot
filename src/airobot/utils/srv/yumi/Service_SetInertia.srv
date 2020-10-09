@@ -1,0 +1,12 @@
+# Service to Set the Inertia of the tool of the robot in cartesian coordinates
+
+float64 m
+float64 cgx
+float64 cgy
+float64 cgz
+float64 ix
+float64 iy
+float64 iz
+---
+bool success
+string msg

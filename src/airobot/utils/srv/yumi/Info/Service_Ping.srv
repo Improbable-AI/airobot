@@ -1,0 +1,5 @@
+# Ping the robot to verify connection status
+
+---
+bool success
+string msg

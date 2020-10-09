@@ -1,0 +1,6 @@
+# Get current robot angle
+
+---
+float64 angle
+bool success
+string msg

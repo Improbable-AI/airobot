@@ -1,0 +1,6 @@
+# Check if gripper is calibrated
+
+---
+bool calibrated
+bool success
+string msg

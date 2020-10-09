@@ -1,0 +1,5 @@
+# Adds a point to joints buffer
+float64[] joints
+---
+bool success
+string msg

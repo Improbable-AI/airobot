@@ -1,0 +1,4 @@
+# Executes cartesian pose buffer (synchronized)
+---
+bool success
+string msg

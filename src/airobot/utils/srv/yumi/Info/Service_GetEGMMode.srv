@@ -1,0 +1,6 @@
+# Get current EGM state
+
+---
+bool success
+int32 mode
+string msg

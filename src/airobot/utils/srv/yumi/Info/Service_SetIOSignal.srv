@@ -1,0 +1,7 @@
+# Service to Set IOSignals
+
+int32 output_num  # 1-4
+int32 signal      # 1: on, 0: off
+---
+bool success
+string msg

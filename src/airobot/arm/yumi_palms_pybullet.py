@@ -50,7 +50,8 @@ class CompliantYumiArm(SingleArmPybullet):
                                                self_collision=self_collision,
                                                eetool_cfg=eetool_cfg)
 
-    def set_jpos(self, position, joint_name=None, wait=True, *args, **kwargs):
+    def set_jpos(self, position, joint_name=None,
+                 wait=True, ignore_physics=False, *args, **kwargs):
         """
         Move the arm to the specified joint position(s). Applies regulation
         position command to the compliant joints after sending driven
@@ -77,11 +78,20 @@ class CompliantYumiArm(SingleArmPybullet):
                                  'elements if the joint_name'
                                  ' is not provided' % self.arm_dof)
             tgt_pos = position
-            self._pb.setJointMotorControlArray(self.robot_id,
-                                               self.arm_jnt_ids,
-                                               self._pb.POSITION_CONTROL,
-                                               targetPositions=tgt_pos,
-                                               forces=self._max_torques)
+            if ignore_physics:
+                self.set_jvel([0.] * self.arm_dof)
+                for idx, jnt in enumerate(self.arm_jnt_names):
+                    self.reset_joint_state(
+                        jnt,
+                        tgt_pos[idx]
+                    )
+                success = True
+            else:
+                self._pb.setJointMotorControlArray(self.robot_id,
+                                                   self.arm_jnt_ids,
+                                                   self._pb.POSITION_CONTROL,
+                                                   targetPositions=tgt_pos,
+                                                   forces=self._max_torques)
         else:
             if joint_name not in self.arm_jnt_names:
                 raise TypeError('Joint name [%s] is not in the arm'
@@ -91,13 +101,18 @@ class CompliantYumiArm(SingleArmPybullet):
                 arm_jnt_idx = self.arm_jnt_names.index(joint_name)
                 max_torque = self._max_torques[arm_jnt_idx]
                 jnt_id = self.jnt_to_id[joint_name]
-            self._pb.setJointMotorControl2(self.robot_id,
-                                           jnt_id,
-                                           self._pb.POSITION_CONTROL,
-                                           targetPosition=tgt_pos,
-                                           force=max_torque)
+            if ignore_physics:
+                self.set_jvel(0., joint_name)
+                self.reset_joint_state(joint_name, tgt_pos)
+                success = True
+            else:
+                self._pb.setJointMotorControl2(self.robot_id,
+                                               jnt_id,
+                                               self._pb.POSITION_CONTROL,
+                                               targetPosition=tgt_pos,
+                                               force=max_torque)
         self.set_compliant_jpos()
-        if not self._step_sim_mode and wait:
+        if self._pb.in_realtime_mode() and wait and not ignore_physics:
             success = wait_to_reach_jnt_goal(
                 tgt_pos,
                 get_func=self.get_jpos,
@@ -155,14 +170,17 @@ class CompliantYumiArm(SingleArmPybullet):
                                            targetVelocity=tgt_vel,
                                            force=max_torque)
         self.set_compliant_jpos()
-        if not self._step_sim_mode and wait:
-            success = wait_to_reach_jnt_goal(
-                tgt_vel,
-                get_func=self.get_jvel,
-                joint_name=joint_name,
-                timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
-                max_error=self.cfgs.ARM.MAX_JOINT_VEL_ERROR
-            )
+        if self._pb.in_realtime_mode():
+            if wait:
+                success = wait_to_reach_jnt_goal(
+                    tgt_vel,
+                    get_func=self.get_jvel,
+                    joint_name=joint_name,
+                    timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
+                    max_error=self.cfgs.ARM.MAX_JOINT_VEL_ERROR
+                )
+            else:
+                success = True
         return success
 
     def set_jtorq(self, torque, joint_name=None, wait=False, *args, **kwargs):

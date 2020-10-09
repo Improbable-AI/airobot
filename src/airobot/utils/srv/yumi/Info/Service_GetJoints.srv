@@ -1,0 +1,6 @@
+# Get current joint angles of the robot
+
+---
+float64[] joints
+bool success
+string msg

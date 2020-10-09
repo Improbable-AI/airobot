@@ -1,0 +1,4 @@
+# Executes joints buffer (synchronized)
+---
+bool success
+string msg

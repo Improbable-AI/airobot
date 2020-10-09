@@ -1,0 +1,5 @@
+# Set cartesian pose of the robot
+float64[] joints
+---
+bool success
+string msg
