@@ -421,7 +421,15 @@ class YumiArmReal(SingleArmROS):
                 fields empty
         """
         joint_msg = JointState()
-        joint_msg.name = self.arm_jnt_names
+        # need to flip joints 3 and 7!
+        joint_msg.name = [''] * self.arm_dof
+        joint_msg.name[0] = self.arm_jnt_names[0]
+        joint_msg.name[1] = self.arm_jnt_names[1]
+        joint_msg.name[2] = self.arm_jnt_names[3]
+        joint_msg.name[3] = self.arm_jnt_names[4]
+        joint_msg.name[4] = self.arm_jnt_names[5]
+        joint_msg.name[5] = self.arm_jnt_names[6]
+        joint_msg.name[6] = self.arm_jnt_names[2]                        
         return joint_msg
 
     def _output_pendant_msg(self, msg):

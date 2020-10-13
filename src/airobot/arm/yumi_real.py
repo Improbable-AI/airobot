@@ -81,7 +81,7 @@ class YumiReal(DualArmReal):
             l_pos = position[self.single_arm_dof:]
             pos_to_send = [r_pos, l_pos]
             for i, arm in enumerate(self.arms.values()):
-                arm.set_jpos(pos_to_send[i])
+                arm.set_jpos(pos_to_send[i], wait=wait)
         else:
             if arm not in self.arms:
                 raise ValueError('Valid arm name must be specified '
