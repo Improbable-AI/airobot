@@ -30,4 +30,5 @@ recommonmark>=0.6.0
 opencv-python==4.2.0.32;python_version <= '2.7'
 opencv-python>=4.2.0.32;python_version > '2.7'
 more_itertools==5.0.0;python_version <= '2.7'
+pyrsistent==0.14.0;python_version <= '2.7'
 open3d==0.8.0
