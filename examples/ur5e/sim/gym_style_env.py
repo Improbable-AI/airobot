@@ -5,13 +5,14 @@ An example of Gym Wrapper.
 import time
 
 import numpy as np
+from gym import spaces
+
 from airobot import Robot
 from airobot.utils.common import ang_in_mpi_ppi
 from airobot.utils.common import clamp
 from airobot.utils.common import euler2quat
 from airobot.utils.common import quat_multiply
 from airobot.utils.common import rotvec2quat
-from gym import spaces
 
 
 class URRobotGym:

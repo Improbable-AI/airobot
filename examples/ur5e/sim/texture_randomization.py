@@ -2,6 +2,7 @@ import os
 import time
 
 import numpy as np
+
 from airobot import Robot
 from airobot.utils.common import euler2quat
 from airobot.utils.pb_util import TextureModder

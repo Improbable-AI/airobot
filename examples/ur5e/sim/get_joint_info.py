@@ -1,4 +1,5 @@
 import numpy as np
+
 from airobot import Robot
 from airobot import log_info
 

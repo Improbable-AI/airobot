@@ -2,6 +2,7 @@
 
 [![Documentation Status](https://readthedocs.org/projects/airobot/badge/?version=latest)](https://airobot.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Improbable-AI/airobot/blob/master/LICENSE)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Improbable-AI/airobot.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Improbable-AI/airobot/context:python)
 
 AIRobot is a python library to interface with robots. It follows a similar architecture from [PyRobot](https://pyrobot.org).
 - [Citation](#citation)

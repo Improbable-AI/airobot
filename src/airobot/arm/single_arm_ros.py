@@ -10,17 +10,18 @@ import numbers
 import sys
 import threading
 
-import airobot.utils.common as arutil
 import moveit_commander
 import numpy as np
 import rospy
 import tf
+from moveit_commander import MoveGroupCommander
+from sensor_msgs.msg import JointState
+
+import airobot.utils.common as arutil
 from airobot.arm.single_arm_real import SingleArmReal
 from airobot.utils.moveit_util import MoveitScene
 from airobot.utils.moveit_util import moveit_cartesian_path
 from airobot.utils.ros_util import get_tf_transform
-from moveit_commander import MoveGroupCommander
-from sensor_msgs.msg import JointState
 
 
 class SingleArmROS(SingleArmReal):

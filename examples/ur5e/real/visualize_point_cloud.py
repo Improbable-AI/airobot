@@ -3,6 +3,7 @@ import sys
 import time
 
 import open3d
+
 from airobot import Robot
 from airobot.utils.ros_util import read_cam_ext
 
