@@ -67,7 +67,7 @@ class YumiArmReal(SingleArmROS):
 
         Args:
             position (float or list or flattened np.ndarray):
-                desired joint position(s)
+                desired joint position(s) in RADIANS
                 (shape: :math:`[DOF,]` if list, otherwise a single value).
             joint_name (str): If not provided, position should be a list and
                 all actuated joints will be moved to specified positions. If
@@ -107,20 +107,19 @@ class YumiArmReal(SingleArmROS):
             # success = self.moveit_group.go(tgt_pos, wait=wait)
         if self._egm_active:
             joint_msg = self._empty_joint_state_msg()
-            joint_msg.position = position
+            joint_msg.position = np.rad2deg(self._flip_joints_set(tgt_pos))
             self._egm_target_joints_pub.publish(joint_msg)
         else:
             rospy.wait_for_service(
                 self.cfgs.ARM.SET_JOINTS_SRV,
                 timeout=self._srv_timeout)
-            self._set_joints_srv(position)
+            self._set_joints_srv(self._flip_joints_set(np.rad2deg(tgt_pos)))
 
         if wait:
             success = wait_to_reach_jnt_goal(
                 position,
                 get_func=self.get_jpos,
                 joint_name=joint_name,
-                get_func_derv=self.get_jvel,
                 timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
                 max_error=self.cfgs.ARM.MAX_JOINT_ERROR
             )
@@ -197,7 +196,6 @@ class YumiArmReal(SingleArmROS):
                 tgt_pos_buffer[-1],
                 get_func=self.get_jpos,
                 joint_name=joint_name,
-                get_func_derv=self.get_jvel,
                 timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
                 max_error=self.cfgs.ARM.MAX_JOINT_ERROR
             )
@@ -255,16 +253,22 @@ class YumiArmReal(SingleArmROS):
                 jnt_pos = self.compute_ik(pos, quat)
                 success = self.set_jpos(jnt_pos, wait=wait)
             else:
-                ee_pose = [pos[0], pos[1], pos[2],
-                           quat[0], quat[1], quat[2], quat[3]]
+                pos = np.asarray(pos)*1000.0
 
                 rospy.wait_for_service(self.cfgs.ARM.SET_CARTESIAN_SRV,
                                        timeout=self._srv_timeout)
-                self._set_cartesian_srv(ee_pose)
+                self._set_cartesian_srv(
+                    pos[0],
+                    pos[1],
+                    pos[2],
+                    quat[3],
+                    quat[0],
+                    quat[1],
+                    quat[2])
                 if wait:
                     args_dict = {
                         'get_func': self.get_ee_pose,
-                        'get_func_derv': self.get_ee_vel,
+                        'get_func_derv': None,
                         'timeout': self.cfgs.ARM.TIMEOUT_LIMIT,
                         'pos_tol': self.cfgs.ARM.MAX_EE_POS_ERROR,
                         'ori_tol': self.cfgs.ARM.MAX_EE_ORI_ERROR
@@ -328,6 +332,7 @@ class YumiArmReal(SingleArmROS):
 
         """
         if self._egm_active:
+            # comes in as radians!
             self._j_state_lock.acquire()
             if joint_name is not None:
                 if joint_name not in self.arm_jnt_names:
@@ -343,6 +348,9 @@ class YumiArmReal(SingleArmROS):
             rospy.wait_for_service(self.cfgs.ARM.GET_JOINTS_SRV,
                                    timeout=self._srv_timeout)
             joint_positions = self._get_joints_srv()
+            # comes in as tuple. we need to 1. reorder, 2. convert deg2rad, 3. convert to list
+            joint_positions = self._flip_joints_get(list(joint_positions.joints))
+            joint_positions = np.deg2rad(joint_positions).tolist()
             if joint_name is not None:
                 if joint_name not in self.arm_jnt_names:
                     raise TypeError('Joint name [%s] '
@@ -350,7 +358,7 @@ class YumiArmReal(SingleArmROS):
                 jnt_ind = self.arm_jnt_names.index(joint_name)
                 jpos = joint_positions[jnt_ind]
             else:
-                jpos = joint_positions.joints
+                jpos = joint_positions
         return jpos
 
     def get_ee_pose(self):
@@ -409,7 +417,64 @@ class YumiArmReal(SingleArmROS):
         self._egm_active = False
 
     def set_speed(self, speed_tcp, speed_ori, speed_joints=180):
-        raise NotImplementedError
+        rospy.wait_for_service(self.cfgs.ARM.SET_SPEED_SRV,
+                               timeout=self._srv_timeout)
+        self._set_speed_srv(speed_tcp, speed_ori, speed_joints)
+
+    def _flip_joints_set(self, jpos):
+        """
+        Assuming joints come in order that is specified in the cfg file,
+        need to reorder them before sending them to the real robot. 
+        Joint order on the robot is [1, 2, 3, 4, 5, 6, 7]
+
+        Args:
+            jpos (list): Joint positions in the order specified in the cfg file
+
+        Returns: 
+            list: Joint positions with same values but reordered to match real yumi
+        """
+        # jpos_flipped = copy.deepcopy(jpos)
+        jpos_flipped = [
+            jpos[0],
+            jpos[1],
+            jpos[3],
+            jpos[4],
+            jpos[5],
+            jpos[6],
+            jpos[2]            ,
+        ]
+        return jpos_flipped
+
+    def _flip_joints_get(self, jpos):
+        """
+        Assuming joints come in order that is specified in the cfg file,
+        need to reorder them before sending them to the real robot. 
+        Joint order on the robot is [1, 2, 3, 4, 5, 6, 7]
+
+        Args:
+            jpos (list): Joint positions in the order specified in the cfg file
+
+        Returns: 
+            list: Joint positions with same values but reordered to match real yumi
+        """
+        # jpos_flipped = copy.deepcopy(jpos)
+        # jpos_flipped[0] = jpos[0]
+        # jpos_flipped[1] = jpos[1]
+        # jpos_flipped[2] = jpos[6]
+        # jpos_flipped[3] = jpos[2]
+        # jpos_flipped[4] = jpos[3]
+        # jpos_flipped[5] = jpos[4]
+        # jpos_flipped[6] = jpos[5]
+        jpos_flipped = [
+            jpos[0],
+            jpos[1],
+            jpos[6],
+            jpos[2],
+            jpos[3],
+            jpos[4],
+            jpos[5]            ,
+        ]        
+        return jpos_flipped        
 
     def _empty_joint_state_msg(self):
         """
@@ -429,7 +494,8 @@ class YumiArmReal(SingleArmROS):
         joint_msg.name[3] = self.arm_jnt_names[4]
         joint_msg.name[4] = self.arm_jnt_names[5]
         joint_msg.name[5] = self.arm_jnt_names[6]
-        joint_msg.name[6] = self.arm_jnt_names[2]                        
+        joint_msg.name[6] = self.arm_jnt_names[2]   
+        # joint_msg.name = self.arm_jnt_names                     
         return joint_msg
 
     def _output_pendant_msg(self, msg):
