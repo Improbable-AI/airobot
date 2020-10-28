@@ -107,7 +107,7 @@ class YumiArmReal(SingleArmROS):
             # success = self.moveit_group.go(tgt_pos, wait=wait)
         if self._egm_active:
             joint_msg = self._empty_joint_state_msg()
-            joint_msg.position = np.rad2deg(self._flip_joints_set(tgt_pos))
+            joint_msg.position = self._flip_joints_set(np.rad2deg(tgt_pos))
             self._egm_target_joints_pub.publish(joint_msg)
         else:
             rospy.wait_for_service(
@@ -126,7 +126,7 @@ class YumiArmReal(SingleArmROS):
         return success
 
     def set_jpos_buffer(self, pos_buffer, joint_name=None,
-                        wait=True, sync=True, *args, **kwargs):
+                        wait=True, sync=True, execute=True, *args, **kwargs):
         """
         Method to send a joint position command to the robot (units in rad).
 
@@ -178,17 +178,18 @@ class YumiArmReal(SingleArmROS):
 
         self._clear_buffer_srv()
         for tgt_pos in tgt_pos_buffer:
-            self._add_to_buffer_srv(tgt_pos)
+            self._add_to_buffer_srv(self._flip_joints_set(np.rad2deg(tgt_pos)))
 
-        if sync:
-            rospy.wait_for_service(self.cfgs.ARM.EXEC_BUFF_SYNC_SRV,
-                                   timeout=self._srv_timeout)
-            exec_buffer = self._execute_buffer_sync_srv
-        else:
-            rospy.wait_for_service(self.cfgs.ARM.EXEC_BUFF_SRV,
-                                   timeout=self._srv_timeout)
-            exec_buffer = self._execute_buffer_srv
-        exec_buffer()
+        if execute:
+            if sync:
+                rospy.wait_for_service(self.cfgs.ARM.EXEC_BUFF_SYNC_SRV,
+                                    timeout=self._srv_timeout)
+                exec_buffer = self._execute_buffer_sync_srv
+            else:
+                rospy.wait_for_service(self.cfgs.ARM.EXEC_BUFF_SRV,
+                                    timeout=self._srv_timeout)
+                exec_buffer = self._execute_buffer_srv
+            exec_buffer()
 
         success = False
         if wait:
