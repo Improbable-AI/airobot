@@ -44,44 +44,49 @@ class UR5ePybullet(SingleArmPybullet):
                                            seed=seed,
                                            self_collision=self_collision,
                                            eetool_cfg=eetool_cfg)
+        self._first_reset = True
         self.reset()
 
     def reset(self):
         """
         Reset the simulation environment.
         """
-        if hasattr(self, 'eetool'):
-            self.eetool.deactivate()
-        self._pb.resetSimulation()
         self._pb.configureDebugVisualizer(self._pb.COV_ENABLE_RENDERING, 0)
-        self.floor_id = self._pb.load_geom('box', size=[10, 10, 0.01], mass=0,
-                                           base_pos=[0, 0, 0],
-                                           rgba=[0.7, 0.77, 0.7, 1],
-                                           specular=[1, 1, 1, 1])
+        if self._first_reset:
+            self._pb.resetSimulation()
+            self.floor_id = self._pb.load_geom('box', size=[10, 10, 0.01], mass=0,
+                                               base_pos=[0, 0, 0],
+                                               rgba=[0.7, 0.77, 0.7, 1],
+                                               specular=[1, 1, 1, 1])
 
-        self.robot_base_pos = self.cfgs.ARM.PYBULLET_RESET_POS
-        robot_base_ori = self.cfgs.ARM.PYBULLET_RESET_ORI
-        self.robot_base_ori = arutil.euler2quat(robot_base_ori).tolist()
-        if self._self_collision:
-            colli_flag = self._pb.URDF_USE_SELF_COLLISION
-            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
-                                              self.robot_base_pos,
-                                              self.robot_base_ori,
-                                              flags=colli_flag)
-        else:
-            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
-                                              self.robot_base_pos,
-                                              self.robot_base_ori)
-        self._build_jnt_id()
-        self.set_visual_shape()
-        self._pb.configureDebugVisualizer(self._pb.COV_ENABLE_RENDERING, 1)
-        if hasattr(self, 'eetool'):
-            self.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
-            self.eetool.activate()
+            self.robot_base_pos = self.cfgs.ARM.PYBULLET_RESET_POS
+            robot_base_ori = self.cfgs.ARM.PYBULLET_RESET_ORI
+            self.robot_base_ori = arutil.euler2quat(robot_base_ori).tolist()
             if self._self_collision:
-                # weird behavior occurs on the gripper
-                # when self-collision is enforced
-                self.eetool.disable_gripper_self_collision()
+                colli_flag = self._pb.URDF_USE_SELF_COLLISION
+                self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                                  self.robot_base_pos,
+                                                  self.robot_base_ori,
+                                                  flags=colli_flag)
+            else:
+                self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                                  self.robot_base_pos,
+                                                  self.robot_base_ori)
+            self._build_jnt_id()
+            self.set_visual_shape()
+            if hasattr(self, 'eetool'):
+                self.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
+                self.eetool.activate()
+                if self._self_collision:
+                    # weird behavior occurs on the gripper
+                    # when self-collision is enforced
+                    self.eetool.disable_gripper_self_collision()
+        else:
+            self.go_home(ignore_physics=True)
+            if hasattr(self, 'eetool'):
+                self.eetool.close(ignore_physics=True)
+        self._pb.configureDebugVisualizer(self._pb.COV_ENABLE_RENDERING, 1)
+        self._first_reset = False
 
     def set_visual_shape(self):
         """

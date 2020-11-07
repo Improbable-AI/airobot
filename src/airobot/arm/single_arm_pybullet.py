@@ -4,12 +4,11 @@ from __future__ import print_function
 
 import copy
 
-import numpy as np
-from gym.utils import seeding
-
 import airobot.utils.common as arutil
+import numpy as np
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
+from gym.utils import seeding
 
 
 class SingleArmPybullet(ARM):
@@ -69,8 +68,9 @@ class SingleArmPybullet(ARM):
         """
         Reset the simulation environment.
         """
-        self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
-                                          [0, 0, 0], [0, 0, 0, 1])
+        if self.robot_id is None:
+            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                              [0, 0, 0], [0, 0, 0, 1])
 
     def set_jpos(self, position, joint_name=None,
                  wait=True, ignore_physics=False, *args, **kwargs):

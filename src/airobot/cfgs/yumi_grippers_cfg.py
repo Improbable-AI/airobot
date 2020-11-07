@@ -17,12 +17,13 @@ _C.ARM.RIGHT.HAS_EETOOL = True
 
 _C.ARM.RIGHT.EETOOL = get_yumi_parallel_jaw_cfg()
 _C.ARM.RIGHT.EETOOL.JOINT_NAMES = ['gripper_r_joint', 'gripper_r_joint_m']
+_C.ARM.RIGHT.EETOOL.MIMIC_COEFF = [1, 1]
 
 _C.ARM.LEFT.HAS_EETOOL = True
 
 _C.ARM.LEFT.EETOOL = get_yumi_parallel_jaw_cfg()
 _C.ARM.LEFT.EETOOL.JOINT_NAMES = ['gripper_l_joint', 'gripper_l_joint_m']
-
+_C.ARM.LEFT.EETOOL.MIMIC_COEFF = [1, 1]
 
 def get_cfg():
     return _C.clone()

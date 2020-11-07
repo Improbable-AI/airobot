@@ -6,7 +6,7 @@ _C.OPEN_ANGLE = 0.025
 # joint angle when the gripper is fully closed
 _C.CLOSE_ANGLE = 0.0
 
-_C.MAX_FORCE = 100.0
+_C.MAX_TORQUE = 100.0
 
 _C.CLASS = 'YumiParallelJawPybullet'
 

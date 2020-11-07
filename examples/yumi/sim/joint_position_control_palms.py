@@ -1,8 +1,7 @@
 import time
 
-import numpy as np
-
 import airobot as ar
+import numpy as np
 
 
 def main():
@@ -12,7 +11,6 @@ def main():
     """
     robot = ar.Robot('yumi_palms')
     robot.arm.go_home()
-
     robot.arm.right_arm.set_jpos(
         [0.5, -1.0, -1.0, -0.0, -0.2, 1.0, -1.57])
 

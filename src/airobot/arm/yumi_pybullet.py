@@ -52,34 +52,42 @@ class YumiPybullet(DualArmPybullet):
                                           seed=seed,
                                           self_collision=self_collision,
                                           eetool_cfg=eetool_cfg)
+        self._first_reset = True
         self.reset()
 
     def reset(self):
         """
         Reset the simulation environment.
         """
-        self._pb.resetSimulation()
+        if self._first_reset:
+            self._pb.resetSimulation()
 
-        yumi_pos = self.cfgs.ARM.PYBULLET_RESET_POS
-        yumi_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
-        if self._self_collision:
-            colli_flag = {'flags': self._pb.URDF_USE_SELF_COLLISION}
-            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
-                                              yumi_pos,
-                                              yumi_ori,
-                                              **colli_flag)
+            yumi_pos = self.cfgs.ARM.PYBULLET_RESET_POS
+            yumi_ori = arutil.euler2quat(self.cfgs.ARM.PYBULLET_RESET_ORI)
+            if self._self_collision:
+                colli_flag = {'flags': self._pb.URDF_USE_SELF_COLLISION}
+                self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                                  yumi_pos,
+                                                  yumi_ori,
+                                                  **colli_flag)
+            else:
+                self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                                  yumi_pos, yumi_ori)
+
+            self._build_jnt_id()
+
+            self.setup_single_arms(right_arm=self.right_arm,
+                                   left_arm=self.left_arm)
+
+            for arm in self.arms.values():
+                if hasattr(arm, 'eetool'):
+                    arm.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
+                    arm.eetool.activate()
+                    if arm._self_collision:
+                        arm.eetool.disable_gripper_self_collision()
         else:
-            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
-                                              yumi_pos, yumi_ori)
-
-        self._build_jnt_id()
-
-        self.setup_single_arms(right_arm=self.right_arm,
-                               left_arm=self.left_arm)
-
-        for arm in self.arms.values():
-            if hasattr(arm, 'eetool'):
-                arm.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
-                arm.eetool.activate()
-                if arm._self_collision:
-                    arm.eetool.disable_gripper_self_collision()
+            self.go_home(ignore_physics=True)
+            for arm in self.arms.values():
+                if hasattr(arm, 'eetool'):
+                    arm.eetool.close(ignore_physics=True)
+        self._first_reset = False
