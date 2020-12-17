@@ -150,7 +150,7 @@ def wait_to_reach_ee_goal(pos, ori, get_func, get_func_derv=None,
                 vel_stop_time = time.time()
             elif np.max(np.abs(ee_vel)) > 0.001:
                 vel_stop_time = None
-            if vel_stop_time is not None and time.time() - vel_stop_time > 1.5:
+            if vel_stop_time is not None and time.time() - vel_stop_time > 0.1:
                 pt_str = 'Unable to move to end effector pose\n' \
                          'pos: %s \n' \
                          'ori: %s ' % (str(pos), str(ori))
