@@ -1,7 +1,7 @@
-from airobot.ee_tool.simple_gripper_pybullet import SimpleGripperPybullet
+from airobot.ee_tool.simple_gripper_mimic_pybullet import SimpleGripperMimicPybullet
 
 
-class Robotiq2F140Pybullet(SimpleGripperPybullet):
+class Robotiq2F140Pybullet(SimpleGripperMimicPybullet):
     """
     Class for interfacing with a Robotiq 2F140 gripper when
     it is attached to UR5e arm in pybullet.

@@ -91,10 +91,11 @@ class Robot:
 
         self.pb_client = None
         if pb:
-            urdfs_root_path = os.path.join(root_path, 'urdfs')
-            urdf = os.path.join(urdfs_root_path,
-                                cfgs.PYBULLET_URDF)
-            cfgs.PYBULLET_URDF = urdf
+            if not 'franka' in robot_name:
+                urdfs_root_path = os.path.join(root_path, 'urdfs')
+                urdf = os.path.join(urdfs_root_path,
+                                    cfgs.PYBULLET_URDF)
+                cfgs.PYBULLET_URDF = urdf
             from .utils.pb_util import create_pybullet_client
             pb_client = create_pybullet_client(**pb_cfg)
             arm_cfg['pb_client'] = pb_client

@@ -1,7 +1,7 @@
-from airobot.ee_tool.simple_gripper_pybullet import SimpleGripperPybullet
+from airobot.ee_tool.simple_gripper_mimic_pybullet import SimpleGripperMimicPybullet
 
 
-class YumiParallelJawPybullet(SimpleGripperPybullet):
+class YumiParallelJawPybullet(SimpleGripperMimicPybullet):
     """
     Class for interfacing with the standard Yumi
     parallel jaw gripper.

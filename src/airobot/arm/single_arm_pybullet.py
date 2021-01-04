@@ -4,11 +4,12 @@ from __future__ import print_function
 
 import copy
 
-import airobot.utils.common as arutil
 import numpy as np
+from gym.utils import seeding
+
+import airobot.utils.common as arutil
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
-from gym.utils import seeding
 
 
 class SingleArmPybullet(ARM):
@@ -98,7 +99,7 @@ class SingleArmPybullet(ARM):
         success = False
         if joint_name is None:
             if len(position) != self.arm_dof:
-                raise ValueError('Position should contain %d'
+                raise ValueError('Position should contain %d '
                                  'elements if the joint_name'
                                  ' is not provided' % self.arm_dof)
             tgt_pos = position

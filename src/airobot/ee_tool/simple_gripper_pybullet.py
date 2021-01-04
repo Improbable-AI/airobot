@@ -1,9 +1,4 @@
-import threading
-import time
-
-import airobot.utils.common as arutil
 from airobot.ee_tool.ee import EndEffectorTool
-from airobot.utils.arm_util import wait_to_reach_jnt_goal
 
 
 class SimpleGripperPybullet(EndEffectorTool):
@@ -29,13 +24,11 @@ class SimpleGripperPybullet(EndEffectorTool):
     def __init__(self, cfgs, pb_client):
         self._pb = pb_client
         super(SimpleGripperPybullet, self).__init__(cfgs=cfgs)
-        self._gripper_mimic_coeff = self.cfgs.EETOOL.MIMIC_COEFF
         self.jnt_names = self.cfgs.EETOOL.JOINT_NAMES
-
         self._max_torque = self.cfgs.EETOOL.MAX_TORQUE
         self.gripper_close_angle = self.cfgs.EETOOL.CLOSE_ANGLE
         self.gripper_open_angle = self.cfgs.EETOOL.OPEN_ANGLE
-        self._mthread_started = False
+
         self.deactivate()
 
     def feed_robot_info(self, robot_id, jnt_to_id):
@@ -53,18 +46,6 @@ class SimpleGripperPybullet(EndEffectorTool):
         self.gripper_jnt_ids = [
             self.jnt_to_id[jnt] for jnt in self.jnt_names
         ]
-        # if the gripper has been activated once,
-        # the following code is used to prevent starting
-        # a new thread after the arm reset if a thread has been started
-
-        if not self._mthread_started:
-            self._mthread_started = True
-            # gripper thread
-            self._th_gripper = threading.Thread(target=self._th_mimic_gripper)
-            self._th_gripper.daemon = True
-            self._th_gripper.start()
-        else:
-            return
 
     def open(self, wait=True, ignore_physics=False):
         """
@@ -107,62 +88,59 @@ class SimpleGripperPybullet(EndEffectorTool):
             bool: A boolean variable representing if the action is
             successful at the moment when the function exits.
         """
-        joint_name = self.jnt_names[0]
-        tgt_pos = arutil.clamp(
-            pos,
-            min(self.gripper_open_angle, self.gripper_close_angle),
-            max(self.gripper_open_angle, self.gripper_close_angle))
+        raise NotImplementedError
 
-        jnt_id = self.jnt_to_id[joint_name]
-        if ignore_physics:
-            self._zero_vel_mode()
-            self._hard_reset(pos)
-            success = True
-        else:
-            self._pb.setJointMotorControl2(self.robot_id,
-                                           jnt_id,
-                                           self._pb.POSITION_CONTROL,
-                                           targetPosition=tgt_pos,
-                                           force=self._max_torque)
-            if not self._pb.in_realtime_mode():
-                self._set_rest_joints(tgt_pos)
-
-            success = False
-            if self._pb.in_realtime_mode() and wait:
-                success = wait_to_reach_jnt_goal(
-                    tgt_pos,
-                    get_func=self.get_pos,
-                    joint_name=joint_name,
-                    get_func_derv=self.get_vel,
-                    timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
-                    max_error=self.cfgs.ARM.MAX_JOINT_ERROR
-                )
-        return success
-
-    def get_pos(self):
+    def get_jpos(self, joint_name=None):
         """
-        Return the joint position(s) of the gripper.
+        Return the joint position(s) of the arm.
+
+        Args:
+            joint_name (str, optional): If it's None,
+                it will return joint positions
+                of all the actuated joints. Otherwise, it will
+                return the joint position of the specified joint.
 
         Returns:
-            float: joint position.
+            One of the following
+
+            - float: joint position given joint_name.
+            - list: joint positions if joint_name is None
+              (shape: :math:`[DOF]`).
         """
-        if not self._is_activated:
-            raise RuntimeError('Call activate function first!')
-        jnt_id = self.jnt_to_id[self.jnt_names[0]]
-        pos = self._pb.getJointState(self.robot_id, jnt_id)[0]
+        if joint_name is None:
+            states = self._pb.getJointStates(self.robot_id,
+                                             self.gripper_jnt_ids)
+            pos = [state[0] for state in states]
+        else:
+            jnt_id = self.jnt_to_id[joint_name]
+            pos = self._pb.getJointState(self.robot_id,
+                                         jnt_id)[0]
         return pos
 
-    def get_vel(self):
+    def get_jvel(self, joint_name=None):
         """
-        Return the joint velocity of the gripper.
+        Return the joint velocity(ies) of the arm.
+
+        Args:
+            joint_name (str, optional): If it's None, it will return
+                joint velocities of all the actuated joints. Otherwise,
+                it will return the joint velocity of the specified joint.
 
         Returns:
-            float: joint velocity.
+            One of the following
+
+            - float: joint velocity given joint_name.
+            - list: joint velocities if joint_name is None
+              (shape: :math:`[DOF]`).
         """
-        if not self._is_activated:
-            raise RuntimeError('Call activate function first!')
-        jnt_id = self.jnt_to_id[self.jnt_names[0]]
-        vel = self._pb.getJointState(self.robot_id, jnt_id)[1]
+        if joint_name is None:
+            states = self._pb.getJointStates(self.robot_id,
+                                             self.gripper_jnt_ids)
+            vel = [state[1] for state in states]
+        else:
+            jnt_id = self.jnt_to_id[joint_name]
+            vel = self._pb.getJointState(self.robot_id,
+                                         jnt_id)[1]
         return vel
 
     def disable_gripper_self_collision(self):
@@ -180,40 +158,6 @@ class SimpleGripperPybullet(EndEffectorTool):
                                                 jnt_idx1,
                                                 jnt_idx2,
                                                 enableCollision=0)
-
-    def _mimic_gripper(self, joint_val):
-        """
-        Given the value for the first joint,
-        mimic the joint values for the rest joints.
-        """
-        jnt_vals = [joint_val]
-        for i in range(1, len(self.jnt_names)):
-            jnt_vals.append(joint_val * self._gripper_mimic_coeff[i])
-        return jnt_vals
-
-    def _th_mimic_gripper(self):
-        """
-        Make all the other joints of the gripper
-        follow the motion of the first joint of the gripper.
-        """
-        while True:
-            if self._is_activated and self._pb.in_realtime_mode():
-                self._set_rest_joints()
-            time.sleep(0.005)
-
-    def _set_rest_joints(self, gripper_pos=None):
-        max_torq = self._max_torque
-        max_torques = [max_torq] * (len(self.jnt_names) - 1)
-        if gripper_pos is None:
-            gripper_pos = self.get_pos()
-        gripper_poss = self._mimic_gripper(gripper_pos)[1:]
-        gripper_vels = [0.0] * len(max_torques)
-        self._pb.setJointMotorControlArray(self.robot_id,
-                                           self.gripper_jnt_ids[1:],
-                                           self._pb.POSITION_CONTROL,
-                                           targetPositions=gripper_poss,
-                                           targetVelocities=gripper_vels,
-                                           forces=max_torques)
 
     def deactivate(self):
         """
@@ -235,9 +179,8 @@ class SimpleGripperPybullet(EndEffectorTool):
                                            forces=[10] * len(self.gripper_jnt_ids))
 
     def _hard_reset(self, pos):
-        mic_pos = self._mimic_gripper(pos)
         for i in range(len(self.gripper_jnt_ids)):
             self._pb.resetJointState(self.robot_id,
                                      self.gripper_jnt_ids[i],
-                                     targetValue=mic_pos[i],
+                                     targetValue=pos[i],
                                      targetVelocity=0)

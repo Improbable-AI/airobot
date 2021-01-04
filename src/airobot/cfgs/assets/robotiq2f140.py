@@ -37,7 +37,7 @@ _C.JOINT_NAMES = [
     'right_inner_knuckle_joint', 'right_inner_finger_joint',
 ]
 _C.MIMIC_COEFF = [1, -1, 1, -1, -1, 1]
-_C.MAX_TORQUE = 10.0
+_C.MAX_TORQUE = 25.0
 
 
 def get_robotiq2f140_cfg():
