@@ -56,7 +56,7 @@ class SimpleGripperPybullet(EndEffectorTool):
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
-        success = self.set_pos(self.gripper_open_angle,
+        success = self.set_jpos(self.gripper_open_angle,
                                wait=wait,
                                ignore_physics=ignore_physics)
         return success
@@ -70,12 +70,12 @@ class SimpleGripperPybullet(EndEffectorTool):
         """
         if not self._is_activated:
             raise RuntimeError('Call activate function first!')
-        success = self.set_pos(self.gripper_close_angle,
+        success = self.set_jpos(self.gripper_close_angle,
                                wait=wait,
                                ignore_physics=ignore_physics)
         return success
 
-    def set_pos(self, pos, wait=True, ignore_physics=False):
+    def set_jpos(self, pos, wait=True, ignore_physics=False):
         """
         Set the gripper position.
 

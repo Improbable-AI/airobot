@@ -54,7 +54,7 @@ class SimpleGripperMimicPybullet(SimpleGripperPybullet):
         else:
             return
 
-    def set_pos(self, pos, wait=True, ignore_physics=False):
+    def set_jpos(self, pos, wait=True, ignore_physics=False):
         """
         Set the gripper position.
 

@@ -58,7 +58,7 @@ class FrankaGripperPybullet(SimpleGripperPybullet):
         super().feed_robot_info(robot_id, jnt_to_id)
         self._setup_gripper()
 
-    def set_pos(self, pos, wait=True, ignore_physics=False):
+    def set_jpos(self, pos, wait=True, ignore_physics=False):
         """
         Set the gripper position.
 

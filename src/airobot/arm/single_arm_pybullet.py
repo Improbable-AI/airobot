@@ -515,13 +515,12 @@ class SingleArmPybullet(ARM):
             list: solution to inverse kinematics, joint angles which achieve
             the specified EE pose (shape: :math:`[DOF]`).
         """
-        ex_args = {'jointDamping': self._ik_jds}
+        kwargs.setdefault('jointDamping', self._ik_jds)
         if ns:
-            ll, ul, jr, rp = self._get_joint_ranges()
-            ex_args['lowerLimits'] = ll
-            ex_args['upperLimits'] = ul
-            ex_args['jointRanges'] = jr
-            ex_args['restPoses'] = rp
+            kwargs.setdefault('lowerLimits', self.jnt_lower_limits)
+            kwargs.setdefault('upperLimits', self.jnt_upper_limits)
+            kwargs.setdefault('jointRanges', self.jnt_ranges)
+            kwargs.setdefault('restPoses', self.jnt_rest_poses)
 
         if ori is not None:
             ori = arutil.to_quat(ori)
@@ -529,12 +528,12 @@ class SingleArmPybullet(ARM):
                                                            self.ee_link_id,
                                                            pos,
                                                            ori,
-                                                           **ex_args)
+                                                           **kwargs)
         else:
             jnt_poss = self._pb.calculateInverseKinematics(self.robot_id,
                                                            self.ee_link_id,
                                                            pos,
-                                                           **ex_args)
+                                                           **kwargs)
         jnt_poss = list(map(arutil.ang_in_mpi_ppi, jnt_poss))
         arm_jnt_poss = [jnt_poss[i] for i in self.arm_jnt_ik_ids]
         return arm_jnt_poss
@@ -632,3 +631,8 @@ class SingleArmPybullet(ARM):
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
         self.arm_jnt_ik_ids = [self.non_fixed_jnt_names.index(jnt)
                                for jnt in self.arm_jnt_names]
+        ll, ul, jr, rp = self._get_joint_ranges()
+        self.jnt_lower_limits = ll
+        self.jnt_upper_limits = ul
+        self.jnt_ranges = jr
+        self.jnt_rest_poses = rp
