@@ -309,11 +309,11 @@ class YumiPalmsPybullet(DualArmPybullet):
         self._first_reset = True
         self.reset()
 
-    def reset(self):
+    def reset(self, force_reset=False):
         """
         Reset the simulation environment.
         """
-        if self._first_reset:
+        if self._first_reset or force_reset:
             self._pb.resetSimulation()
 
             yumi_pos = self.cfgs.ARM.PYBULLET_RESET_POS

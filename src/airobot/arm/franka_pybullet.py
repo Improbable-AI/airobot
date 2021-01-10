@@ -47,12 +47,12 @@ class FrankaPybullet(SingleArmPybullet):
         self._first_reset = True
         self.reset()
 
-    def reset(self):
+    def reset(self, force_reset=False):
         """
         Reset the simulation environment.
         """
         self._pb.configureDebugVisualizer(self._pb.COV_ENABLE_RENDERING, 0)
-        if self._first_reset:
+        if self._first_reset or force_reset:
             self._pb.resetSimulation()
             self.floor_id = self._pb.load_geom('box', size=[10, 10, 0.01], mass=0,
                                                base_pos=[0, 0, 0],
