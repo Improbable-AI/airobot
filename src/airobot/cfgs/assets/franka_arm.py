@@ -18,8 +18,14 @@ _C.JOINT_NAMES = [
 # base frame for the arm
 _C.ROBOT_BASE_FRAME = 'panda_link0'
 # end-effector frame of the arm
-_C.ROBOT_EE_FRAME = 'panda_grasptarget'
-_C.ROBOT_EE_FRAME_JOINT = 'panda_grasptarget_hand'
+# _C.ROBOT_EE_FRAME = 'panda_grasptarget'
+# _C.ROBOT_EE_FRAME_JOINT = 'panda_grasptarget_hand'
+
+# _C.ROBOT_EE_FRAME = 'tool_link'
+# _C.ROBOT_EE_FRAME_JOINT = 'tool_joint'
+
+_C.ROBOT_EE_FRAME = 'panda_link8'
+_C.ROBOT_EE_FRAME_JOINT = 'panda_joint8'
 
 # inverse kinematics position tolerance (m)
 _C.IK_POSITION_TOLERANCE = 0.01
@@ -36,7 +42,8 @@ _C.MAX_EE_ORI_ERROR = 0.02
 _C.TIMEOUT_LIMIT = 10
 
 # reset position for the robot in pybullet
-_C.PYBULLET_RESET_POS = [0, 0, 1]
+# _C.PYBULLET_RESET_POS = [0, 0, 1]
+_C.PYBULLET_RESET_POS = [0, 0, 0]
 # reset orientation (euler angles) for the robot in pybullet
 _C.PYBULLET_RESET_ORI = [0, 0, 0]
 _C.PYBULLET_IK_DAMPING = 0.0005

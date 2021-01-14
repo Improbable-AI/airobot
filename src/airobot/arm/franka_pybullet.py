@@ -8,6 +8,10 @@ from __future__ import print_function
 
 import airobot.utils.common as arutil
 from airobot.arm.single_arm_pybullet import SingleArmPybullet
+from airobot.utils.ikfast.franka_panda import ikfast_panda_arm
+from airobot import log_warn
+import numpy as np
+import copy
 
 
 class FrankaPybullet(SingleArmPybullet):
@@ -46,6 +50,9 @@ class FrankaPybullet(SingleArmPybullet):
                                              eetool_cfg=eetool_cfg)
         self._first_reset = True
         self.reset()
+
+        self.compute_ik_pb = self.compute_ik
+        self.compute_ik = self.compute_ik_ikfast
 
     def reset(self, force_reset=False):
         """
@@ -89,3 +96,83 @@ class FrankaPybullet(SingleArmPybullet):
                 self.eetool.close(ignore_physics=True)
         self._pb.configureDebugVisualizer(self._pb.COV_ENABLE_RENDERING, 1)
         self._first_reset = False
+
+    def compute_ik_ikfast(self, pos, ori=None, seed=None, *args, **kwargs):
+        """Use the compiled IKFast plugin to return inverse kinematics solution
+        instead of the builtin PyBullet IK functionality
+
+        Args:
+            pos (list or np.ndarray): position (shape: :math:`[3,]`).
+            ori (list or np.ndarray): orientation. It can be euler angles
+                ([roll, pitch, yaw]), (shape: :math:`[3,]`), or
+                quaternion ([qx, qy, qz, qw], shape: :math:`[4,]`),
+                or rotation matrix (shape: :math:`[3, 3]`).
+            seed (list or np.ndarray): joint configuration to use as a
+                seed for the IK solver (shape: :math:`[DOF]`).
+
+        Returns:
+            list: solution to inverse kinematics, joint angles which achieve
+            the specified EE pose (shape: :math:`[DOF]`).
+        """
+        if seed is None:
+            seed = self._home_position
+            # seed = self.get_jpos()
+
+        # convert position into the world frame
+        raw_pos = copy.deepcopy(pos)
+        pos = np.asarray(raw_pos) - np.asarray(self.robot_base_pos)
+
+        if ori is not None:
+            ori = arutil.to_rot_mat(ori).tolist()
+        else:
+            ori = arutil.to_rot_mat(self.get_ee_pose()[1]).tolist()
+
+        if not isinstance(pos, list):
+            pos = pos.tolist()
+
+        jnt_poss_solutions = ikfast_panda_arm.get_ik(ori, pos, seed)
+
+        if jnt_poss_solutions is None:
+            log_warn('IKFast returned empty solution, defaulting to pybullet')
+            jnt_poss = self.compute_ik_pb(raw_pos, ori=ori, *args, **kwargs)
+        else:
+            jnt_poss = self._filter_valid_joints(jnt_poss_solutions)
+            if jnt_poss is None:
+                log_warn('IKFast returned empty solution, defaulting to pybullet')
+                jnt_poss = self.compute_ik_pb(raw_pos, ori=ori, *args, **kwargs)
+        return jnt_poss
+
+    def _filter_valid_joints(self, joint_configs):
+        """Filter a list of joint configurations, returning only those
+        that are valid, based on being within the joint limits of the
+        arm
+
+        Args:
+            joint_configs (list): each element is a list or np.ndarray of
+                joint positions, each being shape: :math:`[DOF]`
+
+        Returns:
+            list: each element is a joint configuration from the input list
+            that is within joint limits
+        """
+        valid_joint_configs = []
+        arm_jnt_ll = np.asarray(
+            [self.jnt_lower_limits[i] for i in self.arm_jnt_ik_ids])
+        arm_jnt_ul = np.asarray(
+            [self.jnt_upper_limits[i] for i in self.arm_jnt_ik_ids])
+        for config in joint_configs:
+            valid = True
+            valid = valid and (np.asarray(config) >= arm_jnt_ll).all()
+            valid = valid and (np.asarray(config) <= arm_jnt_ul).all()
+            if valid:
+                valid_joint_configs.append(config)
+
+        # get the one that is closest to the current configuration
+        if len(valid_joint_configs) > 0:
+            current_jpos = np.asarray(self.get_jpos())
+            solutions = sorted(valid_joint_configs,
+                            key=lambda q: np.linalg.norm(
+                                current_jpos - np.asarray(q)))
+            return solutions[0]
+        else:
+            return None

@@ -13,6 +13,7 @@ _C.HAS_EETOOL = True
 
 _C.ROBOT_DESCRIPTION = '/robot_description'
 _C.PYBULLET_URDF = 'franka_panda/panda.urdf'
+# _C.PYBULLET_URDF = 'panda_arm_hand.urdf'
 
 _C.ARM = get_franka_arm_cfg()
 
