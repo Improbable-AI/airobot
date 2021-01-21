@@ -89,3 +89,4 @@ class FrankaPybullet(SingleArmPybullet):
                 self.eetool.close(ignore_physics=True)
         self._pb.configureDebugVisualizer(self._pb.COV_ENABLE_RENDERING, 1)
         self._first_reset = False
+

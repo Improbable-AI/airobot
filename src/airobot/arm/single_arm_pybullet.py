@@ -313,7 +313,8 @@ class SingleArmPybullet(ARM):
         way_jnt_positions = []
         for i in range(waypoints.shape[0]):
             tgt_jnt_poss = self.compute_ik(waypoints[i, :].flatten().tolist(),
-                                           quat)
+                                           quat,
+                                           **kwargs.get('ik_kwargs', dict()))
             way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
         success = False
         for jnt_poss in way_jnt_positions:

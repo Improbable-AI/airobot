@@ -37,7 +37,10 @@ def main():
     move_dir[2] = 0
     eef_step = 0.025
 
-    robot.arm.move_ee_xyz(move_dir, eef_step=eef_step)
+    # an example of using IK with nullspace enabled
+    ik_kwargs = dict(ns=True)
+    robot.arm.move_ee_xyz(move_dir, eef_step=eef_step, **dict(ik_kwargs=ik_kwargs))
+
     move_dir = np.zeros(3)
     move_dir[2] = obj_pos[2] - robot.arm.get_ee_pose()[0][2]
     robot.arm.move_ee_xyz(move_dir, eef_step=eef_step)
