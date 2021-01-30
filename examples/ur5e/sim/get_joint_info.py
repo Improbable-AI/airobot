@@ -24,9 +24,9 @@ def main():
     jtorq = robot.arm.get_jtorq()
     log_info(np.round(jtorq, decimals=3))
     robot.arm.eetool.close()
-    log_info('Gripper position (close): %.3f' % robot.arm.eetool.get_pos())
+    log_info('Gripper position (close): %.3f' % robot.arm.eetool.get_jpos())
     robot.arm.eetool.open()
-    log_info('Gripper position (open): %.3f' % robot.arm.eetool.get_pos())
+    log_info('Gripper position (open): %.3f' % robot.arm.eetool.get_jpos())
 
 
 if __name__ == '__main__':

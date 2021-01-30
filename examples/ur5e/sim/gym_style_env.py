@@ -84,7 +84,7 @@ class URRobotGym:
 
         for step in range(self._action_repeat):
             self.robot.arm.set_jpos(jnt_pos)
-            self.robot.arm.eetool.set_pos(gripper_ang)
+            self.robot.arm.eetool.set_jpos(gripper_ang)
             self.robot.pb_client.stepSimulation()
 
     def _scale_gripper_angle(self, command):

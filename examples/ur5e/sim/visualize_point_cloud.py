@@ -46,7 +46,7 @@ def main():
                                         depth_max=depth_max)
         pcd.points = open3d.utility.Vector3dVector(pts)
         pcd.colors = open3d.utility.Vector3dVector(colors / 255.0)
-        vis.update_geometry()
+        vis.update_geometry(pcd)
         vis.poll_events()
         vis.update_renderer()
         time.sleep(0.1)

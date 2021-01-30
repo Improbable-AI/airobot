@@ -1,6 +1,5 @@
 """
-Pybullet simulation environment of a UR5e
-robot with a robotiq 2f140 gripper
+Pybullet simulation environment of a Franka Robot
 """
 from __future__ import absolute_import
 from __future__ import division

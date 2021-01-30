@@ -41,10 +41,11 @@ setup(
     package_data={
         'airobot': extra_pkg_files,
     },
-    python_requires='>=2.7.*, <3.8',
+    python_requires='>=2.7.*, <3.9',
     classifiers=[
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Framework :: Robot Framework"
