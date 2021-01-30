@@ -1,6 +1,7 @@
 import os
 
-from setuptools import setup, find_packages
+from setuptools import find_packages
+from setuptools import setup
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -41,11 +42,12 @@ setup(
     package_data={
         'airobot': extra_pkg_files,
     },
-    python_requires='>=2.7.*, <3.9',
+    python_requires='>=2.7.*, <3.10',
     classifiers=[
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: MIT License",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Framework :: Robot Framework"

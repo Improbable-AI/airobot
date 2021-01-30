@@ -2,7 +2,13 @@ import signal
 import sys
 import time
 
-import open3d
+from airobot import logger
+
+try:
+    import open3d
+except ImportError:
+    logger.error('Please install open3d first (pip install open3d).')
+    sys.exit()
 
 from airobot import Robot
 
