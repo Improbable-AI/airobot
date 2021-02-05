@@ -1,8 +1,7 @@
 import time
 
-import numpy as np
-
 import airobot as ar
+import numpy as np
 
 
 def main():
@@ -38,6 +37,7 @@ def main():
     time.sleep(3)
 
     robot.arm.left_arm.eetool.close()
+
     time.sleep(3)
     ar.log_info('Left gripper position at close: ')
     ar.log_info(np.round(robot.arm.left_arm.eetool.get_pos(), 6))

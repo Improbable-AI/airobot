@@ -2,7 +2,13 @@ import signal
 import sys
 import time
 
-import open3d
+from airobot import logger
+
+try:
+    import open3d
+except ImportError:
+    logger.error('Please install open3d first (pip install open3d).')
+    sys.exit()
 
 from airobot import Robot
 
@@ -46,7 +52,7 @@ def main():
                                         depth_max=depth_max)
         pcd.points = open3d.utility.Vector3dVector(pts)
         pcd.colors = open3d.utility.Vector3dVector(colors / 255.0)
-        vis.update_geometry()
+        vis.update_geometry(pcd)
         vis.poll_events()
         vis.update_renderer()
         time.sleep(0.1)

@@ -1,4 +1,3 @@
-import numbers
 import time
 
 import numpy as np
@@ -26,7 +25,7 @@ def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
             the current joint values.
         joint_name (str): if it's none, all the actuated
             joints are compared.
-            Otherwise, only the specified joint is compared.
+            Otherwise, only the specified joint is compared.W
         get_func_derv (function): the name of the function with which we
             can get the derivative of the joint values.
         timeout (float): maximum waiting time.
@@ -38,37 +37,37 @@ def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
     success = False
     start_time = time.time()
     vel_stop_time = None
-    if joint_name is not None:
-        if not isinstance(goal, numbers.Number):
-            raise ValueError('Only one goal should be '
-                             'specified for a single joint!')
+    goal = np.array(goal)
     while True:
-        if time.time() - start_time > timeout:
-            pt_str = 'Unable to move to joint goals (%s)' \
-                     ' within %f s' % (str(goal),
-                                       timeout)
-            ar.log_error(pt_str)
-            return success
-        if reach_jnt_goal(goal, get_func, joint_name, max_error):
-            success = True
-            break
-        if get_func_derv is not None:
-            vel_threshold = 0.006
-            nargs = get_func_derv.__code__.co_argcount
-            if nargs == 1:
-                jnt_vel = get_func_derv()
-            else:
-                jnt_vel = get_func_derv(joint_name)
-            if np.max(np.abs(jnt_vel)) <= vel_threshold \
-                    and vel_stop_time is None:
-                vel_stop_time = time.time()
-            elif np.max(np.abs(jnt_vel)) > vel_threshold:
-                vel_stop_time = None
-            if vel_stop_time is not None and time.time() - vel_stop_time > 1.5:
-                pt_str = 'Unable to move to joint goals (%s)' % str(goal)
+        try:
+            if time.time() - start_time > timeout:
+                pt_str = 'Unable to move to joint goals (%s)' \
+                         ' within %f s' % (str(goal),
+                                           timeout)
                 ar.log_error(pt_str)
                 return success
-        time.sleep(0.001)
+            if reach_jnt_goal(goal, get_func, joint_name, max_error):
+                success = True
+                break
+            if get_func_derv is not None:
+                vel_threshold = 0.006
+                nargs = get_func_derv.__code__.co_argcount
+                if nargs == 1:
+                    jnt_vel = get_func_derv()
+                else:
+                    jnt_vel = get_func_derv(joint_name)
+                if np.max(np.abs(jnt_vel)) <= vel_threshold \
+                        and vel_stop_time is None:
+                    vel_stop_time = time.time()
+                elif np.max(np.abs(jnt_vel)) > vel_threshold:
+                    vel_stop_time = None
+                if vel_stop_time is not None and time.time() - vel_stop_time > 1.5:
+                    pt_str = 'Unable to move to joint goals (%s)' % str(goal)
+                    ar.log_error(pt_str)
+                    return success
+            time.sleep(0.001)
+        except KeyboardInterrupt:
+            success = False
     return success
 
 
@@ -78,7 +77,7 @@ def reach_jnt_goal(goal, get_func, joint_name=None, max_error=0.01):
     The goal can be a desired velocity(s) or a desired position(s).
 
     Args:
-        goal (float or list): goal positions or velocities.
+        goal (np.ndarray): goal positions or velocities.
         get_func (function): name of the function with which we can get
             the current joint values.
         joint_name (str): if it's none, all the
@@ -89,7 +88,8 @@ def reach_jnt_goal(goal, get_func, joint_name=None, max_error=0.01):
     Returns:
         bool: if the goal is reached or not.
     """
-    goal = np.array(goal)
+    if not isinstance(goal, np.ndarray):
+        goal = np.array(goal)
     nargs = get_func.__code__.co_argcount
     if nargs == 1:
         new_jnt_val = get_func()
@@ -150,7 +150,7 @@ def wait_to_reach_ee_goal(pos, ori, get_func, get_func_derv=None,
                 vel_stop_time = time.time()
             elif np.max(np.abs(ee_vel)) > 0.001:
                 vel_stop_time = None
-            if vel_stop_time is not None and time.time() - vel_stop_time > 1.5:
+            if vel_stop_time is not None and time.time() - vel_stop_time > 0.1:
                 pt_str = 'Unable to move to end effector pose\n' \
                          'pos: %s \n' \
                          'ori: %s ' % (str(pos), str(ori))

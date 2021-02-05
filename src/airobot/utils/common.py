@@ -54,7 +54,7 @@ def quat2rot(quat):
 
     """
     r = R.from_quat(quat)
-    return r.as_dcm()
+    return r.as_matrix()
 
 
 def quat2euler(quat, axes='xyz'):
@@ -138,7 +138,7 @@ def rotvec2rot(vec):
         np.ndarray: rotation matrix (shape: :math:`[3, 3]`).
     """
     r = R.from_rotvec(vec)
-    return r.as_dcm()
+    return r.as_matrix()
 
 
 def rotvec2quat(vec):
@@ -198,7 +198,7 @@ def euler2rot(euler, axes='xyz'):
         np.ndarray: rotation matrix (shape: :math:`[3, 3]`).
     """
     r = R.from_euler(axes, euler)
-    return r.as_dcm()
+    return r.as_matrix()
 
 
 def euler2quat(euler, axes='xyz'):
@@ -231,7 +231,7 @@ def rot2quat(rot):
     Returns:
         np.ndarray: quaternion [x,y,z,w] (shape: :math:`[4,]`).
     """
-    r = R.from_dcm(rot)
+    r = R.from_matrix(rot)
     return r.as_quat()
 
 
@@ -251,7 +251,7 @@ def rot2euler(rot, axes='xyz'):
     Returns:
         np.ndarray: euler angles (shape: :math:`[3,]`).
     """
-    r = R.from_dcm(rot)
+    r = R.from_matrix(rot)
     return r.as_euler(axes)
 
 

@@ -8,7 +8,6 @@ import rospy
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import CameraInfo
 from sensor_msgs.msg import Image
-from tf import TransformListener
 
 import airobot as ar
 from airobot.sensor.camera.rgbdcam import RGBDCamera
@@ -60,7 +59,6 @@ class RGBDCameraReal(RGBDCamera):
         self._cv_bridge = CvBridge()
         self._cam_info_lock = threading.RLock()
         self._cam_img_lock = threading.RLock()
-        self._tf_listener = TransformListener()
         self._rgb_img = None
         self._depth_img = None
         self._cam_info = None

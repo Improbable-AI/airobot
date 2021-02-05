@@ -1,7 +1,6 @@
 import logging
 
 import colorlog
-from colorlog import ColoredFormatter
 
 
 class Logger:
@@ -14,7 +13,7 @@ class Logger:
     """
 
     def __init__(self, log_level):
-        formatter = ColoredFormatter(
+        formatter = colorlog.ColoredFormatter(
             "%(log_color)s[%(levelname)s]%(reset)s[%(asctime)s]: "
             "%(message_log_color)s%(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",

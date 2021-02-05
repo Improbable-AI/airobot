@@ -11,7 +11,8 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import String
 
 from airobot.ee_tool.ee import EndEffectorTool
-from airobot.utils.common import clamp, print_red
+from airobot.utils.common import clamp
+from airobot.utils.common import print_red
 from airobot.utils.urscript_util import Robotiq2F140URScript
 
 

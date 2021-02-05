@@ -30,6 +30,15 @@ _C.POSITION_RANGE = 255
 # scaling factor to convert from URScript range to Robotiq range
 _C.POSITION_SCALING = (255 / 0.7)
 
+# for the gripper in pybullet
+_C.JOINT_NAMES = [
+    'finger_joint', 'left_inner_knuckle_joint',
+    'left_inner_finger_joint', 'right_outer_knuckle_joint',
+    'right_inner_knuckle_joint', 'right_inner_finger_joint',
+]
+_C.MIMIC_COEFF = [1, -1, 1, -1, -1, 1]
+_C.MAX_TORQUE = 25.0
+
 
 def get_robotiq2f140_cfg():
     return _C.clone()

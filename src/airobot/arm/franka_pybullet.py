@@ -1,6 +1,5 @@
 """
-Pybullet simulation environment of a UR5e
-robot with a robotiq 2f140 gripper
+Pybullet simulation environment of a Franka Robot
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -10,10 +9,10 @@ import airobot.utils.common as arutil
 from airobot.arm.single_arm_pybullet import SingleArmPybullet
 
 
-class UR5ePybullet(SingleArmPybullet):
+class FrankaPybullet(SingleArmPybullet):
     """
     Class for the pybullet simulation environment
-    of a UR5e robot with a robotiq 2f140 gripper.
+    of a Franka robot.
 
     Args:
         cfgs (YACS CfgNode): configurations for the arm
@@ -39,11 +38,11 @@ class UR5ePybullet(SingleArmPybullet):
                  seed=None,
                  self_collision=False,
                  eetool_cfg=None):
-        super(UR5ePybullet, self).__init__(cfgs=cfgs,
-                                           pb_client=pb_client,
-                                           seed=seed,
-                                           self_collision=self_collision,
-                                           eetool_cfg=eetool_cfg)
+        super(FrankaPybullet, self).__init__(cfgs=cfgs,
+                                             pb_client=pb_client,
+                                             seed=seed,
+                                             self_collision=self_collision,
+                                             eetool_cfg=eetool_cfg)
         self._first_reset = True
         self.reset()
 
@@ -75,7 +74,7 @@ class UR5ePybullet(SingleArmPybullet):
                                                   self.robot_base_ori,
                                                   useFixedBase=True)
             self._build_jnt_id()
-            self.set_visual_shape()
+            # self.set_visual_shape()
             if hasattr(self, 'eetool'):
                 self.eetool.feed_robot_info(self.robot_id, self.jnt_to_id)
                 self.eetool.activate()
@@ -90,31 +89,3 @@ class UR5ePybullet(SingleArmPybullet):
         self._pb.configureDebugVisualizer(self._pb.COV_ENABLE_RENDERING, 1)
         self._first_reset = False
 
-    def set_visual_shape(self):
-        """
-        Set the color of the UR arm.
-        """
-        color1 = [0.25, 0.25, 0.25, 1]
-        color2 = [0.95, 0.95, 0.95, 1]
-        jnt_id = self.jnt_to_id['base-base_link_fixed_joint']
-        self._pb.changeVisualShape(self.robot_id,
-                                   jnt_id,
-                                   rgbaColor=color1)
-        self._pb.changeVisualShape(self.robot_id,
-                                   self.jnt_to_id['shoulder_pan_joint'],
-                                   rgbaColor=color2)
-        self._pb.changeVisualShape(self.robot_id,
-                                   self.jnt_to_id['shoulder_lift_joint'],
-                                   rgbaColor=color1)
-        self._pb.changeVisualShape(self.robot_id,
-                                   self.jnt_to_id['elbow_joint'],
-                                   rgbaColor=color2)
-        self._pb.changeVisualShape(self.robot_id,
-                                   self.jnt_to_id['wrist_1_joint'],
-                                   rgbaColor=color1)
-        self._pb.changeVisualShape(self.robot_id,
-                                   self.jnt_to_id['wrist_2_joint'],
-                                   rgbaColor=color2)
-        self._pb.changeVisualShape(self.robot_id,
-                                   self.jnt_to_id['wrist_3_joint'],
-                                   rgbaColor=color1)

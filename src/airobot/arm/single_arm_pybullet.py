@@ -69,8 +69,9 @@ class SingleArmPybullet(ARM):
         """
         Reset the simulation environment.
         """
-        self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
-                                          [0, 0, 0], [0, 0, 0, 1])
+        if self.robot_id is None:
+            self.robot_id = self._pb.loadURDF(self.cfgs.PYBULLET_URDF,
+                                              [0, 0, 0], [0, 0, 0, 1])
 
     def set_jpos(self, position, joint_name=None,
                  wait=True, ignore_physics=False, *args, **kwargs):
@@ -98,7 +99,7 @@ class SingleArmPybullet(ARM):
         success = False
         if joint_name is None:
             if len(position) != self.arm_dof:
-                raise ValueError('Position should contain %d'
+                raise ValueError('Position should contain %d '
                                  'elements if the joint_name'
                                  ' is not provided' % self.arm_dof)
             tgt_pos = position
@@ -312,7 +313,8 @@ class SingleArmPybullet(ARM):
         way_jnt_positions = []
         for i in range(waypoints.shape[0]):
             tgt_jnt_poss = self.compute_ik(waypoints[i, :].flatten().tolist(),
-                                           quat)
+                                           quat,
+                                           **kwargs.get('ik_kwargs', dict()))
             way_jnt_positions.append(copy.deepcopy(tgt_jnt_poss))
         success = False
         for jnt_poss in way_jnt_positions:
@@ -514,13 +516,12 @@ class SingleArmPybullet(ARM):
             list: solution to inverse kinematics, joint angles which achieve
             the specified EE pose (shape: :math:`[DOF]`).
         """
-        ex_args = {'jointDamping': self._ik_jds}
+        kwargs.setdefault('jointDamping', self._ik_jds)
         if ns:
-            ll, ul, jr, rp = self._get_joint_ranges()
-            ex_args['lowerLimits'] = ll
-            ex_args['upperLimits'] = ul
-            ex_args['jointRanges'] = jr
-            ex_args['restPoses'] = rp
+            kwargs.setdefault('lowerLimits', self.jnt_lower_limits)
+            kwargs.setdefault('upperLimits', self.jnt_upper_limits)
+            kwargs.setdefault('jointRanges', self.jnt_ranges)
+            kwargs.setdefault('restPoses', self.jnt_rest_poses)
 
         if ori is not None:
             ori = arutil.to_quat(ori)
@@ -528,12 +529,12 @@ class SingleArmPybullet(ARM):
                                                            self.ee_link_id,
                                                            pos,
                                                            ori,
-                                                           **ex_args)
+                                                           **kwargs)
         else:
             jnt_poss = self._pb.calculateInverseKinematics(self.robot_id,
                                                            self.ee_link_id,
                                                            pos,
-                                                           **ex_args)
+                                                           **kwargs)
         jnt_poss = list(map(arutil.ang_in_mpi_ppi, jnt_poss))
         arm_jnt_poss = [jnt_poss[i] for i in self.arm_jnt_ik_ids]
         return arm_jnt_poss
@@ -631,3 +632,8 @@ class SingleArmPybullet(ARM):
         self.arm_jnt_ids = [self.jnt_to_id[jnt] for jnt in self.arm_jnt_names]
         self.arm_jnt_ik_ids = [self.non_fixed_jnt_names.index(jnt)
                                for jnt in self.arm_jnt_names]
+        ll, ul, jr, rp = self._get_joint_ranges()
+        self.jnt_lower_limits = ll
+        self.jnt_upper_limits = ul
+        self.jnt_ranges = jr
+        self.jnt_rest_poses = rp
