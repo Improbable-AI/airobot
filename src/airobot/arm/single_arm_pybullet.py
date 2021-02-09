@@ -343,7 +343,7 @@ class SingleArmPybullet(ARM):
                                  ' simulation mode')
 
         axis_dict = {'x': 0, 'y': 1, 'z': 2}
-        if axis not in ['x', 'y', 'z']:
+        if axis not in axis_dict.keys(): 
             raise ValueError('axis must be in [x, y, z]')
 
         pos, quat = self.get_ee_pose()[:2]

@@ -6,6 +6,8 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
+from airobot.utils import common
+
 
 class Position:
     """
@@ -151,10 +153,7 @@ def matrix_from_pose(pose):
     pose_list = pose_stamped2list(pose)
     trans, quat = pose_list[:3], pose_list[3:]
     T = np.eye(4)
-    if hasattr(R, 'as_matrix'):
-        T[:-1, :-1] = R.from_quat(quat).as_matrix()
-    else:
-        T[:-1, :-1] = R.from_quat(quat).as_dcm()
+    T[:-1, :-1] = common.quat2rot(quat)
     T[0:3, 3] = trans
     return T
 
@@ -172,10 +171,7 @@ def pose_from_matrix(matrix, frame_id="world"):
     Returns:
         PoseStamped: 6D pose representation of the transformation matrix.
     """
-    if hasattr(R, 'from_matrix'):
-        quat = R.from_matrix(matrix[:-1, :-1]).as_quat()
-    else:
-        quat = R.from_dcm(matrix[:-1, :-1]).as_quat()
+    quat = common.rot2quat(matrix[:-1, :-1])
     trans = matrix[:-1, -1]
     pose = list(trans) + list(quat)
     pose = list2pose_stamped(pose, frame_id=frame_id)
@@ -317,7 +313,7 @@ def interpolate_pose(pose_initial, pose_final, N):
             trans_interp_total[0][counter],
             trans_interp_total[1][counter],
             trans_interp_total[2][counter],
-            quat_interp_total[counter][0], #return in ROS ordering w,x,y,z
+            quat_interp_total[counter][0], 
             quat_interp_total[counter][1],
             quat_interp_total[counter][2],
             quat_interp_total[counter][3],
