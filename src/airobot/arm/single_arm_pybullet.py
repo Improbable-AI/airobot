@@ -8,7 +8,7 @@ import numpy as np
 from gym.utils import seeding
 
 import airobot.utils.common as arutil
-import airobot.utils.transform_util as tutil
+import airobot.utils.transform_util as pose_util
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 
@@ -322,14 +322,17 @@ class SingleArmPybullet(ARM):
         return success
 
     def rot_ee_xyz(self, angle, axis='x', N=50, *args, **kwargs):
-        """Rotate the end-effector about one of the end-effector axes,
+        """
+        Rotate the end-effector about one of the end-effector axes,
         without changing the position
 
         Args:
-            angle (float): angle by which to rotate in radians.
-            axis (str, optional): which end-effector frame axis to rotate about.
-            eef_step (float, optional): interpolation interval.
-
+            angle (float): Angle by which to rotate in radians.
+            axis (str): Which end-effector frame axis to rotate about.
+                Must be in ['x', 'y', 'z'].
+            N (int): Number of waypoints along the rotation trajectory
+                (larger N means motion will be more smooth but potentially
+                slower).
         Returns:
             bool: A boolean variable representing if the action is successful
             at the moment when the function exits.            
@@ -350,17 +353,17 @@ class SingleArmPybullet(ARM):
         transformation = np.eye(4)
         transformation[:-1, :-1] = arutil.euler2rot(euler_rot)
 
-        current_pose = tutil.list2pose_stamped(pos.tolist() + quat.tolist())
+        current_pose = pose_util.list2pose_stamped(pos.tolist() + quat.tolist())
 
-        new_pose = tutil.transform_body(
+        new_pose = pose_util.transform_body(
             current_pose,
-            tutil.pose_from_matrix(transformation)
+            pose_util.pose_from_matrix(transformation)
         )
 
-        waypoint_poses = tutil.interpolate_pose(current_pose, new_pose, N=N)
+        waypoint_poses = pose_util.interpolate_pose(current_pose, new_pose, N=N)
 
         for waypoint in waypoint_poses:
-            pose = tutil.pose_stamped2list(waypoint)
+            pose = pose_util.pose_stamped2list(waypoint)
             success = self.set_ee_pose(pose[:3], pose[3:])
         return success
 
