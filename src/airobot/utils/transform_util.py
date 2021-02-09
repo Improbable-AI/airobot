@@ -5,8 +5,6 @@ from __future__ import print_function
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
-import math
-import random
 
 
 class Position:
