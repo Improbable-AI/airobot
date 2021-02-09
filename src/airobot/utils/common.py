@@ -54,7 +54,10 @@ def quat2rot(quat):
 
     """
     r = R.from_quat(quat)
-    return r.as_matrix()
+    if hasattr(r, 'as_matrix'):
+        return r.as_matrix()
+    else:
+        return r.as_dcm()
 
 
 def quat2euler(quat, axes='xyz'):
@@ -138,7 +141,10 @@ def rotvec2rot(vec):
         np.ndarray: rotation matrix (shape: :math:`[3, 3]`).
     """
     r = R.from_rotvec(vec)
-    return r.as_matrix()
+    if hasattr(r, 'as_matrix'):
+        return r.as_matrix()
+    else:
+        return r.as_dcm()
 
 
 def rotvec2quat(vec):
@@ -198,7 +204,10 @@ def euler2rot(euler, axes='xyz'):
         np.ndarray: rotation matrix (shape: :math:`[3, 3]`).
     """
     r = R.from_euler(axes, euler)
-    return r.as_matrix()
+    if hasattr(r, 'as_matrix'):
+        return r.as_matrix()
+    else:
+        return r.as_dcm()
 
 
 def euler2quat(euler, axes='xyz'):
