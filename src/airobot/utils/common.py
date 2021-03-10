@@ -240,7 +240,10 @@ def rot2quat(rot):
     Returns:
         np.ndarray: quaternion [x,y,z,w] (shape: :math:`[4,]`).
     """
-    r = R.from_matrix(rot)
+    if hasattr(R, 'from_matrix'):   
+        r = R.from_matrix(rot)
+    else:
+        r = R.from_dcm(rot)
     return r.as_quat()
 
 
@@ -260,7 +263,10 @@ def rot2euler(rot, axes='xyz'):
     Returns:
         np.ndarray: euler angles (shape: :math:`[3,]`).
     """
-    r = R.from_matrix(rot)
+    if hasattr(R, 'from_matrix'):   
+        r = R.from_matrix(rot)
+    else:
+        r = R.from_dcm(rot)
     return r.as_euler(axes)
 
 
