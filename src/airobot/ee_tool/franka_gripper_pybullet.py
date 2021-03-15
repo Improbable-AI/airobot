@@ -78,7 +78,7 @@ class FrankaGripperPybullet(SimpleGripperPybullet):
         tgt_pos = [tgt_pos] * len(self.gripper_jnt_ids)
         if ignore_physics:
             self._zero_vel_mode()
-            self._hard_reset(pos)
+            self._hard_reset([pos]*len(self.gripper_jnt_ids))
             success = True
         else:
             self._pb.setJointMotorControlArray(self.robot_id,
