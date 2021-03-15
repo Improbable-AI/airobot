@@ -61,7 +61,7 @@ def wait_to_reach_jnt_goal(goal, get_func, joint_name=None,
                     vel_stop_time = time.time()
                 elif np.max(np.abs(jnt_vel)) > vel_threshold:
                     vel_stop_time = None
-                if vel_stop_time is not None and time.time() - vel_stop_time > 1.5:
+                if vel_stop_time is not None and time.time() - vel_stop_time > 0.1:
                     pt_str = 'Unable to move to joint goals (%s)' % str(goal)
                     ar.log_error(pt_str)
                     return success
