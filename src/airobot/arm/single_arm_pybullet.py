@@ -8,6 +8,7 @@ import numpy as np
 from gym.utils import seeding
 
 import airobot.utils.common as arutil
+import airobot.utils.transform_util as pose_util
 from airobot.arm.arm import ARM
 from airobot.utils.arm_util import wait_to_reach_jnt_goal
 
@@ -319,6 +320,52 @@ class SingleArmPybullet(ARM):
         success = False
         for jnt_poss in way_jnt_positions:
             success = self.set_jpos(jnt_poss, **kwargs)
+        return success
+
+    def rot_ee_xyz(self, angle, axis='x', N=50, *args, **kwargs):
+        """
+        Rotate the end-effector about one of the end-effector axes,
+        without changing the position
+
+        Args:
+            angle (float): Angle by which to rotate in radians.
+            axis (str): Which end-effector frame axis to rotate about.
+                Must be in ['x', 'y', 'z'].
+            N (int): Number of waypoints along the rotation trajectory
+                (larger N means motion will be more smooth but potentially
+                slower).
+        Returns:
+            bool: A boolean variable representing if the action is successful
+            at the moment when the function exits.            
+        """
+        if not self._pb.in_realtime_mode():
+            raise AssertionError('rot_ee_xyz() can  '
+                                 'only be called in realtime'
+                                 ' simulation mode')
+
+        axis_dict = {'x': 0, 'y': 1, 'z': 2}
+        if axis not in axis_dict.keys(): 
+            raise ValueError('axis must be in [x, y, z]')
+
+        pos, quat = self.get_ee_pose()[:2]
+        euler_rot = [0.0]*3
+        euler_rot[axis_dict[axis]] = angle
+
+        transformation = np.eye(4)
+        transformation[:-1, :-1] = arutil.euler2rot(euler_rot)
+
+        current_pose = pose_util.list2pose_stamped(pos.tolist() + quat.tolist())
+
+        new_pose = pose_util.transform_body(
+            current_pose,
+            pose_util.pose_from_matrix(transformation)
+        )
+
+        waypoint_poses = pose_util.interpolate_pose(current_pose, new_pose, N=N)
+
+        for waypoint in waypoint_poses:
+            pose = pose_util.pose_stamped2list(waypoint)
+            success = self.set_ee_pose(pose[:3], pose[3:])
         return success
 
     def enable_torque_control(self, joint_name=None):
