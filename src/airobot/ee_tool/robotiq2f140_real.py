@@ -84,7 +84,7 @@ class Robotiq2F140Real(EndEffectorTool):
         if not self._gazebo_sim:
             self._get_current_pos_urscript()
 
-    def set_pos(self, pos):
+    def set_jpos(self, pos):
         """
         Set the gripper position. Function internally maps
         values from API position range to URScript position
@@ -138,13 +138,13 @@ class Robotiq2F140Real(EndEffectorTool):
         """
         Open gripper.
         """
-        self.set_pos(self.cfgs.EETOOL.OPEN_ANGLE)
+        self.set_jpos(self.cfgs.EETOOL.OPEN_ANGLE)
 
     def close(self):
         """
         Close gripper.
         """
-        self.set_pos(self.cfgs.EETOOL.CLOSE_ANGLE)
+        self.set_jpos(self.cfgs.EETOOL.CLOSE_ANGLE)
 
     def get_pos(self):
         """
