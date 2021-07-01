@@ -259,7 +259,7 @@ class SingleArmPybullet(ARM):
                                            force=torque)
         return True
 
-    def set_ee_pose(self, pos=None, ori=None, wait=True, *args, **kwargs):
+    def set_ee_pose(self, pos=None, ori=None, wait=True, ignore_physics=False, *args, **kwargs):
         """
         Move the end effector to the specifed pose.
 
@@ -272,6 +272,12 @@ class SingleArmPybullet(ARM):
                 or rotation matrix (shape: :math:`[3, 3]`). If it's None,
                 the solver will use the current end effector
                 orientation as the target orientation.
+            wait (bool): whether to block the code and wait
+                for the action to complete.
+            ignore_physics (bool): hard reset the joints to the target joint
+                positions. It's best only to do this at the start,
+                while not running the simulation. It will overrides
+                all physics simulation.
 
         Returns:
             bool: A boolean variable representing if the action is successful
@@ -281,7 +287,7 @@ class SingleArmPybullet(ARM):
             pose = self.get_ee_pose()
             pos = pose[0]
         jnt_pos = self.compute_ik(pos, ori)
-        success = self.set_jpos(jnt_pos, wait=wait)
+        success = self.set_jpos(jnt_pos, wait=wait, ignore_physics=ignore_physics)
         return success
 
     def move_ee_xyz(self, delta_xyz, eef_step=0.005, *args, **kwargs):
