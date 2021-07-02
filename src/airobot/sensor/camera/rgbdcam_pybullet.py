@@ -1,7 +1,9 @@
 import numpy as np
 
 from airobot.sensor.camera.rgbdcam import RGBDCamera
+from airobot.utils.common import create_se3
 from airobot.utils.common import rotvec2rot
+
 
 class RGBDCameraPybullet(RGBDCamera):
     """
@@ -25,6 +27,30 @@ class RGBDCameraPybullet(RGBDCamera):
         self.depth_scale = 1
         self.depth_min = self.cfgs.CAM.SIM.ZNEAR
         self.depth_max = self.cfgs.CAM.SIM.ZFAR
+        self._set_cam_int()
+
+    def _set_cam_int(self, img_height=None, img_width=None):
+        self.img_height = img_height if img_height else self.cfgs.CAM.SIM.HEIGHT
+        self.img_width = img_width if img_width else self.cfgs.CAM.SIM.WIDTH
+        aspect = self.img_width / float(self.img_height)
+        znear = self.cfgs.CAM.SIM.ZNEAR
+        zfar = self.cfgs.CAM.SIM.ZFAR
+        fov = self.cfgs.CAM.SIM.FOV
+        pm = self._pb.computeProjectionMatrixFOV(fov,
+                                                 aspect,
+                                                 znear,
+                                                 zfar)
+        self.proj_matrix = np.array(pm).reshape(4, 4)
+        vfov = np.deg2rad(fov)
+        tan_half_vfov = np.tan(vfov / 2.0)
+        tan_half_hfov = tan_half_vfov * self.img_width / float(self.img_height)
+        # focal length in pixel space
+        fx = self.img_width / 2.0 / tan_half_hfov
+        fy = self.img_height / 2.0 / tan_half_vfov
+        self.cam_int_mat = np.array([[fx, 0, self.img_width / 2.0],
+                                     [0, fy, self.img_height / 2.0],
+                                     [0, 0, 1]])
+        self._init_pers_mat()
 
     def setup_camera(self, focus_pt=None, dist=3,
                      yaw=0, pitch=0, roll=0,
@@ -57,35 +83,13 @@ class RGBDCameraPybullet(RGBDCamera):
                                                         roll,
                                                         upAxisIndex=2)
         self.view_matrix = np.array(vm).reshape(4, 4)
-        self.img_height = height if height else self.cfgs.CAM.SIM.HEIGHT
-        self.img_width = width if width else self.cfgs.CAM.SIM.WIDTH
-        aspect = self.img_width / float(self.img_height)
-        znear = self.cfgs.CAM.SIM.ZNEAR
-        zfar = self.cfgs.CAM.SIM.ZFAR
-        fov = self.cfgs.CAM.SIM.FOV
-        pm = self._pb.computeProjectionMatrixFOV(fov,
-                                                 aspect,
-                                                 znear,
-                                                 zfar)
-        self.proj_matrix = np.array(pm).reshape(4, 4)
-        # rotvec2rot(np.pi * np.array([1, 0, 0]))
-        rot = np.array([[1, 0, 0, 0],
-                        [0, -1, 0, 0],
-                        [0, 0, -1, 0],
-                        [0, 0, 0, 1]])
+
+        rot = create_se3(rotvec2rot(np.pi * np.array([1, 0, 0])))
         view_matrix_T = self.view_matrix.T
         self.cam_ext_mat = np.dot(np.linalg.inv(view_matrix_T), rot)
 
-        vfov = np.deg2rad(fov)
-        tan_half_vfov = np.tan(vfov / 2.0)
-        tan_half_hfov = tan_half_vfov * self.img_width / float(self.img_height)
-        # focal length in pixel space
-        fx = self.img_width / 2.0 / tan_half_hfov
-        fy = self.img_height / 2.0 / tan_half_vfov
-        self.cam_int_mat = np.array([[fx, 0, self.img_width / 2.0],
-                                     [0, fy, self.img_height / 2.0],
-                                     [0, 0, 1]])
-        self._init_pers_mat()
+        if height is not None or width is not None:
+            self._set_cam_int(img_height=height, img_width=width)
 
     def set_cam_ext(self, pos=None, ori=None, cam_ext=None):
         """

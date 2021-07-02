@@ -3,6 +3,7 @@ import numpy as np
 from airobot.sensor.camera.camera import Camera
 from airobot.utils.common import to_rot_mat
 
+
 class RGBDCamera(Camera):
     """
     A RGBD camera.
@@ -198,13 +199,14 @@ class RGBDCamera(Camera):
         uv_one_in_cam = np.dot(self.cam_int_mat_inv, uv_one)
         pts_in_cam = np.multiply(uv_one_in_cam, depth)
         if in_world:
-            if self.cam_ext_mat is None:
+            if self.cam_ext_mat is None and cam_ext_mat is None:
                 raise ValueError('Please call set_cam_ext() first to set up'
                                  ' the camera extrinsic matrix')
+            cam_ext_mat = self.cam_ext_mat if cam_ext_mat is None else cam_ext_mat
             pts_in_cam = np.concatenate((pts_in_cam,
                                          np.ones((1, pts_in_cam.shape[1]))),
                                         axis=0)
-            pts_in_world = np.dot(self.cam_ext_mat, pts_in_cam)
+            pts_in_world = np.dot(cam_ext_mat, pts_in_cam)
             pts_in_world = pts_in_world[:3, :].T
             return pts_in_world
         else:
