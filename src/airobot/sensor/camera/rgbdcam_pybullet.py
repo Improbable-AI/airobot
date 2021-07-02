@@ -1,7 +1,7 @@
 import numpy as np
 
 from airobot.sensor.camera.rgbdcam import RGBDCamera
-
+from airobot.utils.common import rotvec2rot
 
 class RGBDCameraPybullet(RGBDCamera):
     """
@@ -68,6 +68,7 @@ class RGBDCameraPybullet(RGBDCamera):
                                                  znear,
                                                  zfar)
         self.proj_matrix = np.array(pm).reshape(4, 4)
+        # rotvec2rot(np.pi * np.array([1, 0, 0]))
         rot = np.array([[1, 0, 0, 0],
                         [0, -1, 0, 0],
                         [0, 0, -1, 0],
@@ -85,6 +86,25 @@ class RGBDCameraPybullet(RGBDCamera):
                                      [0, fy, self.img_height / 2.0],
                                      [0, 0, 1]])
         self._init_pers_mat()
+
+    def set_cam_ext(self, pos=None, ori=None, cam_ext=None):
+        """
+        Set the camera extrinsic matrix.
+
+        Args:
+            pos (np.ndarray): position of the camera (shape: :math:`[3,]`).
+            ori (np.ndarray): orientation.
+                It can be rotation matrix (shape: :math:`[3, 3]`)
+                quaternion ([x, y, z, w], shape: :math:`[4]`), or
+                euler angles ([roll, pitch, yaw], shape: :math:`[3]`).
+            cam_ext (np.ndarray): extrinsic matrix (shape: :math:`[4, 4]`).
+                If this is provided, pos and ori will be ignored.
+        """
+        super().set_cam_ext(pos=pos, ori=ori, cam_ext=cam_ext)
+        transform = np.eye(4)
+        transform[:3, :3] = rotvec2rot(np.pi * np.array([1, 0, 0]))
+        view_matrix = np.linalg.inv(np.dot(self.cam_ext_mat, transform)).T
+        self.view_matrix = view_matrix
 
     def get_images(self, get_rgb=True, get_depth=True,
                    get_seg=False, **kwargs):
