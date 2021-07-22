@@ -247,6 +247,23 @@ def rot2quat(rot):
     return r.as_quat()
 
 
+def rot2rotvec(rot):
+    """
+    Convert rotation matrix to quaternion.
+
+    Args:
+        rot (np.ndarray): rotation matrix (shape: :math:`[3, 3]`).
+
+    Returns:
+        np.ndarray: a rotation vector (shape: :math:`[3,]`).
+    """
+    if hasattr(R, 'from_matrix'):
+        r = R.from_matrix(rot)
+    else:
+        r = R.from_dcm(rot)
+    return r.as_rotvec()
+
+
 def rot2euler(rot, axes='xyz'):
     """
     Convert rotation matrix to euler angles.
@@ -297,7 +314,7 @@ def to_rot_mat(ori):
     return ori
 
 
-def to_euler_angles(ori):
+def to_euler_angles(ori, axes='xyz'):
     """
     Convert orientation in any form (rotation matrix,
     quaternion, or euler angles) to euler angles (roll, pitch, yaw).
@@ -307,16 +324,23 @@ def to_euler_angles(ori):
             rotation matrix (shape: :math:`[3, 3]`)
             quaternion (shape: :math:`[4]`)
             euler angles (shape: :math:`[3]`).
+        axes (str): Specifies sequence of axes for rotations.
+            3 characters belonging to the set {'X', 'Y', 'Z'}
+            for intrinsic rotations (rotation about the axes of a
+            coordinate system XYZ attached to a moving body),
+            or {'x', 'y', 'z'} for extrinsic rotations (rotation about
+            the axes of the fixed coordinate system).
 
     Returns:
-        np.ndarray: euler angles [roll, pitch, yaw] (shape: :math:`[3,]`).
+        np.ndarray: euler angles (shape: :math:`[3,]`).
+            By default, it's [roll, pitch, yaw]
 
     """
     ori = np.array(ori)
     if ori.size == 4:
-        ori = quat2euler(ori)
+        ori = quat2euler(ori, axes=axes)
     elif ori.shape == (3, 3):
-        ori = rot2euler(ori)
+        ori = rot2euler(ori, axes=axes)
     elif ori.size != 3:
         raise ValueError('Orientation should be rotation matrix, '
                          'euler angles or quaternion')
@@ -347,6 +371,35 @@ def to_quat(ori):
         raise ValueError('Orientation should be rotation matrix, '
                          'euler angles or quaternion')
     return ori
+
+
+def se3_to_trans_ori(se3, ori='quat', axes='xyz'):
+    """
+
+    Args:
+        se3 (np.ndarray): a SE(3) matrix (shape: :math:`[4, 4]`)
+        ori (str): orientation format, can be one of ['quat', 'euler', 'matrix', 'rotvec']
+        axes (str): only used when ori == 'euler'
+
+    Returns:
+        2-element tuple containing
+
+        - np.ndarray: translational vector (shape: :math:`[3,]`).
+        - np.ndarray: rotational vector/matrix.
+    """
+    rot = se3[:3, :3]
+    trans = se3[:3, 3]
+    if ori == 'quat':
+        ori = to_quat(rot)
+    elif ori == 'euler':
+        ori = to_euler_angles(rot, axes=axes)
+    elif ori == 'matrix':
+        ori = rot
+    elif ori == 'rotvec':
+        ori = rot2rotvec(rot)
+    else:
+        raise ValueError(f'Unknown orientation format:{ori}.')
+    return trans, ori
 
 
 def create_se3(ori, trans=None):

@@ -45,7 +45,8 @@ def main():
                                     depth_max=depth_max)
     pcd.points = open3d.utility.Vector3dVector(pts)
     pcd.colors = open3d.utility.Vector3dVector(colors / 255.0)
-    vis.add_geometry(pcd)
+    # coor = open3d.geometry.TriangleMesh.create_coordinate_frame(0.5)
+    vis.add_geometry([pcd])
     while True:
         pts, colors = robot.cam.get_pcd(in_world=True,
                                         filter_depth=True,
