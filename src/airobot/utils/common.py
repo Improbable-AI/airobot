@@ -398,7 +398,7 @@ def se3_to_trans_ori(se3, ori='quat', axes='xyz'):
     elif ori == 'rotvec':
         ori = rot2rotvec(rot)
     else:
-        raise ValueError(f'Unknown orientation format:{ori}.')
+        raise ValueError('Unknown orientation format:{ori}.'.format(ori=ori))
     return trans, ori
 
 
