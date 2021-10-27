@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 import pybullet as p
 import pybullet_data
-
+import airobot
 from airobot.utils.common import clamp
 
 GRAVITY_CONST = -9.8
@@ -61,20 +61,21 @@ class BulletClient:
     def __init__(self,
                  connection_mode=None,
                  realtime=False,
-                 opengl_render=True):
+                 opengl_render=True,
+                 options=''):
         self._in_realtime_mode = realtime
         self.opengl_render = opengl_render
         self._realtime_lock = threading.RLock()
         if connection_mode is None:
-            self._client = p.connect(p.SHARED_MEMORY)
+            self._client = p.connect(p.SHARED_MEMORY, options=options)
             if self._client >= 0:
                 return
             else:
                 connection_mode = p.DIRECT
-        self._client = p.connect(connection_mode)
+        self._client = p.connect(connection_mode, options=options)
         is_linux = platform.system() == 'Linux'
         if connection_mode == p.DIRECT and is_linux and opengl_render:
-            print('load in opengl')
+            airobot.log_info('Load in OpenGL!')
             # # using the eglRendererPlugin (hardware OpenGL acceleration)
             egl = pkgutil.get_loader('eglRenderer')
             if egl:
