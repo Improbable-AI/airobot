@@ -213,7 +213,8 @@ class RGBDCamera(Camera):
             return pts_in_cam.T
 
     def get_pcd(self, in_world=True, filter_depth=True,
-                depth_min=None, depth_max=None, cam_ext_mat=None):
+                depth_min=None, depth_max=None, cam_ext_mat=None,
+                rgb_image=None, depth_image=None):
         """
         Get the point cloud from the entire depth image
         in the camera frame or in the world frame.
@@ -229,6 +230,12 @@ class RGBDCamera(Camera):
                 default maximum depth value defined in the config file.
             cam_ext_mat (np.ndarray): camera extrinsic matrix (shape: :math:`[4,4]`).
                 If provided, it will be used to compute the points in the world frame.
+            rgb_image (np.ndarray): externally captured RGB image, if we want to
+                convert a depth image captured outside this function to a point cloud.
+                (shape :math:`[H, W, 3]`)
+            depth_image (np.ndarray): externally captured depth image, if we want to
+                convert a depth image captured outside this function to a point cloud.
+                (shape :math:`[H, W]`)
 
         Returns:
             2-element tuple containing
@@ -236,7 +243,11 @@ class RGBDCamera(Camera):
             - np.ndarray: point coordinates (shape: :math:`[N, 3]`).
             - np.ndarray: rgb values (shape: :math:`[N, 3]`).
         """
-        rgb_im, depth_im = self.get_images(get_rgb=True, get_depth=True)
+        if depth_image is None or rgb_image is None:
+            rgb_im, depth_im = self.get_images(get_rgb=True, get_depth=True)
+        else:
+            rgb_im = rgb_image
+            depth_im = depth_image
         # pcd in camera from depth
         depth = depth_im.reshape(-1) * self.depth_scale
         rgb = None
