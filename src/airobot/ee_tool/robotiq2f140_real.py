@@ -293,7 +293,7 @@ class Robotiq2F140Real(EndEffectorTool):
         for ip in ip_list:
             if ip.startswith(self.cfgs.EETOOL.IP_PREFIX):
                 return ip
-        return None
+        return self.cfgs.EETOOL.FULL_IP
 
     def _initialize_comm(self):
         """
