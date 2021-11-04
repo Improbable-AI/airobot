@@ -53,6 +53,7 @@ class Robotiq2F140Real(EndEffectorTool):
             self._err_thresh = 1
 
             self._local_ip_addr = None
+
             local_ip = self._get_local_ip()
             # we assume the machine is connected to a router
             if local_ip is not None:
@@ -293,7 +294,8 @@ class Robotiq2F140Real(EndEffectorTool):
         for ip in ip_list:
             if ip.startswith(self.cfgs.EETOOL.IP_PREFIX):
                 return ip
-        return None
+        return self.cfgs.EETOOL.FULL_IP
+        # return None
 
     def _initialize_comm(self):
         """
