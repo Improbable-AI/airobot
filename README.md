@@ -65,7 +65,7 @@ pip install -e .
 If you want to use [Sawyer](https://www.rethinkrobotics.com/sawyer) or [LoCoBot](https://locobot-website.netlify.com/), you can use [PyRobot](https://pyrobot.org).
 
 ## Getting Started
-A sample script is shown below. You can find more examples [here](https://github.com/Improbable-AI/airobot/examples)
+A sample script is shown below. You can find more examples [here](https://github.com/Improbable-AI/airobot/tree/master/examples)
 
 ```python
 from airobot import Robot
