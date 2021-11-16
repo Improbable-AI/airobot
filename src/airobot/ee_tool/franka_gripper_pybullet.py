@@ -55,7 +55,7 @@ class FrankaGripperPybullet(SimpleGripperPybullet):
             jnt_to_id (dict): mapping from the joint name to joint id.
 
         """
-        super().feed_robot_info(robot_id, jnt_to_id)
+        super(FrankaGripperPybullet, self).feed_robot_info(robot_id, jnt_to_id)
         self._setup_gripper()
 
     def set_jpos(self, pos, wait=True, ignore_physics=False):

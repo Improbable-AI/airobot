@@ -134,32 +134,6 @@ class RGBDCameraReal(RGBDCamera):
         topic.insert(0, cam_name)
         return '/'.join(topic)
 
-    def set_cam_ext(self, pos=None, ori=None, cam_ext=None):
-        """
-        Set the camera extrinsic matrix.
-
-        Args:
-            pos (np.ndarray): position of the camera (shape: :math:`[3,]`).
-            ori (np.ndarray): orientation.
-                It can be rotation matrix (shape: :math:`[3, 3]`)
-                quaternion ([x, y, z, w], shape: :math:`[4]`), or
-                euler angles ([roll, pitch, yaw], shape: :math:`[3]`).
-            cam_ext (np.ndarray): extrinsic matrix (shape: :math:`[4, 4]`).
-                If this is provided, pos and ori will be ignored.
-        """
-        if cam_ext is not None:
-            self.cam_ext_mat = cam_ext
-        else:
-            if pos is None or ori is None:
-                raise ValueError('If cam_ext is not provided, '
-                                 'both pos and ori need'
-                                 'to be provided.')
-            ori = to_rot_mat(ori)
-            cam_mat = np.eye(4)
-            cam_mat[:3, :3] = ori
-            cam_mat[:3, 3] = pos.flatten()
-            self.cam_ext_mat = cam_mat
-
     def get_images(self, get_rgb=True, get_depth=True, **kwargs):
         """
         Return rgb/depth images.

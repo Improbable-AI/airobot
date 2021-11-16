@@ -1,6 +1,7 @@
 import numpy as np
 
 from airobot.sensor.camera.camera import Camera
+from airobot.utils.common import to_rot_mat
 
 
 class RGBDCamera(Camera):
@@ -72,8 +73,35 @@ class RGBDCamera(Camera):
         """
         return self.cam_int_mat
 
+    def set_cam_ext(self, pos=None, ori=None, cam_ext=None):
+        """
+        Set the camera extrinsic matrix.
+
+        Args:
+            pos (np.ndarray): position of the camera (shape: :math:`[3,]`).
+            ori (np.ndarray): orientation.
+                It can be rotation matrix (shape: :math:`[3, 3]`)
+                quaternion ([x, y, z, w], shape: :math:`[4]`), or
+                euler angles ([roll, pitch, yaw], shape: :math:`[3]`).
+            cam_ext (np.ndarray): extrinsic matrix (shape: :math:`[4, 4]`).
+                If this is provided, pos and ori will be ignored.
+        """
+        if cam_ext is not None:
+            self.cam_ext_mat = cam_ext
+        else:
+            if pos is None or ori is None:
+                raise ValueError('If cam_ext is not provided, '
+                                 'both pos and ori need '
+                                 'to be provided.')
+            ori = to_rot_mat(ori)
+            cam_mat = np.eye(4)
+            cam_mat[:3, :3] = ori
+            cam_mat[:3, 3] = pos.flatten()
+            self.cam_ext_mat = cam_mat
+
     def get_pix_3dpt(self, rs, cs, in_world=True, filter_depth=False,
-                     k=1, ktype='median', depth_min=None, depth_max=None):
+                     k=1, ktype='median', depth_min=None, depth_max=None,
+                     cam_ext_mat=None):
         """
         Calculate the 3D position of pixels in the RGB image.
 
@@ -107,6 +135,8 @@ class RGBDCamera(Camera):
                 default minimum depth value defined in the config file.
             depth_max (float): maximum depth value. If None, it will use the
                 default maximum depth value defined in the config file.
+            cam_ext_mat (np.ndarray): camera extrinsic matrix (shape: :math:`[4,4]`).
+                If provided, it will be used to compute the points in the world frame.
 
         Returns:
             np.ndarray: 3D point coordinates of the pixels in
@@ -169,20 +199,22 @@ class RGBDCamera(Camera):
         uv_one_in_cam = np.dot(self.cam_int_mat_inv, uv_one)
         pts_in_cam = np.multiply(uv_one_in_cam, depth)
         if in_world:
-            if self.cam_ext_mat is None:
+            if self.cam_ext_mat is None and cam_ext_mat is None:
                 raise ValueError('Please call set_cam_ext() first to set up'
                                  ' the camera extrinsic matrix')
+            cam_ext_mat = self.cam_ext_mat if cam_ext_mat is None else cam_ext_mat
             pts_in_cam = np.concatenate((pts_in_cam,
                                          np.ones((1, pts_in_cam.shape[1]))),
                                         axis=0)
-            pts_in_world = np.dot(self.cam_ext_mat, pts_in_cam)
+            pts_in_world = np.dot(cam_ext_mat, pts_in_cam)
             pts_in_world = pts_in_world[:3, :].T
             return pts_in_world
         else:
             return pts_in_cam.T
 
     def get_pcd(self, in_world=True, filter_depth=True,
-                depth_min=None, depth_max=None):
+                depth_min=None, depth_max=None, cam_ext_mat=None,
+                rgb_image=None, depth_image=None):
         """
         Get the point cloud from the entire depth image
         in the camera frame or in the world frame.
@@ -196,6 +228,14 @@ class RGBDCamera(Camera):
                 default minimum depth value defined in the config file.
             depth_max (float): maximum depth value. If None, it will use the
                 default maximum depth value defined in the config file.
+            cam_ext_mat (np.ndarray): camera extrinsic matrix (shape: :math:`[4,4]`).
+                If provided, it will be used to compute the points in the world frame.
+            rgb_image (np.ndarray): externally captured RGB image, if we want to
+                convert a depth image captured outside this function to a point cloud.
+                (shape :math:`[H, W, 3]`)
+            depth_image (np.ndarray): externally captured depth image, if we want to
+                convert a depth image captured outside this function to a point cloud.
+                (shape :math:`[H, W]`)
 
         Returns:
             2-element tuple containing
@@ -203,7 +243,11 @@ class RGBDCamera(Camera):
             - np.ndarray: point coordinates (shape: :math:`[N, 3]`).
             - np.ndarray: rgb values (shape: :math:`[N, 3]`).
         """
-        rgb_im, depth_im = self.get_images(get_rgb=True, get_depth=True)
+        if depth_image is None or rgb_image is None:
+            rgb_im, depth_im = self.get_images(get_rgb=True, get_depth=True)
+        else:
+            rgb_im = rgb_image
+            depth_im = depth_image
         # pcd in camera from depth
         depth = depth_im.reshape(-1) * self.depth_scale
         rgb = None
@@ -227,13 +271,14 @@ class RGBDCamera(Camera):
             pcd_rgb = rgb
             return pcd_pts, pcd_rgb
         else:
-            if self.cam_ext_mat is None:
+            if self.cam_ext_mat is None and cam_ext_mat is None:
                 raise ValueError('Please call set_cam_ext() first to set up'
                                  ' the camera extrinsic matrix')
+            cam_ext_mat = self.cam_ext_mat if cam_ext_mat is None else cam_ext_mat
             pts_in_cam = np.concatenate((pts_in_cam,
                                          np.ones((1, pts_in_cam.shape[1]))),
                                         axis=0)
-            pts_in_world = np.dot(self.cam_ext_mat, pts_in_cam)
+            pts_in_world = np.dot(cam_ext_mat, pts_in_cam)
             pcd_pts = pts_in_world[:3, :].T
             pcd_rgb = rgb
             return pcd_pts, pcd_rgb

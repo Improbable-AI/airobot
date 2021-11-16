@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 import pybullet as p
 import pybullet_data
-
+import airobot
 from airobot.utils.common import clamp
 
 GRAVITY_CONST = -9.8
@@ -61,19 +61,21 @@ class BulletClient:
     def __init__(self,
                  connection_mode=None,
                  realtime=False,
-                 opengl_render=True):
+                 opengl_render=True,
+                 options=''):
         self._in_realtime_mode = realtime
         self.opengl_render = opengl_render
         self._realtime_lock = threading.RLock()
         if connection_mode is None:
-            self._client = p.connect(p.SHARED_MEMORY)
+            self._client = p.connect(p.SHARED_MEMORY, options=options)
             if self._client >= 0:
                 return
             else:
                 connection_mode = p.DIRECT
-        self._client = p.connect(connection_mode)
+        self._client = p.connect(connection_mode, options=options)
         is_linux = platform.system() == 'Linux'
         if connection_mode == p.DIRECT and is_linux and opengl_render:
+            airobot.log_info('Load in OpenGL!')
             # # using the eglRendererPlugin (hardware OpenGL acceleration)
             egl = pkgutil.get_loader('eglRenderer')
             if egl:
@@ -301,7 +303,7 @@ class BulletClient:
     def load_geom(self, shape_type, size=None, mass=0.5, visualfile=None,
                   collifile=None, mesh_scale=None, rgba=None,
                   specular=None, shift_pos=None, shift_ori=None,
-                  base_pos=None, base_ori=None, **kwargs):
+                  base_pos=None, base_ori=None, no_collision=False, **kwargs):
         """
         Load a regular geometry (`sphere`, `box`,
         `capsule`, `cylinder`, `mesh`).
@@ -456,15 +458,20 @@ class BulletClient:
 
         self.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0)
         vs_id = self.createVisualShape(**visual_args)
-        cs_id = self.createCollisionShape(**collision_args)
-        body_id = self.createMultiBody(baseMass=mass,
-                                       baseInertialFramePosition=shift_pos,
-                                       baseInertialFrameOrientation=shift_ori,
-                                       baseCollisionShapeIndex=cs_id,
-                                       baseVisualShapeIndex=vs_id,
-                                       basePosition=base_pos,
-                                       baseOrientation=base_ori,
-                                       **kwargs)
+
+        multi_body_kwargs = dict(
+            baseMass=mass,
+            baseInertialFramePosition=shift_pos,
+            baseInertialFrameOrientation=shift_ori,
+            baseVisualShapeIndex=vs_id,
+            basePosition=base_pos,
+            baseOrientation=base_ori,
+            **kwargs
+        )
+        if not no_collision:
+            cs_id = self.createCollisionShape(**collision_args)
+            multi_body_kwargs['baseCollisionShapeIndex'] = cs_id
+        body_id = self.createMultiBody(**multi_body_kwargs)
         self.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1)
         self.setGravity(0, 0, GRAVITY_CONST)
         return body_id
