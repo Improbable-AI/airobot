@@ -93,7 +93,7 @@ def get_tf_transform(tf_listener, tgt_frame, src_frame):
     return list(trans), list(quat)
 
 
-def read_cam_ext(robot_name):
+def read_cam_ext(robot_name, filename='calib_base_to_cam.json'):
     """
     Read the camera extrinsic information from calibration result.
 
@@ -110,7 +110,7 @@ def read_cam_ext(robot_name):
     rospack = rospkg.RosPack()
     data_path = rospack.get_path('hand_eye_calibration')
     calib_file_path = os.path.join(data_path, 'result', robot_name,
-                                   'calib_base_to_cam.json')
+                                   filename)
     with open(calib_file_path, 'r') as f:
         calib_data = json.load(f)
     cam_pos = np.array(calib_data['b_c_transform']['position'])
