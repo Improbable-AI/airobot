@@ -20,7 +20,8 @@ GRAVITY_CONST = -9.8
 
 def create_pybullet_client(gui=True,
                            realtime=True,
-                           opengl_render=True):
+                           opengl_render=True,
+                           server=False):
     """
     Create a pybullet simulation client.
 
@@ -31,9 +32,9 @@ def create_pybullet_client(gui=True,
             RGB images.
     """
     if gui:
-        mode = p.GUI
+        mode = p.GUI_SERVER if server else p.GUI
     else:
-        mode = p.DIRECT
+        mode = p.SHARED_MEMORY_SERVER if server else p.DIRECT
     pb_client = BulletClient(connection_mode=mode,
                              realtime=realtime,
                              opengl_render=opengl_render)
@@ -84,7 +85,8 @@ class BulletClient:
             else:
                 p.loadPlugin("eglRendererPlugin",
                              physicsClientId=self._client)
-        self._gui_mode = connection_mode == p.GUI
+        self._gui_mode = connection_mode in [p.GUI, p.GUI_SERVER]
+        # self._gui_mode = connection_mode == p.GUI
         p.setGravity(0, 0, GRAVITY_CONST,
                      physicsClientId=self._client)
         self.set_step_sim(not self._in_realtime_mode)
