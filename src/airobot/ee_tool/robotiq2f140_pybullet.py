@@ -1,4 +1,6 @@
+import airobot.utils.common as arutil
 from airobot.ee_tool.simple_gripper_pybullet import SimpleGripperPybullet
+from airobot.utils.arm_util import wait_to_reach_jnt_goal
 
 
 class Robotiq2F140Pybullet(SimpleGripperPybullet):
@@ -34,26 +36,6 @@ class Robotiq2F140Pybullet(SimpleGripperPybullet):
             jnt_to_id (dict): mapping from the joint name to joint id.
 
         """
-        self._pb.changeDynamics(self.robot_id,
-                                self.jnt_to_id['left_inner_finger_pad_joint'],
-                                lateralFriction=2.0,
-                                spinningFriction=1.0,
-                                rollingFriction=1.0)
-        self._pb.changeDynamics(self.robot_id,
-                                self.jnt_to_id['right_inner_finger_pad_joint'],
-                                lateralFriction=2.0,
-                                spinningFriction=1.0,
-                                rollingFriction=1.0)
-
-    def feed_robot_info(self, robot_id, jnt_to_id):
-        """
-        Setup the gripper, pass the robot info from the arm to the gripper.
-
-        Args:
-            robot_id (int): robot id in Pybullet.
-            jnt_to_id (dict): mapping from the joint name to joint id.
-
-        """
         c_mimic = self._pb.createConstraint(
             self.robot_id,
             self.jnt_to_id['finger_joint'],
@@ -63,7 +45,7 @@ class Robotiq2F140Pybullet(SimpleGripperPybullet):
             jointAxis=[1, 0, 0],
             parentFramePosition=[0, 0, 0],
             childFramePosition=[0, 0, 0])
-        self._pb.changeConstraint(c_mimic, gearRatio=1.0, erp=0.2, maxForce=10)
+        self._pb.changeConstraint(c_mimic, gearRatio=1.0, erp=0.2, maxForce=self._max_torque)
 
         parent_pos = [0.0, -0.01, -0.004]
         child_pos = [0, 0.049, 0.0]
@@ -89,14 +71,62 @@ class Robotiq2F140Pybullet(SimpleGripperPybullet):
             childFramePosition=child_pos)
         self._pb.changeConstraint(c2, erp=0.8, maxForce=9999)
 
-        self._pb.setJointMotorControl2(bodyIndex=self.robot_id, jointIndex=self.jnt_to_id['right_inner_finger_joint'], controlMode=self._pb.VELOCITY_CONTROL, force=0)
-        self._pb.setJointMotorControl2(bodyIndex=self.robot_id, jointIndex=self.jnt_to_id['left_inner_finger_joint'],  controlMode=self._pb.VELOCITY_CONTROL, force=0)
-        self._pb.setJointMotorControl2(bodyIndex=self.robot_id, jointIndex=self.jnt_to_id['right_inner_knuckle_joint'],  controlMode=self._pb.VELOCITY_CONTROL, force=0)
-        self._pb.setJointMotorControl2(bodyIndex=self.robot_id, jointIndex=self.jnt_to_id['left_inner_knuckle_joint'],  controlMode=self._pb.VELOCITY_CONTROL, force=0)
-        # self._pb.setJointMotorControl2(bodyIndex=self.robot_id, jointIndex=self.jnt_to_id['gripper_right_coupler_joint'],  controlMode=self._pb.VELOCITY_CONTROL, force=0)
-        # self._pb.setJointMotorControl2(bodyIndex=self.robot_id, jointIndex=self.jnt_to_id['gripper_left_coupler_joint'],  controlMode=self._pb.VELOCITY_CONTROL, force=0)
-        
-        self._pb.setJointMotorControl2(bodyIndex=self.robot_id, jointIndex=self.jnt_to_id['right_outer_knuckle_joint'],  controlMode=self._pb.VELOCITY_CONTROL, force=0)
+        passive_force = 0
+        for name in self.jnt_names:
+            if name == 'finger_joint':
+                continue
+            # set all joints except driven one to have non-active motors
+            self._pb.setJointMotorControl2(
+                bodyIndex=self.robot_id, 
+                jointIndex=self.jnt_to_id[name], 
+                controlMode=self._pb.VELOCITY_CONTROL, 
+                force=passive_force)
+
+        self._pb.changeDynamics(self.robot_id,
+                                self.jnt_to_id['left_inner_finger_pad_joint'],
+                                lateralFriction=2.0,
+                                spinningFriction=1.0,
+                                rollingFriction=1.0)
+        self._pb.changeDynamics(self.robot_id,
+                                self.jnt_to_id['right_inner_finger_pad_joint'],
+                                lateralFriction=2.0,
+                                spinningFriction=1.0,
+                                rollingFriction=1.0)
+
+        # set a pretty low default for the gripper velocity 
+        self.set_gripper_velocity(1.0)
+
+        # initialize driven joint positions to be open
+        self._pb.setJointMotorControl2(self.robot_id,
+            self.jnt_to_id['finger_joint'],
+            self._pb.POSITION_CONTROL,
+            targetPosition=0,
+            maxVelocity=self.max_velocity,
+            force=self._max_torque)
+
+    def set_gripper_velocity(self, gripper_vel):
+        """
+        Set the speed for gripper position control
+
+        Args: 
+            gripper_vel (float): gripper joint speed
+        """
+        self.max_velocity = gripper_vel
+
+    def feed_robot_info(self, robot_id, jnt_to_id):
+        """
+        Setup the gripper, pass the robot info from the arm to the gripper.
+
+        Args:
+            robot_id (int): robot id in Pybullet.
+            jnt_to_id (dict): mapping from the joint name to joint id.
+
+        """
+        self.robot_id = robot_id
+        self.jnt_to_id = jnt_to_id
+        self.gripper_jnt_ids = [
+            self.jnt_to_id[jnt] for jnt in self.jnt_names
+        ]
 
         self._setup_gripper()
 
@@ -121,14 +151,47 @@ class Robotiq2F140Pybullet(SimpleGripperPybullet):
 
         jnt_id = self.jnt_to_id[joint_name]
 
-        # self._pb.setJointMotorControl2(targetPosition=-1.0*self.MAX_CLOSING, bodyIndex=self.robot_id, jointIndex=self.jnt_to_id['right_inner_knuckle_joint'], controlMode=self._pb.POSITION_CONTROL, force=1)
-        # self._pb.setJointMotorControl2(targetPosition=1.0*self.MAX_CLOSING, bodyIndex=self.robot_id, jointIndex=self.jnt_to_id['left_inner_knuckle_joint'], controlMode=self._pb.POSITION_CONTROL, force=1)
+        if ignore_physics:
+            self._zero_vel_mode()
+            self._hard_reset(mic_pos)
+            success = True
+        else:
+            self._pb.setJointMotorControl2(self.robot_id,
+                jnt_id,
+                self._pb.POSITION_CONTROL,
+                targetPosition=tgt_pos,
+                maxVelocity=self.max_velocity,
+                force=self._max_torque)
 
-        self._pb.setJointMotorControl2(self.robot_id,
-            jnt_id,
-            self._pb.POSITION_CONTROL,
-            targetPosition=tgt_pos,
-            force=self._max_torque)
+            # this applies a small spring force on the inner links
+            # unclear if keeping it in is beneficial
+            '''
+            self._pb.setJointMotorControl2(
+                targetPosition=-1.0*self.cfgs.EETOOL.CLOSE_ANGLE, 
+                bodyIndex=self.robot_id, 
+                jointIndex=self.jnt_to_id['right_inner_knuckle_joint'], 
+                controlMode=self._pb.POSITION_CONTROL, 
+                force=1)
+            self._pb.setJointMotorControl2(
+                targetPosition=1.0*self.cfgs.EETOOL.CLOSE_ANGLE, 
+                bodyIndex=self.robot_id, 
+                jointIndex=self.jnt_to_id['left_inner_knuckle_joint'], 
+                controlMode=self._pb.POSITION_CONTROL, 
+                force=1)
+            '''
+
+            success = False
+            if self._pb.in_realtime_mode() and wait:
+                success = wait_to_reach_jnt_goal(
+                    tgt_pos,
+                    get_func=self.get_jpos,
+                    joint_name=joint_name,
+                    get_func_derv=self.get_jvel,
+                    timeout=self.cfgs.ARM.TIMEOUT_LIMIT,
+                    max_error=self.cfgs.ARM.MAX_JOINT_ERROR
+                )
+            else:
+                success = True
 
         return True
 
