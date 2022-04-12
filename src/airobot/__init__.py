@@ -27,6 +27,8 @@ class Robot:
             if the robot has an base class
         use_cam (bool): whether to create the robot camera instance
             if the robot has an camera class
+        pybullet_urdf (bool): whether to use a robot URDF from
+            the pybullet data folder
         pb_cfg (dict): arguments to pass int when creating
             the pybullet client
         arm_cfg (dict): arguments to pass in the constructor
@@ -52,6 +54,7 @@ class Robot:
                  use_eetool=True,
                  use_base=True,
                  use_cam=True,
+                 pybullet_urdf=False,
                  pb_cfg=None,
                  arm_cfg=None,
                  base_cfg=None,
@@ -91,7 +94,7 @@ class Robot:
 
         self.pb_client = None
         if pb:
-            if not 'franka' in robot_name:
+            if not pybullet_urdf:
                 urdfs_root_path = os.path.join(root_path, 'urdfs')
                 urdf = os.path.join(urdfs_root_path,
                                     cfgs.PYBULLET_URDF)
