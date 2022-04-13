@@ -26,16 +26,8 @@ class Robotiq2F140Pybullet(SimpleGripperPybullet):
     def __init__(self, cfgs, pb_client):
         super(Robotiq2F140Pybullet, self).__init__(cfgs=cfgs,
                                                    pb_client=pb_client)
-
-    def _setup_gripper(self):
-        """
-        Setup the gripper, pass the robot info from the arm to the gripper.
-
-        Args:
-            robot_id (int): robot id in Pybullet.
-            jnt_to_id (dict): mapping from the joint name to joint id.
-
-        """
+    
+    def _create_constraint(self):
         c_mimic = self._pb.createConstraint(
             self.robot_id,
             self.jnt_to_id['finger_joint'],
@@ -71,6 +63,16 @@ class Robotiq2F140Pybullet(SimpleGripperPybullet):
             childFramePosition=child_pos)
         self._pb.changeConstraint(c2, erp=0.8, maxForce=9999)
 
+    def _setup_gripper(self):
+        """
+        Setup the gripper, pass the robot info from the arm to the gripper.
+
+        Args:
+            robot_id (int): robot id in Pybullet.
+            jnt_to_id (dict): mapping from the joint name to joint id.
+
+        """
+        self._create_constraint()
         passive_force = 0
         for name in self.jnt_names:
             if name == 'finger_joint':
@@ -153,7 +155,9 @@ class Robotiq2F140Pybullet(SimpleGripperPybullet):
 
         if ignore_physics:
             self._zero_vel_mode()
-            self._hard_reset(mic_pos)
+            tgt_pos_mimic = self._mimic_gripper(tgt_pos)
+            self._hard_reset(tgt_pos_mimic)
+            self._create_constraint()
             success = True
         else:
             self._pb.setJointMotorControl2(self.robot_id,
@@ -220,4 +224,14 @@ class Robotiq2F140Pybullet(SimpleGripperPybullet):
         jnt_id = self.jnt_to_id[self.jnt_names[0]]
         vel = self._pb.getJointState(self.robot_id, jnt_id)[1]
         return vel
+    
+    def _mimic_gripper(self, joint_val):
+        """
+        Given the value for the first joint,
+        mimic the joint values for the rest joints.
+        """
+        jnt_vals = [joint_val]
+        for i in range(1, len(self.jnt_names)):
+            jnt_vals.append(joint_val * self.cfgs.EETOOL.MIMIC_COEFF[i])
+        return jnt_vals
 
