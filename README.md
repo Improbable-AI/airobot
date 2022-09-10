@@ -21,12 +21,12 @@ AIRobot is a python library to interface with robots. It follows a similar archi
 If you use AIRobot in your research, please use the following BibTeX entry.
 ```
 @misc{airobot2019,
-  author =       {Tao Chen and Anthony Simeonov and Pulkit Agrawal},
-  title =        {{AIRobot}},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/Improbable-AI/airobot}},
-  year =         {2019}
+  author={Tao Chen and Anthony Simeonov and Pulkit Agrawal},
+  title={{AIRobot}},
+  publisher={GitHub},
+  journal={GitHub repository},
+  howpublished={\url{https://github.com/Improbable-AI/airobot}},
+  year={2019}
 }
 ```
 
