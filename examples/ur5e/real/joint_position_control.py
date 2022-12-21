@@ -1,6 +1,7 @@
 import time
 
 import airobot as ar
+import numpy as np
 
 
 def main():
@@ -25,41 +26,18 @@ def main():
     robot = ar.Robot('ur5e_2f140', pb=False, use_cam=False)
     robot.arm.go_home()
 
-    goal_pos = [0.5, -2, -1.1, -0.95, 1.7, -0.1]
+    goal_pos = np.deg2rad([-34, -74, 77.1, -141.1, -89, 0])
+
 
     robot.arm.set_jpos(goal_pos, wait=True)
     print("Joint Angles: ")
     print(robot.arm.get_jpos())
 
-    ar.utils.common.print_red(
-        """
-        ---SWITCHING COMM MODE TO USE_URSCRIPT=TRUE---\n\n\n
-        Robot will execute a joint position command using
-        direct position control\n\n\n
-        These movements have been verified to be collision free\n\n\n
-        ---MODIFY THE GOAL POSITIONS WHEN USING DIRECT POSITION
-        CONTROL AT YOUR OWN RISK---
-        """
-    )
-    time.sleep(3.0)
-
-    robot.arm.set_comm_mode(use_urscript=True)
-
-    goal_pos = [0, -1.66, -1.92, -1.12, 1.57, 0]
+    goal_pos = np.deg2rad([6.38, -49.51, 68.9, -137.61, -64.52, 0])
 
     robot.arm.set_jpos(goal_pos, wait=True)
     print("Joint Angles: ")
     print(robot.arm.get_jpos())
-    print('Joint Angle of Joint[shoulder_pan_joint]:')
-    print(robot.arm.get_jpos('shoulder_pan_joint'))
-
-    robot.arm.eetool.activate()
-    print('Opening gripper')
-    robot.arm.eetool.open()
-    time.sleep(1.0)
-    print('Closing gripper')
-    robot.arm.eetool.close()
-    time.sleep(1.0)
 
 
 if __name__ == '__main__':

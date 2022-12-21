@@ -40,7 +40,7 @@ def execute_build(args):
 
 
 if __name__ == '__main__':
-    default_image_name = "airobot-cuda-dev"
+    default_image_name = "improbableailab/ur5e-ros:noetic"
 
     parser = argparse.ArgumentParser()
 

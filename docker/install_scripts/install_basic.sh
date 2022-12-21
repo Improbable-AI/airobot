@@ -16,6 +16,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ffmpeg \
     unzip \
     vim \
+    htop \
     xserver-xorg-dev \
     tmux \
     terminator \
@@ -26,14 +27,13 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     libqt5multimedia5 \
     libqt5x11extras5 \
     libtbb2 \
-    libtheora0 \
-    libyaml-cpp0.5v5 \
     libpng-dev \
     qtbase5-dev \
     zlib1g \
     dirmngr \
     gnupg2 \
-    lsb-release
+    lsb-release \
+    python3-pip
 
 apt-get clean
 

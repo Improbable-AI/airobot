@@ -7,9 +7,9 @@
 
 ### Dependencies
 System dependencies:
-- Linux OS (tested on Ubuntu 16.04 and 18.04)
+- Linux OS (tested on Ubuntu 18.04)
 - Nvidia GPU
-- Nvidia driver version >= 418.39
+- Nvidia driver version >= 470.42
 
 #### Local Docker engine setup
 Install [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) (you may want to configure your user permissions so you don't have to use sudo with every docker command -- see [here](https://docs.docker.com/install/linux/linux-postinstall/))
@@ -56,9 +56,9 @@ sudo systemctl restart docker
 ```
 
 ## Pulling the Pre-Built Images
-The image is set up with CUDA 10.1, cuDNN 7.6, and PyTorch 1.3 installed (```airobot-cuda-dev```)
+The image is set up with CUDA 11.4, and PyTorch 1.10 installed.
 ```
-docker pull anthonysimeonov/airobot-cuda-dev:latest
+docker pull improbableailab/ur5e-ros:kinetic-cuda
 ```
 
 
