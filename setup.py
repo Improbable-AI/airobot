@@ -42,7 +42,7 @@ setup(
     package_data={
         'airobot': extra_pkg_files,
     },
-    python_requires='>=2.7.*, <3.10',
+    python_requires='>=2.7, <3.10',
     classifiers=[
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.7",
