@@ -179,7 +179,7 @@ class SimpleGripperPybullet(EndEffectorTool):
                                            forces=[10] * len(self.gripper_jnt_ids))
 
     def _hard_reset(self, pos):
-        for i in range(len(self.gripper_jnt_ids)):
+        for i in range(min(len(self.gripper_jnt_ids), len(pos))):
             self._pb.resetJointState(self.robot_id,
                                      self.gripper_jnt_ids[i],
                                      targetValue=pos[i],

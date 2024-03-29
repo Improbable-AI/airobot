@@ -12,7 +12,7 @@ _C.HAS_CAMERA = True
 _C.HAS_EETOOL = True
 
 _C.ROBOT_DESCRIPTION = '/robot_description'
-_C.PYBULLET_URDF = 'franka_panda/panda.urdf'
+_C.PYBULLET_URDF = 'panda.urdf'
 
 _C.ARM = get_franka_arm_cfg()
 

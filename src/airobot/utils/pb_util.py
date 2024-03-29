@@ -20,7 +20,8 @@ GRAVITY_CONST = -9.8
 
 def create_pybullet_client(gui=True,
                            realtime=True,
-                           opengl_render=True):
+                           opengl_render=True,
+                           server=False):
     """
     Create a pybullet simulation client.
 
@@ -31,12 +32,13 @@ def create_pybullet_client(gui=True,
             RGB images.
     """
     if gui:
-        mode = p.GUI
+        mode = p.GUI_SERVER if server else p.GUI
     else:
-        mode = p.DIRECT
+        mode = p.SHARED_MEMORY_SERVER if server else p.DIRECT
     pb_client = BulletClient(connection_mode=mode,
                              realtime=realtime,
-                             opengl_render=opengl_render)
+                             opengl_render=opengl_render,
+                             server=server)
     pb_client.setAdditionalSearchPath(pybullet_data.getDataPath())
     return pb_client
 
@@ -62,6 +64,7 @@ class BulletClient:
                  connection_mode=None,
                  realtime=False,
                  opengl_render=True,
+                 server=False,
                  options=''):
         self._in_realtime_mode = realtime
         self.opengl_render = opengl_render
@@ -71,10 +74,10 @@ class BulletClient:
             if self._client >= 0:
                 return
             else:
-                connection_mode = p.DIRECT
+                connection_mode = p.SHARED_MEMORY_SERVER if server else p.DIRECT
         self._client = p.connect(connection_mode, options=options)
         is_linux = platform.system() == 'Linux'
-        if connection_mode == p.DIRECT and is_linux and opengl_render:
+        if connection_mode in [p.DIRECT, p.SHARED_MEMORY_SERVER] and is_linux and opengl_render:
             airobot.log_info('Load in OpenGL!')
             # # using the eglRendererPlugin (hardware OpenGL acceleration)
             egl = pkgutil.get_loader('eglRenderer')
@@ -84,7 +87,7 @@ class BulletClient:
             else:
                 p.loadPlugin("eglRendererPlugin",
                              physicsClientId=self._client)
-        self._gui_mode = connection_mode == p.GUI
+        self._gui_mode = connection_mode in [p.GUI, p.GUI_SERVER]
         p.setGravity(0, 0, GRAVITY_CONST,
                      physicsClientId=self._client)
         self.set_step_sim(not self._in_realtime_mode)

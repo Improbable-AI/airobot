@@ -10,7 +10,7 @@ _C = CN()
 _C.CLASS = 'Franka'
 
 # https://www.universal-robots.com/how-tos-and-faqs/faq/ur-faq/max-joint-torques-17260/
-_C.MAX_TORQUES = [87, 87, 87, 87, 12, 12, 12]
+_C.MAX_TORQUES = [200, 200, 200, 200, 150, 150, 150]
 _C.JOINT_NAMES = [
     'panda_joint1', 'panda_joint2', 'panda_joint3', 'panda_joint4',
     'panda_joint5', 'panda_joint6', 'panda_joint7'
@@ -25,7 +25,6 @@ _C.ROBOT_EE_FRAME_JOINT = 'panda_grasptarget_hand'
 _C.IK_POSITION_TOLERANCE = 0.01
 # inverse kinematics orientation tolerance (rad)
 _C.IK_ORIENTATION_TOLERANCE = 0.05
-# _C.HOME_POSITION = [0.98, 0.458, 0.31, -2.24, -0.30, 2.66, 2.32]
 _C.HOME_POSITION = [-0.19, 0.08, 0.23, -2.43, 0.03, 2.52, 0.86]
 _C.MAX_JOINT_ERROR = 0.01
 _C.MAX_JOINT_VEL_ERROR = 0.05
